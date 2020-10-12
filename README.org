@@ -1,0 +1,3 @@
+These are my elisp macros and functions used in different projects.
+
+To generate ~functions.el~, ~macros.el~, and ~examples.el~ from ~goodies.org~, use =M-x org-babel-tangle= in =emacs=.
