@@ -1,3 +1,4 @@
+
 * emacs configuration
 Although I tried to eliminate personal stuff from this section,
 still you probably want to adjust this code to your needs before using it:
@@ -426,7 +427,6 @@ rw-rw-r--
 rw-rw-rwx
 :END:
 
-
 ** simple stuff
 
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
@@ -523,7 +523,7 @@ before quitting emacs:
 * to do
 1. Expand explanation for =needs=.
 2. Probably it is imposiible to insert colored text in *Messages* buffer; Otherwise I would color messages according to their priority.
-   (But do not highlight if (= 3 *log-level*) so that only :error messages are shown.
+   (But do not highlight if ~(= 3 *log-level*)~ so that only :error messages are shown.
 3. Package the logging system?
 4. The rest of this project does not deserve packaging sice it is too much focused on my writing style;
    However, I can and must write the code allowing easy usage (by downloading) this project without packaging it.
