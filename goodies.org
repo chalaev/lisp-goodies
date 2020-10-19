@@ -1,5 +1,6 @@
 
 * emacs configuration
+
 Although I tried to eliminate personal stuff from this section,
 still you probably want to adjust this code to your needs before using it:
 #+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
@@ -48,6 +49,7 @@ The following line is equivalent to =chmod a-x FN=:
 (add-hook 'org-babel-post-tangle-hook #'after-tangle)
 #+END_SRC
 so they are not backuped.
+
 
 * short pieces of code
 ** chgrp
