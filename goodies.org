@@ -1,23 +1,57 @@
-;; -*- lexical-binding: t; -*-
-Time-stamp: <2020-10-12 12:36 MSK>
-
-* TODO
-1. Expand explanation for =needs=.
-
 * emacs configuration
+Although I tried to eliminate personal stuff from this section,
+still you probably want to adjust this code to your needs before using it:
+#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+;; Generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
+;; See explanations therein.
+;; Do not forget to edit this file before using it.
+
+(defun basename (FN) (car(last(split-string FN "/" t))))
+
+(defun barename (FN)
+  (let ((SS (split-string (basename FN)  "\\." t)))
+    (mapconcat #'(lambda(x)x) (butlast SS) ".")))
+#+END_SRC
+
+The following function is designed to prevent multiple evaluation of one and the same file:
+#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
+(defvar *loaded* nil "prevents duplicate evaluation of files")
+(defun load-file* (x &optional el-prefix)
+  (let ((FN (file-chase-links 
+             (if (= ?/ (aref x 0)) x
+               (concat (or el-prefix 
+ (concat (getenv "HOME") "/"))
+x)))))
+    (unless (member (car (last (split-string FN "\\." t))) '("el" "elc"))
+      (setf FN (concat FN ".el")))
+    (unless (member FN *loaded*) (load-file FN) (push (barename FN) *loaded*))))
+#+END_SRC
+Every time I start emacs, I load several files:
+#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
+(mapcar #'(lambda(x) (load-file* x "~/programming/emacs/"))
+	'("macros" "functions" "logging"  ....))
+#+END_SRC
+where dots stand for some other files I use to make my emacs cozy.
+
 My ~backup~ system does not save files having the group ~tmp~.
-I use this group to mark all generated (tangled) files
-#+BEGIN_SRC 
+I use this group to mark all generated (tangled) files:
+#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
 (defun after-tangle()
-  "tangled files are temporary, should not be backed up"
-  (chgrp "tmp" (concat default-directory (buffer-name))))
+  "tangled files are temporary, should not be backuped"
+  (let ((FN (buffer-file-name)))
+#+END_SRC
+The following line is equivalent to =chmod a-x FN=:
+#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
+    (set-file-modes FN (logand #o666 (perms-from-str (nth 8 (file-attributes FN 'string)))))
+    (chgrp "tmp" FN)))
 (add-hook 'org-babel-post-tangle-hook #'after-tangle)
 #+END_SRC
 so they are not backuped.
 
 * short pieces of code
 ** chgrp
-#+BEGIN_SRC emacs-lisp :tangle functions.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
 (defun chgrp(group file-name)
   (let (process (counter 300) (buffer (generate-new-buffer " *chgrp*")))
     (setf process (apply #'start-process "cloud-chgrp" buffer "chgrp" (list group file-name)))
@@ -28,7 +62,7 @@ so they are not backuped.
 
 ** gensym
 Actually =gensym= is defined in =cl.el= but I prefer to avoid using it; so let me write my own =gensym=:
-#+BEGIN_SRC emacs-lisp :tangle functions.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (unless (functionp 'gensym)
 (let ((counter 0))
   (defun gensym(&optional starts-with)
@@ -57,7 +91,8 @@ I use =gensym= in macros, e.g.
 ** case=
 My ~case=~ is not exactly the same as =case= defined in =cl.el=:
 it uses integer equality (=) as a test function:
-#+BEGIN_SRC emacs-lisp :tangle macros.el
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
 (defmacro case= (var &rest cases)
   "case with integer equality (=) as a test function"
   (let ((v (gensym "v")))
@@ -86,7 +121,7 @@ A simple example:
 where quotes somehow disappeared: is this an ~org-mode~ or ~babel~ bug?
 
 A simple usage example is self-explanatory:
-#+BEGIN_SRC emacs-lisp :tangle examples.el
+#+BEGIN_SRC emacs-lisp :tangle generated/examples.el
 (let ((x 33) (choice-1 22)  (choice-2 33))
   (case= (1+ x)
 	 (choice-1 (message "choice-1"))
@@ -96,14 +131,19 @@ A simple usage example is self-explanatory:
 
 ** when-let
 =when-let= is one of my most-used macros:
-#+BEGIN_SRC emacs-lisp :tangle macros.el
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro when-let (vars &rest body)
   "when with let using stndard let-notation"
+  (if (caar vars)
   `(let ((,(caar vars) ,(cadar vars)))
      ,(if (cdr vars)
 	  `(when ,(caar vars)
 	     ,(macroexpand-1 `(when-let ,(cdr vars) ,@body)))
-	(append `(when ,(caar vars)) body))))
+	(append `(when ,(caar vars)) body)))
+  (if (cdr vars)
+      `(when ,(cadar vars)
+	     ,(macroexpand-1 `(when-let ,(cdr vars) ,@body)))
+    (append `(when ,(cadar vars)) body))))
 #+END_SRC
 Using standard let-syntax, it evaluates varibales in the header one after another,
 and, if they are all non-nil, evalueates the body:
@@ -118,23 +158,49 @@ and, if they are all non-nil, evalueates the body:
 (let ((x 1)) (when x (let ((y (1+ x))) (when y (incf x y) (incf y x)))))
 :END:
 
-Recently I wrote =needs= (see below), and now it is gradually replacing =when-let=.
+If we put =nil= instead of the variable name, no local varibale will be created for this entry
+#+BEGIN_SRC emacs-lisp :results drawer
+(print (macroexpand-1
+ `(when-let ((CN (clouded (aref newDBrec cipher))) (nil (not (file-exists-p CN))))
+    (+ 1 2)
+    (- 1 2))))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(let ((CN (clouded (aref newDBrec cipher)))) (when CN (when (not (file-exists-p CN)) (+ 1 2) (- 1 2))))
+:END:
+– this double =when= is ugly and inefficient, but for ~elisp~ it is probably o.k. because we do not need as much efficiency here, as in Common Lisp.
+
+Sometimes I use somewhat similar =when-set= macro:
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+(defmacro when-set (vars &rest body)
+  "when-let using global variable instead of defining local one"
+  `(progn (setf ,(caar vars) ,(cadar vars)); get rid of progn here
+     ,(if (cdr vars)
+	  `(when ,(caar vars)
+	     ,(macroexpand-1 `(when-set ,(cdr vars) ,@body)))
+	(append `(when ,(caar vars)) body))))
+#+END_SRC
+
+Recently I wrote =needs= (see below) which is now gradually replacing =when-let=.
 
 ** if-let
-Similarly to =when-let=, macro =if-let= is heavily used in my projects:
-#+BEGIN_SRC emacs-lisp :tangle macros.el
+Like =when-let=, macro =if-let= is heavily used in my projects.
+=if-let= is somewhat similar to =when-let=, but offers "else" clause:
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro if-let (vars &rest body)
   "if with let using stndard let-notation"
-  (let ((if-true (gensym "it"))); "it" stands for "if true"
-    `(let (,if-true)
+  (let ((if-true (gensym "it")) (result (gensym "r")))
+    `(let (,if-true ,result)
        (when-let ,vars
-		  (setf ,if-true t)
-		  ,(car body))
-       (unless ,if-true
+		 (setf ,if-true t)
+		 (setf ,result ,(car body)))
+       (if ,if-true
+	   ,result
 	 ,@(cdr body)))))
 #+END_SRC
-=if-let= is somewhat similar to =when-let=, but offers "else" clause:
-
+Usage example:
 #+BEGIN_SRC emacs-lisp :results drawer
 (print (macroexpand-1 
   '(if-let ((x 1) (y (1+ x)))
@@ -146,9 +212,36 @@ Similarly to =when-let=, macro =if-let= is heavily used in my projects:
 (let (it27) (when-let ((x 1) (y (1+ x))) (setf it27 t) (+ x y)) (unless it27 (- x y) (* x y)))
 :END:
 
+Sometimes I need slightly changed versions of =if-let=:
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+(defmacro ifn-let (vars &rest body)
+  `(if-let ,vars
+      ,(cons 'progn (cdr body))
+    ,(car body)))
+#+END_SRC
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+(defmacro ifn-set (vars &rest body)
+  `(if-set ,vars
+      ,(cons 'progn (cdr body))
+    ,(car body)))
+#+END_SRC
+*Warning*: =if-set= should probably
+be updated by introducing =result= variable similarly to how it is done
+in =if-let= above:
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+(defmacro if-set (vars &rest body)
+  (let ((if-true (gensym "it")))
+    `(let (,if-true)
+       (when-set ,vars
+		  (setf ,if-true t)
+		  ,(car body))
+       (unless ,if-true
+	 ,@(cdr body)))))
+#+END_SRC
+
 ** cond-let
 =cond-let= is a natural generalization of =if-let=:
-#+BEGIN_SRC emacs-lisp :tangle macros.el
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro cond-let (&rest conds)
   "cond with let"
   (let ((c (car conds)) (r (cdr conds)))
@@ -173,7 +266,7 @@ Similarly to =when-let=, macro =if-let= is heavily used in my projects:
 
 ** needs
 New =needs= macro is gradually replacing =when-let=:
-#+BEGIN_SRC emacs-lisp :tangle macros.el
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro needs (&rest all-args)
   "unifying when-let and if-let"
   (let* ((vardefs (car all-args))
@@ -201,9 +294,34 @@ it has an optional third argument – a form to be evaluated in case the variabl
 
 For usage example, see [[https://github.com/chalaev/cloud][cloud]] project.
 
+Sometimes I need slightly changed versions of =needs=:
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+(defmacro needs-set (&rest all-args)
+  "needs with 'let' being replaced with 'setf'"
+  (let* ((vardefs (car all-args))
+	(body (cdr all-args))
+	(vardef (car vardefs)))
+    (if (and (listp vardef) (not (or (special-form-p (car vardef)) (functionp (car vardef)) (macrop (car vardef)))))
+    `(progn (setf ,(car vardef) ,(cadr vardef))
+       ,(if (cddr vardef)
+	    `(if ,(car vardef)
+		,(if (cdr vardefs)
+		     (macroexpand-1 `(needs ,(cdr vardefs) ,@body))
+		   `(progn ,@body))
+	       ,(car (cddr vardef)))
+	  (append `(when ,(car vardef))
+		  (if (cdr vardefs)
+		      (list (macroexpand-1 `(needs ,(cdr vardefs) ,@body)))
+		    body))))
+    (append `(when ,vardef)
+		  (if (cdr vardefs)
+		      (list (macroexpand-1 `(needs ,(cdr vardefs) ,@body)))
+		    body)))))
+#+END_SRC
+
 ** email
 Sometimes I need to =email=:
-#+BEGIN_SRC emacs-lisp :tangle functions.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun email (addr &optional subject body)
   "fast non-interactive way to send an email"
   (compose-mail addr (if subject subject ""))
@@ -211,27 +329,126 @@ Sometimes I need to =email=:
   (message-send-and-exit))
 #+END_SRC
 
+** remo & drop
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(defun remo (from-where &rest what)
+  (if (cdr what)
+      (remo
+       (apply #'remo (cons from-where (cdr what)))
+       (car what))
+ (remove (car what) from-where)))
+(defmacro drop (from-where &rest what)
+  `(setf ,from-where (remo ,from-where ,@what)))
+#+END_SRC
+Test:
+#+BEGIN_SRC emacs-lisp :results drawer
+(let ((ll '(1 2 3 4 5 6)))
+  (drop ll 2 4)
+  ll)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(1 3 5 6)
+:END:
+
+** perms-from-str
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(defun perms-from-str (str)
+"parses file mode string into integer"
+  (let ((text-mode (reverse (cdr (append str nil)))) (mode 0) (fac 1))
+    (loop for c in text-mode for i from 0
+          unless (= c ?-) do (incf mode fac)
+          do (setf fac (* 2 fac)))
+    mode))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :results drawer
+(perms-from-str "-rw-rw----")
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+432
+:END:
+
+** perms-to-str
+#+BEGIN_SRC emacs-lisp :results drawer
+(let ((ll '((1 . 0))))
+  (dotimes (i 8 ll)
+     (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll)))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+((256 . 2) (128 . 1) (64 . 0) (32 . 2) (16 . 1) (8 . 0) (4 . 2) (2 . 1) (1 . 0))
+:END:
+
+#+BEGIN_SRC emacs-lisp :results drawer
+(let ((ll '((1 . 0))))
+  (dotimes (i 8 ll)
+     (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll)))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+((256 . 2) (128 . 1) (64 . 0) (32 . 2) (16 . 1) (8 . 0) (4 . 2) (2 . 1) (1 . 0))
+:END:
+
+#+BEGIN_SRC emacs-lisp :results drawer
+(let ((ll '((1 . 0))) (file-mode #o664))
+  (apply #'concat (mapcar
+		   #'(lambda(x) (format "%c" (if (= 0 (logand file-mode (car x))) ?- (aref "xwr" (cdr x)))))
+  (dotimes (i 8 ll)
+     (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll)))))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+rw-rw-r--
+:END:
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(defun perms-to-str(file-mode)
+"formats integer file mode into string"
+(let ((ll '((1 . 0))))
+  (apply #'concat (mapcar
+		   #'(lambda(x) (format "%c" (if (= 0 (logand file-mode (car x))) ?- (aref "xwr" (cdr x)))))
+  (dotimes (i 8 ll)
+     (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll))))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :results drawer
+(perms-to-str #o667)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+rw-rw-rwx
+:END:
+
+
 ** simple stuff
-#+BEGIN_SRC emacs-lisp :tangle macros.el
+
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle functions.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (unless (or (boundp 'decf) (functionp 'decf) (macrop 'decf))
 (defmacro decf (var &optional amount)
   (unless amount (setf amount 1))
   `(setf ,var (- ,var ,amount))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle functions.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (unless (or (boundp 'incf) (functionp 'incf) (macrop 'incf))
 (defmacro incf (var &optional amount)
   (unless amount (setf amount 1))
   `(setf ,var (+ ,var ,amount))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle functions.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun pos (el ll)
   (let ((i 0) r)
   (dolist (e ll r)
@@ -246,16 +463,18 @@ I doubt if I should really package my logging system: probably it is not large e
 Global variable =*log-level*= controls how much information should be logged: the (default) zero value means
 that all types of log-messages (:debug :warning :info :error) should be logged (saved);
 the value 3 means that only error messages (marked with :error) will be logged:
-#+BEGIN_SRC emacs-lisp :tangle logging.el
+#+BEGIN_SRC emacs-lisp :tangle generated/logging.el :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
 (unless (boundp '*log-level*) (defvar *log-level* 0))
+(unless (boundp '*emacs-d*) (defvar *emacs-d* (concat (getenv "HOME") "/.emacs.d/")))
 #+END_SRC
 Log messages are accumulated in =*file-acc-buffer*=
-#+BEGIN_SRC emacs-lisp :tangle logging.el
+#+BEGIN_SRC emacs-lisp :tangle generated/logging.el
 (unless (boundp '*file-acc-buffer*) (defvar *file-acc-buffer* nil))
 (defvar *last-FLD* nil "saves last day printed to the log file")
 #+END_SRC
-and once in a while (when the number of queued messages >10) appended to the file =~/.emacs.d/elisp.log=:
-#+BEGIN_SRC emacs-lisp :tangle logging.el
+and once in a while (when the number of queued messages >30) appended to the file =~/.emacs.d/elisp.log=:
+#+BEGIN_SRC emacs-lisp :tangle generated/logging.el
 (defun clog-flush()
   "save log messages to file for debugging"
   (when (= 0 *log-level*)
@@ -270,14 +489,14 @@ and once in a while (when the number of queued messages >10) appended to the fil
     (setf *file-acc-buffer* nil)))
 #+END_SRC
 Since we have no multi-threading in elisp, we do not need to introduce any lock functions.
-#+BEGIN_SRC emacs-lisp :tangle logging.el
+#+BEGIN_SRC emacs-lisp :tangle generated/logging.el
 (defun file-acc-push(msg)
   (when (= 0 *log-level*)
     (push msg *file-acc-buffer*)
-    (when (< 10 (length *file-acc-buffer*)) (clog-flush))))
+    (when (< 30 (length *file-acc-buffer*)) (clog-flush))))
 #+END_SRC
 The main logging function:
-#+BEGIN_SRC emacs-lisp :tangle logging.el
+#+BEGIN_SRC emacs-lisp :tangle generated/logging.el
 (defun clog (level fstr &rest args)
   "simple logging function" ; level is one of → :debug :info :warning :error
   (when (<= *log-level* (or (pos level '(:debug :info :warning :error)) 0))
@@ -292,12 +511,19 @@ fstr)
 Its typical usage example is: =(clog :info "z=%d" 3)=
 
 Do not forget to flush the log
-#+BEGIN_SRC emacs-lisp :tangle logging.el
+#+BEGIN_SRC emacs-lisp :tangle generated/logging.el
 (defun on-emacs-exit()
   (clog :debug "flushing comments before quiting emacs")
   (clog-flush))
 #+END_SRC
 before quitting emacs:
-#+BEGIN_SRC emacs-lisp :tangle logging.el
+#+BEGIN_SRC emacs-lisp :tangle generated/logging.el
 (add-hook 'kill-emacs-hook 'on-emacs-exit)
 #+END_SRC
+* to do
+1. Expand explanation for =needs=.
+2. Probably it is imposiible to insert colored text in *Messages* buffer; Otherwise I would color messages according to their priority.
+   (But do not highlight if (= 3 *log-level*) so that only :error messages are shown.
+3. Package the logging system?
+4. The rest of this project does not deserve packaging sice it is too much focused on my writing style;
+   However, I can and must write the code allowing easy usage (by downloading) this project without packaging it.
