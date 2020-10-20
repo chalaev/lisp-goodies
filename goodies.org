@@ -356,6 +356,8 @@ Test:
 :END:
 
 ** perms-from-str
+When I ask ~emacs~ to show me file's permissions, it provides a text string (e.g., "-rw-rw----") instead of a number.
+The following function produces a number from such a string:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun perms-from-str (str)
 "parses file mode string into integer"
@@ -365,7 +367,7 @@ Test:
           do (setf fac (* 2 fac)))
     mode))
 #+END_SRC
-
+Usage example:
 #+BEGIN_SRC emacs-lisp :results drawer
 (perms-from-str "-rw-rw----")
 #+END_SRC
@@ -376,6 +378,7 @@ Test:
 :END:
 
 ** perms-to-str
+=perms-to-str= is just the opposite of [[perms-from-str]].
 #+BEGIN_SRC emacs-lisp :results drawer
 (let ((ll '((1 . 0))))
   (dotimes (i 8 ll)
@@ -419,7 +422,7 @@ rw-rw-r--
   (dotimes (i 8 ll)
      (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll))))))
 #+END_SRC
-
+Usage example:
 #+BEGIN_SRC emacs-lisp :results drawer
 (perms-to-str #o667)
 #+END_SRC
@@ -435,7 +438,7 @@ rw-rw-rwx
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))
 #+END_SRC
-
+=decf= and =incf= are defined in ~cl.el~ so let us not redefine them if ~cl.el~ is loaded:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (unless (or (boundp 'decf) (functionp 'decf) (macrop 'decf))
 (defmacro decf (var &optional amount)
@@ -449,7 +452,7 @@ rw-rw-rwx
   (unless amount (setf amount 1))
   `(setf ,var (+ ,var ,amount))))
 #+END_SRC
-
+Position of an element in a list:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun pos (el ll)
   (let ((i 0) r)
@@ -461,7 +464,10 @@ rw-rw-rwx
 
 * logging system
 I doubt if I should really package my logging system: probably it is not large enough.
-
+** Short description
+This code prints log messages to ~*Messages*~ buffer and saves them to log file =~/.emacs.d/elisp.log=.
+Every message is formatted similarly to how it is done in =format= function.
+** Code
 Global variable =*log-level*= controls how much information should be logged: the (default) zero value means
 that all types of log-messages (:debug :warning :info :error) should be logged (saved);
 the value 3 means that only error messages (marked with :error) will be logged:
@@ -475,7 +481,7 @@ Log messages are accumulated in =*file-acc-buffer*=
 (unless (boundp '*file-acc-buffer*) (defvar *file-acc-buffer* nil))
 (defvar *last-FLD* nil "saves last day printed to the log file")
 #+END_SRC
-and once in a while (when the number of queued messages >30) appended to the file =~/.emacs.d/elisp.log=:
+and once in a while (when the number of queued messages >30 or before quitting ~emacs~) appended to the file =~/.emacs.d/elisp.log=:
 #+BEGIN_SRC emacs-lisp :tangle generated/logging.el
 (defun clog-flush()
   "save log messages to file for debugging"
@@ -502,17 +508,18 @@ The main logging function:
 (defun clog (level fstr &rest args)
   "simple logging function" ; level is one of → :debug :info :warning :error
   (when (<= *log-level* (or (pos level '(:debug :info :warning :error)) 0))
-    (let ((log-msg (cons (concat "%s "
-(format-time-string "%H:%M:%S "
-		    (apply 'encode-time (butlast (decode-time (current-time)) 3)))
-fstr)
-(cons (symbol-name level) args))))
-(file-acc-push (apply #'format log-msg))
-(apply #'message log-msg))))
+    (let ((log-msg
+	   (cons
+	    (concat "%s " (format-time-string "%H:%M:%S "
+(apply 'encode-time (butlast (decode-time (current-time)) 3)))
+		    fstr)
+	    (cons (symbol-name level) args))))
+      (file-acc-push (apply #'format log-msg))
+      (apply #'message log-msg))))
 #+END_SRC
 Its typical usage example is: =(clog :info "z=%d" 3)=
 
-Do not forget to flush the log
+Let us not forget to flush the log
 #+BEGIN_SRC emacs-lisp :tangle generated/logging.el
 (defun on-emacs-exit()
   (clog :debug "flushing comments before quiting emacs")
@@ -523,9 +530,6 @@ before quitting emacs:
 (add-hook 'kill-emacs-hook 'on-emacs-exit)
 #+END_SRC
 * to do
-1. Expand explanation for =needs=.
-2. Probably it is imposiible to insert colored text in *Messages* buffer; Otherwise I would color messages according to their priority.
-   (But do not highlight if ~(= 3 *log-level*)~ so that only :error messages are shown.
-3. Package the logging system?
-4. The rest of this project does not deserve packaging sice it is too much focused on my writing style;
+1. Package the logging system?
+2. The rest of this project does not deserve packaging sice it is too much focused on my writing style;
    However, I can and must write the code allowing easy usage (by downloading) this project without packaging it.
