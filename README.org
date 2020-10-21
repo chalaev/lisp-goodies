@@ -3,7 +3,7 @@ These are my eLisp macros and functions used in different projects.
 
 * Files
 1. ~functions.el~ contains functions that I almost for sure will need in 3+ projects.
-2. ~macros.el~ makes my eLisp code more elegant.
+2. ~macros.el~ simplifies my eLisp code.
 3. ~logging.el~ is a simple logging system; used mainly for debugging purposes.
 
 The files ~functions.el~, ~macros.el~, ~logging.el~, and ~examples.el~ in the ~generated/~ folder are only included for convenience

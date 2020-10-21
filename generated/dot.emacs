@@ -4,10 +4,8 @@
 ;; See explanations therein.
 ;; Do not forget to edit this file before using it.
 
-(defun basename (FN) (car(last(split-string FN "/" t))))
-
 (defun barename (FN)
-  (let ((SS (split-string (basename FN)  "\\." t)))
+  (let ((SS (split-string (file-name-nondirectory FN)  "\\." t)))
     (mapconcat #'(lambda(x)x) (butlast SS) ".")))
 
 (defvar *loaded* nil "prevents duplicate evaluation of files")
