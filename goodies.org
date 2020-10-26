@@ -1,24 +1,26 @@
-#+TITLE: my eLisp macros and functions used in different projects
+#+TITLE: eLisp macros and functions used in different projects
 #+AUTHOR: Oleg Shalaev
 #+EMAIL:  oleg@chalaev.com
-#+LaTeX_HEADER: \usepackage[english,russian]{babel}
+#+LaTeX_HEADER: \usepackage[english]{babel}
 #+LATEX_HEADER: \usepackage[letterpaper,hmargin={1.5cm,1.5cm},vmargin={1.3cm,2cm},nohead,nofoot]{geometry}
+#+KEYWORDS: emacs, elisp, macros, functions
 
-* emacs configuration
+*Note*:
+evaluation results are important part of this file, but =github= org-parser does not show them.
+Open this file in ~emacs~ to see them.
 
-Although I tried to eliminate personal stuff from this section,
-still you probably want to adjust this code to your needs before using it:
+* emacs configuration in ~/.emacs
+You probably want to adjust this code to your needs before pasting it into your =~/.emacs=:
 #+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 ;; Generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
-;; See explanations therein.
-;; Do not forget to edit this file before using it.
+;; See explanations therein. Edit this code before using it.
 
 (defun barename (FN)
   (let ((SS (split-string (file-name-nondirectory FN)  "\\." t)))
     (mapconcat #'(lambda(x)x) (butlast SS) ".")))
 #+END_SRC
 
-Obsolete:
+Obsoleted by =file-name-nondirectory=:
 #+BEGIN_SRC 
 (defun basename (FN) (car(last(split-string FN "/" t))))
 #+END_SRC
@@ -41,13 +43,12 @@ Every time I start emacs, I load several files:
 (mapcar #'(lambda(x) (load-file* x "~/programming/emacs/"))
 	'("macros" "functions" "logging"  ....))
 #+END_SRC
-where dots stand for some other files I use to make my emacs cozy.
 
 My ~backup~ system does not save files having the group ~tmp~.
 I use this group to mark all generated (tangled) files:
 #+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
 (defun after-tangle()
-  "tangled files are temporary, should not be backuped"
+  "mark tangled files as non-backupable (chgrp tmp files) and non-excecutable"
   (let ((FN (buffer-file-name)))
 #+END_SRC
 The following line is equivalent to =chmod a-x FN=:
@@ -59,10 +60,17 @@ The following line is equivalent to =chmod a-x FN=:
 so they are not backuped.
 
 * short pieces of code
-** gensym
-Actually =gensym= is defined in =cl.el= but I prefer to avoid using it; so let me write my own =gensym=:
+** chgrp
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 ;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
+(defun chgrp(group file-name)
+  (= 0 (call-process "chgrp" nil nil nil group file-name)))
+#+END_SRC
+See also =dired-do-chown=.
+
+** gensym
+Actually =gensym= is defined in =cl.el= but I prefer to avoid using it; so let me write my own =gensym=:
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (unless (functionp 'gensym)
 (let ((counter 0))
   (defun gensym(&optional starts-with)
@@ -76,7 +84,7 @@ Actually =gensym= is defined in =cl.el= but I prefer to avoid using it; so let m
       (incf counter)
       sym))))
 #+END_SRC
-I use =gensym= in macros, e.g.
+=gensym= is used in macros, e.g.
 #+BEGIN_SRC emacs-lisp :results drawer
 (let ((ms (gensym "a")))
   `(let ((,ms 0))
@@ -89,7 +97,7 @@ I use =gensym= in macros, e.g.
 :END:
 
 ** case=
-My ~case=~ is not exactly the same as =case= defined in =cl.el=:
+~case=~ is not identical to =case= from =cl.el=:
 it uses integer equality (=) as a test function:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 ;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
@@ -116,18 +124,22 @@ A simple example:
 
 #+RESULTS:
 :RESULTS:
-(let ((v24 (+ 1 2))) (cond ((= v24 choice-1) (message choice-1)) ((= v24 choice-2) (message choice-2)) (t (message no match))))
+(let ((v13 (+ 1 2))) (cond ((= v13 choice-1) (message choice-1)) ((= v13 choice-2) (message choice-2)) (t (message no match))))
 :END:
-where quotes somehow disappeared: is this an ~org-mode~ or ~babel~ bug?
 
-A simple usage example is self-explanatory:
-#+BEGIN_SRC emacs-lisp :tangle generated/examples.el
-(let ((x 33) (choice-1 22)  (choice-2 33))
+Another example is also self-explanatory:
+#+BEGIN_SRC emacs-lisp :results drawer
+(let ((x 32) (choice-1 22)  (choice-2 33))
   (case= (1+ x)
 	 (choice-1 (message "choice-1"))
 	 (choice-2 (message "choice-2"))
 	 (otherwise (message "no match"))))
 #+END_SRC
+
+#+RESULTS:
+:RESULTS:
+choice-2
+:END:
 
 ** when-let
 =when-let= is one of my most-used macros:
@@ -145,7 +157,7 @@ A simple usage example is self-explanatory:
 	     ,(macroexpand-1 `(when-let ,(cdr vars) ,@body)))
     (append `(when ,(cadar vars)) body))))
 #+END_SRC
-Using standard let-syntax, it evaluates varibales in the header one after another,
+Using standard let*-syntax, it evaluates varibales in the header one after another,
 and, if they are all non-nil, evalueates the body:
 #+BEGIN_SRC emacs-lisp :results drawer
 (print (macroexpand-1 
@@ -158,7 +170,7 @@ and, if they are all non-nil, evalueates the body:
 (let ((x 1)) (when x (let ((y (1+ x))) (when y (incf x y) (incf y x)))))
 :END:
 
-If we put =nil= instead of the variable name, no local varibale will be created for this entry
+If we put =nil= instead of the variable name, no local varibale will be created for this entry:
 #+BEGIN_SRC emacs-lisp :results drawer
 (print (macroexpand-1
  `(when-let ((CN (clouded (aref newDBrec cipher))) (nil (not (file-exists-p CN))))
@@ -172,7 +184,7 @@ If we put =nil= instead of the variable name, no local varibale will be created 
 :END:
 – this double =when= is ugly and inefficient, but for ~elisp~ it is probably o.k. because we do not need as much efficiency here, as in Common Lisp.
 
-Sometimes I use somewhat similar =when-set= macro:
+Sometimes instead of =when-let= I use somewhat similar =when-set= macro:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro when-set (vars &rest body)
   "when-let using global variable instead of defining local one"
@@ -182,12 +194,11 @@ Sometimes I use somewhat similar =when-set= macro:
 	     ,(macroexpand-1 `(when-set ,(cdr vars) ,@body)))
 	(append `(when ,(caar vars)) body))))
 #+END_SRC
-
-Recently I wrote =needs= (see below) which is now gradually replacing =when-let=.
+Later I wrote [[needs]] which is more general than =when-let=, and can replace it.
 
 ** if-let
 Like =when-let=, macro =if-let= is heavily used in my projects.
-=if-let= is somewhat similar to =when-let=, but offers "else" clause:
+It is somewhat similar to =when-let=, but offers "else" clause:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro if-let (vars &rest body)
   "if with let using stndard let-notation"
@@ -200,6 +211,7 @@ Like =when-let=, macro =if-let= is heavily used in my projects.
 	   ,result
 	 ,@(cdr body)))))
 #+END_SRC
+
 Usage example:
 #+BEGIN_SRC emacs-lisp :results drawer
 (print (macroexpand-1 
@@ -225,7 +237,7 @@ Sometimes I need slightly changed versions of =if-let=:
       ,(cons 'progn (cdr body))
     ,(car body)))
 #+END_SRC
-*Warning*: =if-set= should probably
+*Note*: =if-set= should probably
 be updated by introducing =result= variable similarly to how it is done
 in =if-let= above:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
@@ -238,6 +250,7 @@ in =if-let= above:
        (unless ,if-true
 	 ,@(cdr body)))))
 #+END_SRC
+Without this update it is going to run the code, but won't return the result.
 
 ** cond-let
 =cond-let= is a natural generalization of =if-let=:
@@ -289,12 +302,13 @@ New =needs= macro is gradually replacing =when-let=:
 		      (list (macroexpand-1 `(needs ,(cdr vardefs) ,@body)))
 		    body)))))
 #+END_SRC
-=needs= acts very similarly to =when-let= except that for every variable decalared in its header
+=needs= acts similarly to =when-let= except that for every variable decalared in its header
 it has an optional third argument – a form to be evaluated in case the variable turns out to be ~nil~.
 
 For usage example, see [[https://github.com/chalaev/cloud][cloud]] project.
 
-Sometimes I need slightly changed versions of =needs=:
+Sometimes I need a slightly changed version of =needs= that does not create a local variable,
+setting the value of a global one instead:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro needs-set (&rest all-args)
   "needs with 'let' being replaced with 'setf'"
@@ -320,7 +334,7 @@ Sometimes I need slightly changed versions of =needs=:
 #+END_SRC
 
 ** email
-Sometimes I need to =email=:
+A non-interactive =email= function:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun email (addr &optional subject body)
   "fast non-interactive way to send an email"
@@ -328,8 +342,10 @@ Sometimes I need to =email=:
   (when body (insert body))
   (message-send-and-exit))
 #+END_SRC
+– will work if mailing system (~exim4~ in my case) is configured on your linux system.
 
 ** remo & drop
+Remo is a helper for =drop= macro which removes elements from an array:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun remo (from-where &rest what)
   (if (cdr what)
@@ -467,11 +483,6 @@ Example:
 :END:
 
 ** simple stuff
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun chgrp(group file-name)
-  (= 0 (call-process "chgrp" nil nil nil group file-name)))
-#+END_SRC
-
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))
@@ -510,7 +521,7 @@ Position of an element in a list:
 I doubt if I should really package my logging system: probably it is not large enough.
 ** Short description
 This code prints log messages to ~*Messages*~ buffer and saves them to log file =~/.emacs.d/elisp.log=.
-Every message is formatted similarly to how it is done in =format= function.
+Every message is formatted similarly to how it is done by =format= function.
 ** Code
 Global variable =*log-level*= controls how much information should be logged: the (default) zero value means
 that all types of log-messages (:debug :warning :info :error) should be logged (saved);
@@ -558,9 +569,16 @@ The main logging function:
 		    fstr)
 	    (cons (symbol-name level) args))))
       (file-acc-push (apply #'format log-msg))
-      (apply #'message log-msg))))
+      (apply #'message log-msg)) nil))
 #+END_SRC
-Its typical usage example is: =(clog :info "z=%d" 3)=
+where I inserted =nil= at the end just for convenience, since I often use
+=clog= for error messages:
+#+BEGIN_SRC emacs-lisp
+(if (we-got-problems)
+(clog :error "we've got %d problems!" 1000)
+(the-rest-of-code))
+#+END_SRC
+← in case of "problems" I want this code block to return =nil=.
 
 Let us not forget to flush the log
 #+BEGIN_SRC emacs-lisp :tangle generated/logging.el
@@ -572,7 +590,3 @@ before quitting emacs:
 #+BEGIN_SRC emacs-lisp :tangle generated/logging.el
 (add-hook 'kill-emacs-hook 'on-emacs-exit)
 #+END_SRC
-* to do
-1. Package the logging system?
-2. The rest of this project does not deserve packaging sice it is too much focused on my writing style;
-   However, I can and must write the code allowing easy usage (by downloading) this project without packaging it.

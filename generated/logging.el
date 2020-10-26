@@ -34,7 +34,7 @@
                     fstr)
             (cons (symbol-name level) args))))
       (file-acc-push (apply #'format log-msg))
-      (apply #'message log-msg))))
+      (apply #'message log-msg)) nil))
 
 (defun on-emacs-exit()
   (clog :debug "flushing comments before quiting emacs")

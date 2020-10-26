@@ -2,10 +2,7 @@
 
 ;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
 (defun chgrp(group file-name)
-  (let (process (counter 300) (buffer (generate-new-buffer " *chgrp*")))
-    (setf process (apply #'start-process "cloud-chgrp" buffer "chgrp" (list group file-name)))
-    (while (and (> counter 0) (eq (process-status process) 'run))
-      (decf counter) (sleep-for 0.1))))
+  (= 0 (call-process "chgrp" nil nil nil group file-name)))
 
 (unless (functionp 'gensym)
 (let ((counter 0))
