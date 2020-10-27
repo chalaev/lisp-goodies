@@ -6,13 +6,14 @@
 #+KEYWORDS: emacs, elisp, macros, functions
 
 *Note*:
-evaluation results are important part of this file, but =github= org-parser does not show them.
-Open this file in ~emacs~ to see them.
+Evaluation results are important part of this file, but =github= org-parser does not show them.
+(BTW [[https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org][notabug does show them]] although unformatted.)
+Consider opening this file in ~emacs~ instead of watching it online.
 
 * emacs configuration in ~/.emacs
 You probably want to adjust this code to your needs before pasting it into your =~/.emacs=:
 #+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
-;; Generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
+;; Generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
 ;; See explanations therein. Edit this code before using it.
 
 (defun barename (FN)
@@ -59,19 +60,21 @@ The following line is equivalent to =chmod a-x FN=:
 #+END_SRC
 so they are not backuped.
 
-* short pieces of code
-** chgrp
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
-;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
-(defun chgrp(group file-name)
-  (= 0 (call-process "chgrp" nil nil nil group file-name)))
+* replacing cl.el
+Just following Stallman's advice, I try to avoid using =cl.el=;
+=generated/cl.el= will be my (incomplete for now) replacement for  =cl.el=
+to be loaded as follows:
+#+BEGIN_SRC emacs-lisp
+(unless (functionp 'gensym)
+  (load "generated/cl.el"))
 #+END_SRC
-See also =dired-do-chown=.
+
+*Problem:* I am not sure if eliminating =cl.el= really makes sence because
+apparently it is widely used; for example, =M-x org-babel-tangle= uses =cl.el= (although does not require it).
 
 ** gensym
-Actually =gensym= is defined in =cl.el= but I prefer to avoid using it; so let me write my own =gensym=:
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(unless (functionp 'gensym)
+#+BEGIN_SRC emacs-lisp :tangle generated/cl.el :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
 (let ((counter 0))
   (defun gensym(&optional starts-with)
     "for those who miss gensym from Common Lisp"
@@ -82,7 +85,7 @@ Actually =gensym= is defined in =cl.el= but I prefer to avoid using it; so let m
                (or (special-form-p sym) (functionp sym) (macrop sym) (boundp sym)))
         (incf counter))
       (incf counter)
-      sym))))
+      sym)))
 #+END_SRC
 =gensym= is used in macros, e.g.
 #+BEGIN_SRC emacs-lisp :results drawer
@@ -96,11 +99,101 @@ Actually =gensym= is defined in =cl.el= but I prefer to avoid using it; so let m
 (let ((a3 0)) (1+ a3))
 :END:
 
+** find
+#+BEGIN_SRC emacs-lisp :tangle generated/cl.el
+(defun find(item seq &optional key test)
+  (when seq
+  (let ((test (or test #'=)))
+    (when-let ((CS (car seq)))
+      (if-let ((found (funcall test
+			       item
+			       (if key (funcall key CS) CS))))
+	  CS
+	(find item (cdr seq) key test))))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :results drawer
+(find 3 '( 1 2 3 4 5))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+3
+:END:
+
+#+BEGIN_SRC emacs-lisp :results drawer
+(find 4 '((1 2) (3 4) (5 6)) #'cadr)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(3 4)
+:END:
+
+** decf and incf
+#+BEGIN_SRC emacs-lisp :tangle generated/cl.el
+(unless (or (boundp 'decf) (functionp 'decf) (macrop 'decf))
+(defmacro decf (var &optional amount)
+  (unless amount (setf amount 1))
+  `(setf ,var (- ,var ,amount))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/cl.el
+(unless (or (boundp 'incf) (functionp 'incf) (macrop 'incf))
+(defmacro incf (var &optional amount)
+  (unless amount (setf amount 1))
+  `(setf ,var (+ ,var ,amount))))
+#+END_SRC
+
+** pos
+Position of an element in a list:
+#+BEGIN_SRC emacs-lisp :tangle generated/cl.el
+(defun pos (el ll)
+  (let ((i 0) r)
+  (dolist (e ll r)
+    (if (eql e el)
+	(setf r i)
+      (incf i)))))
+#+END_SRC
+
+** flet
+It uses =macrolet= which is also defined in  =cl.el= :)
+
+#+BEGIN_SRC emacs-lisp :tangle generated/cl.el
+(defmacro flet(fun-defs &rest body)
+(let ((GSs (mapcar #'(lambda(FD) (cons (car FD) (gensym))) fun-defs)))
+`(let ,(mapcar #'(lambda(FD)
+(list (cdr (assoc (car FD) GSs))
+`(lambda ,(cadr FD) ,@(cddr FD)))) fun-defs)
+(macrolet ,(mapcar #'(lambda(FD)
+(list (car FD) (cadr FD) `(funcall ,(cdr (assoc (car FD) GSs)) ,@(cadr FD)))) fun-defs)
+ ,@body))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :results drawer
+(print (macroexpand-1 '(flet ((f1(x) (1+ x)) (f2(x) (1- x)))
+(+ 1 2 (f1 3))
+(* 1 2 (f2 3)))))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(let ((G38 (lambda (x) (1+ x)))
+      (G39 (lambda (x) (1- x))))
+(macrolet ((f1 (x) (funcall G38 x)) 
+           (f2 (x) (funcall G39 x)))
+ (+ 1 2 (f1 3))
+ (* 1 2 (f2 3))))
+:END:
+
+To be improved: variable names in =macrolet= should be generated by =gensym=.
+
+* short pieces of code
 ** case=
 ~case=~ is not identical to =case= from =cl.el=:
 it uses integer equality (=) as a test function:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
-;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
+;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
 (defmacro case= (var &rest cases)
   "case with integer equality (=) as a test function"
   (let ((v (gensym "v")))
@@ -140,6 +233,14 @@ Another example is also self-explanatory:
 :RESULTS:
 choice-2
 :END:
+
+** chgrp
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
+(defun chgrp(group file-name)
+  (= 0 (call-process "chgrp" nil nil nil group file-name)))
+#+END_SRC
+See also =dired-do-chown=.
 
 ** when-let
 =when-let= is one of my most-used macros:
@@ -487,29 +588,6 @@ Example:
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))
 #+END_SRC
-=decf= and =incf= are defined in ~cl.el~ so let us not redefine them if ~cl.el~ is loaded:
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(unless (or (boundp 'decf) (functionp 'decf) (macrop 'decf))
-(defmacro decf (var &optional amount)
-  (unless amount (setf amount 1))
-  `(setf ,var (- ,var ,amount))))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(unless (or (boundp 'incf) (functionp 'incf) (macrop 'incf))
-(defmacro incf (var &optional amount)
-  (unless amount (setf amount 1))
-  `(setf ,var (+ ,var ,amount))))
-#+END_SRC
-Position of an element in a list:
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun pos (el ll)
-  (let ((i 0) r)
-  (dolist (e ll r)
-    (if (eql e el)
-	(setf r i)
-      (incf i)))))
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun firstN(lista N)
@@ -527,7 +605,7 @@ Global variable =*log-level*= controls how much information should be logged: th
 that all types of log-messages (:debug :warning :info :error) should be logged (saved);
 the value 3 means that only error messages (marked with :error) will be logged:
 #+BEGIN_SRC emacs-lisp :tangle generated/logging.el :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
-;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
+;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
 (unless (boundp '*log-level*) (defvar *log-level* 0))
 (unless (boundp '*emacs-d*) (defvar *emacs-d* (concat (getenv "HOME") "/.emacs.d/")))
 #+END_SRC
@@ -551,7 +629,7 @@ and once in a while (when the number of queued messages >30 or before quitting ~
       (append-to-file (point-min) (point-max) (concat *emacs-d* "elisp.log")))
     (setf *file-acc-buffer* nil)))
 #+END_SRC
-Since we have no multi-threading in elisp, we do not need to introduce any lock functions.
+Since we have [[https://www.emacswiki.org/emacs/EmacsLispLimitations][no multi-threading in elisp]], we do not need to introduce any lock functions.
 #+BEGIN_SRC emacs-lisp :tangle generated/logging.el
 (defun file-acc-push(msg)
   (push msg *file-acc-buffer*)

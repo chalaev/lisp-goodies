@@ -1,6 +1,6 @@
 ;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
-;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
+;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
 (defmacro case= (var &rest cases)
   "case with integer equality (=) as a test function"
   (let ((v (gensym "v")))
