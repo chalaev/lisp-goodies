@@ -2,12 +2,14 @@
 These are my eLisp macros and functions used in different projects.
 
 * Files
-1. ~functions.el~ contains functions that I almost for sure will need in 3+ projects.
-2. ~macros.el~ simplifies my eLisp code.
-3. ~logging.el~ is a simple logging system; used mainly for debugging purposes.
+1. [[file:functions.el][functions.el]] contains functions that I almost for sure will need in 3+ projects.
+2. [[file:macros.el][macros.el]] simplifies my eLisp code.
+3. [[file:logging.el][logging.el]] is a simple logging system; used mainly for debugging purposes.
+4. [[file:dot.emacs][dot.emacs]] is (almost) the copy of my =~/.emacs=
+5. [[file:cl.el][cl.el]] will probably be used some day as a replacement for the standard ~cl.el~.
 
-The files ~functions.el~, ~macros.el~, ~logging.el~, and ~examples.el~ in the ~generated/~ folder are only included for convenience
-and can be easilly (re)generated from ~goodies.org~ using =M-x org-babel-tangle= in =emacs= or just =make=.
+The files [[file:functions.el][functions.el]], [[file:macros.el][macros.el]], [[file:logging.el][logging.el]], [[file:dot.emacs][dot.emacs]], and [[file:cl.el][cl.el]] in the ~generated/~ folder are only included for convenience
+and can be easilly (re)generated from [[file:goodies.org][goodies.org]] using =M-x org-babel-tangle= in =emacs= or just =make=.
 
 * Support
 You can [[https://liberapay.com/shalaev/donate][support]] this project.
