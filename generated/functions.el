@@ -42,7 +42,7 @@
      (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll))))))
 
 (defun parse-date (str)
-  (mapcar 'string-to-number 
+  (mapcar 'string-to-number
 	  (cond
  ((string-match "\\([0-9]\\{4\\}\\)[/-]\\([0-9][0-9]\\)[/-]\\([0-9][0-9]\\)" str) (mapcar #'(lambda (x) (match-string x str)) '(3 2 1)))
  ((string-match "\\([0-9][0-9]\\)[/-]\\([0-9][0-9]\\)[/-]\\([0-9]\\{4\\}\\)" str) (mapcar #'(lambda (x) (match-string x str)) '(2 1 3)))
