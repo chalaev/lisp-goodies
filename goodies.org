@@ -380,6 +380,7 @@ Sometimes I need slightly changed versions of =if-let=:
       ,(cons 'progn (cdr body))
     ,(car body)))
 #+END_SRC
+
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro ifn-set (vars &rest body)
   `(if-set ,vars
@@ -467,8 +468,6 @@ Sometimes I need slightly changed versions of =if-let=:
 ** needs
 New =needs= macro is gradually replacing =when-let=:
 
-2020-11-01 to be updated
-
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro needs (vardefs &rest body)
   "unifying when-let and if-let"
@@ -542,7 +541,7 @@ setting the value of a global one instead:
 	  ,(caddr vardef))
       `(when-set (,(car vardefs))
 	   ,(if (cdr vardefs)
-	       (macroexpand-1 `(needs ,(cdr vardefs) ,@body))
+	       (macroexpand-1 `(needs-set ,(cdr vardefs) ,@body))
 	      (cons 'progn body))))))
 #+END_SRC
 
@@ -560,7 +559,7 @@ Example #1:
 (if-set ((x (f 1))) (if-set ((y (g x))) (progn (message let's rock) (- x y)) (message did not set y)) (message did not set x))
 :END:
 
-← and here is the formatted result:
+and here is the formatted result:
 #+BEGIN_SRC emacs-lisp
 (if-set ((x (f 1)))
   (if-set ((y (g x)))
@@ -571,10 +570,10 @@ Example #1:
   (message "did not set x"))
 #+END_SRC
 
-Example #2:
+Example #2 (from the [[https://github.com/chalaev/cloud][cloud project]]):
 #+BEGIN_SRC emacs-lisp :results drawer
-(print (macroexpand-1 (needs-set
-  ((conf (read-conf (local/config)))
+(print (macroexpand-1 '(needs-set
+  ((conf (read-conf* (local/config)))
    (remote/files (cdr (assoc "remote/files" conf)) (clog :error "specify 3-symbol contents name (remote/files) in %s" (local/config)))
    (N-CPU-cores (string-to-number
  (or
@@ -582,8 +581,25 @@ Example #2:
  (clog :warning "specify number-of-CPU-cores in %s" (local/config)
  "1"))))
    (password (cdr (assoc "password" conf)) (clog :error "specify password in %s" (local/config)))
-   (remote-dir (cdr (assoc "remote-directory" conf))))
-conf)
+   (remote-dir (cdr (assoc "remote-directory" conf)) (clog :error "specify remote-directory in %s" (local/config))))
+conf)))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(when-set ((conf (read-conf* (local/config)))) (if-set ((remote/files (cdr (assoc remote/files conf)))) (when-set ((N-CPU-cores (string-to-number (or (cdr (assoc number-of-CPU-cores conf)) (clog :warning specify number-of-CPU-cores in %s (local/config) 1))))) (if-set ((password (cdr (assoc password conf)))) (if-set ((remote-dir (cdr (assoc remote-directory conf)))) (progn conf) (clog :error specify remote-directory in %s (local/config))) (clog :error specify password in %s (local/config)))) (clog :error specify 3-symbol contents name (remote/files) in %s (local/config))))
+:END:
+and here is the formatted result:
+#+BEGIN_SRC emacs-lisp
+(when-set ((conf (read-conf* (local/config))))
+  (if-set ((remote/files (cdr (assoc remote/files conf))))
+    (when-set ((N-CPU-cores (string-to-number (or (cdr (assoc number-of-CPU-cores conf)) (clog :warning specify number-of-CPU-cores in %s (local/config) 1)))))
+      (if-set ((password (cdr (assoc password conf))))
+        (if-set ((remote-dir (cdr (assoc remote-directory conf))))
+	  (progn conf)
+	  (clog :error specify remote-directory in %s (local/config)))
+	(clog :error specify password in %s (local/config))))
+    (clog :error specify 3-symbol contents name (remote/files) in %s (local/config))))
 #+END_SRC
 
 ** email
