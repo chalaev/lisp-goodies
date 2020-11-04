@@ -1,4 +1,4 @@
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; Generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
 ;; See explanations therein. Edit this code before using it.
 

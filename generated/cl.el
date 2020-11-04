@@ -1,4 +1,4 @@
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
 (let ((counter 0))
   (defun gensym(&optional starts-with)
