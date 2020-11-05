@@ -228,9 +228,12 @@ choice-2
 :END:
 
 ** case-let
+As of 2020-11-04 I think that small convenience due to slight code reduction does not compensate new symbol introduction,
+so =case-let= remains unused for now.
+
 Sometimes we may want to access the let-variable name generated in =case*=;
 so we define =case-let= which is only a slightly modified version of =case*=:
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+#+BEGIN_SRC emacs-lisp
 (defmacro case-let (let-var expr test &rest cases)
   "case* with let expriable named by the user"
     `(let ((,let-var ,expr))
@@ -313,7 +316,7 @@ Later I wrote [[needs]] which is more general than =when-let=, and can replace i
 Sometimes instead of =when-let= I use somewhat similar =when-set= macro.
 =when-set= is similar to =when-let= except for that it uses existing global variables instead of creating local ones.
 
-Note that the value of the global variable will *not* be set to ~nil~.
+Note that global variable values will *not* be set to ~nil~.
 
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro when-set (vars &rest body)
@@ -546,12 +549,12 @@ it has an optional third argument – a form to be evaluated in case the variabl
 #+BEGIN_SRC emacs-lisp
 (let ((x (f 1)))
   (if x
-      (let ((y (g x)))
-	(if y
-	    (progn
-	      (message "let's rock")
-	      (- x y))
-	  (message "could not define y")))
+    (let ((y (g x)))
+      (if y
+        (progn
+	  (message "let's rock")
+	  (- x y))
+	(message "could not define y")))
     (message could "not define x")))
 #+END_SRC
 
@@ -800,33 +803,31 @@ Example:
 :END:
 
 ** directory-lock
-=directory-lock= attempts to create directory =locked-dir=.
+=(directory-lock locked-dir by body...)= attempts to create directory =locked-dir=.
+(Linux kernel is made in such a way, that if several processes are simultaneously trying to create nonexistent directory, *only one*
+of them succeeds.)
 
-If the subdirectory was sucessfully created,
-1. file "by" is created there containing the string ~by~, and
+If the directory was sucessfully created,
+1. file "by" is created inside it containing the string ~by~, and
 2. forms ~body~ are evaluated.
 
 =directory-lock= returns =cons=; its =car= is ~t~ in case
 all =directory-lock= operations went through successfully:
 the directory was successfully locked and later unlocked;
-in this case, =cdr= contains the result of ~body~ evaluation.
+in this case, =(cdr (directory-lock ...))= contains the result of ~body~ evaluation.
 
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro directory-lock(locked-dir by &rest body)
-(let ((LD0 (gensym "ld0-")) (LD1 (gensym "ld1-")) (lock-file (gensym "lf")) (mkdir (gensym "md")) (result (gensym "r")) (unlock (gensym "u")))
-#+END_SRC
-Adding slash symbol at the end of =locked-dir= if necessary:
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
-`(let* ((,LD0 ,locked-dir)
-        (,LD1 (if (= ?/ (aref (reverse ,LD0) 0)) ,LD0 (concat ,LD0 "/")))
-        (,lock-file (concat ,LD1 "by"))
-        (,mkdir (safe-mkdir ,LD1)))
-  (ifn (car ,mkdir) (cons nil ,mkdir)
+(let ((LD (gensym "ld")) (lock-file (gensym "lf")) (mkdir (gensym "md")) (result (gensym "r")) (unlock (gensym "u")))
+`(let* ((,LD (file-name-as-directory ,locked-dir))
+        (,lock-file (concat ,LD "by"))
+        (,mkdir (safe-mkdir ,LD)))
+  (ifn (car ,mkdir) (cons nil (cons :lock ,mkdir))
   (write-region ,by nil ,lock-file)
   (let ((,result (progn ,@body)))
-    (if-let ((,unlock (and (safe-delete-file ,lock-file) (safe-delete-dir ,LD1))))
+    (if-let ((,unlock (and (safe-delete-file ,lock-file) (safe-delete-dir ,LD))))
       (cons t ,result)
-      (cons nil (cons ,unlock ,result))))))))
+      (cons nil (cons :unlock (cons ,unlock ,result)))))))))
 #+END_SRC
 
 If something went wrong, =(car (directory-lock ...))= is =nil=,
@@ -843,21 +844,20 @@ Example – locking remote directory:
 
 #+RESULTS:
 :RESULTS:
-(let* ((ld0-58 /mnt/server/code-name) (ld1-59 (if (= 47 (aref (reverse ld0-58) 0)) ld0-58 (concat ld0-58 /))) (lf60 (concat ld1-59 by)) (md61 (safe-mkdir ld1-59))) (ifn (car md61) (cons nil md61) (write-region (system-name) nil lf60) (let ((r62 (progn (body-1) (body-2)))) (if-let ((u63 (and (safe-delete-file lf60) (safe-delete-dir ld1-59)))) (cons t result) (cons nil (cons u63 r62))))))
+(let* ((ld43 (file-name-as-directory /mnt/server/code-name)) (lf44 (concat ld43 by)) (md45 (safe-mkdir ld43))) (ifn (car md45) (cons nil (cons :lock md45)) (write-region (system-name) nil lf44) (let ((r46 (progn (body-1) (body-2)))) (if-let ((u47 (and (safe-delete-file lf44) (safe-delete-dir ld43)))) (cons t r46) (cons nil (cons :unlock (cons u47 r46)))))))
 :END:
 
 Formatted result:
 #+BEGIN_SRC
-(let* ((ld0-58 "/mnt/server/code-name")
-       (ld1-59 (if (= 47 (aref (reverse ld0-58) 0)) ld0-58 (concat ld0-58 "/")))
-       (lf60 (concat ld1-59 "by"))
-       (md61 (safe-mkdir ld1-59)))
-  (ifn (car md61) (cons nil md61)
-    (write-region (system-name) nil lf60)
-    (let ((r62 (progn (body-1) (body-2))))
-      (if-let ((u63 (and (safe-delete-file lf60) (safe-delete-dir ld1-59))))
-	  (cons t r62)
-	(cons nil (cons u63 r62))))))
+(let* ((ld43 (file-name-as-directory "/mnt/server/code-name"))
+       (lf44 (concat ld43 "by"))
+       (md45 (safe-mkdir ld43)))
+  (ifn (car md45) (cons nil (cons :lock md45))
+       (write-region (system-name) nil lf44)
+       (let ((r46 (progn (body-1) (body-2))))
+	 (if-let ((u47 (and (safe-delete-file lf44) (safe-delete-dir ld43))))
+	     (cons t r46)
+	   (cons nil (cons :unlock (cons u47 r46)))))))
 #+END_SRC
 
 ** simple stuff
@@ -889,7 +889,7 @@ It returns =cons=; its =car= is
   (if (file-exists-p dirname)
     (cons nil (if (file-directory-p dirname) :exists :file))
     (condition-case err
-        (progn (make-directory dirname) (list t))
+        (progn (make-directory dirname t) (list t))
       (file-already-exists (cons nil :strange))
       (file-error (cons nil :permission)))))
 #+END_SRC

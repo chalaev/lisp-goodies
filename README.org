@@ -2,13 +2,13 @@
 These are my eLisp macros and functions used in different projects.
 
 * Files
-1. [[file:generated/functions.el][functions.el]] contains functions that I almost for sure will need in 3+ projects.
+1. [[file:generated/functions.el][functions.el]] and [[file:generated/file-functions.el][file-functions.el]] contains functions that I almost for sure will need in 3+ projects.
 2. [[file:generated/macros.el][macros.el]] simplifies my eLisp code.
 3. [[file:generated/logging.el][logging.el]] is a simple logging system; used mainly for debugging purposes.
 4. [[file:generated/dot.emacs][dot.emacs]] is (almost) the copy of my =~/.emacs=
 5. [[file:generated/cl.el][cl.el]] will probably be used some day as a replacement for the standard ~cl.el~.
 
-The files [[file:generated/functions.el][functions.el]], [[file:generated/macros.el][macros.el]], [[file:generated/logging.el][logging.el]], [[file:generated/dot.emacs][dot.emacs]], and [[file:generated/cl.el][cl.el]] in the ~generated/~ folder are only included for convenience
+The files [[file:generated/functions.el][functions.el]], [[file:generated/file-functions.el][file-functions.el]], [[file:generated/macros.el][macros.el]], [[file:generated/logging.el][logging.el]], [[file:generated/dot.emacs][dot.emacs]], and [[file:generated/cl.el][cl.el]] in the ~generated/~ folder are only included for convenience
 and can be easilly (re)generated from [[file:goodies.org][goodies.org]] using =M-x org-babel-tangle= in =emacs= or just =make=.
 
 * Support

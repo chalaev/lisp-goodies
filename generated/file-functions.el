@@ -7,7 +7,7 @@
   (if (file-exists-p dirname)
     (cons nil (if (file-directory-p dirname) :exists :file))
     (condition-case err
-        (progn (make-directory dirname) (list t))
+        (progn (make-directory dirname t) (list t))
       (file-already-exists (cons nil :strange))
       (file-error (cons nil :permission)))))
 
