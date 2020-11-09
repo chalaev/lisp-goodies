@@ -11,5 +11,7 @@ These are my eLisp macros and functions used in different projects.
 The files [[file:generated/functions.el][functions.el]], [[file:generated/file-functions.el][file-functions.el]], [[file:generated/macros.el][macros.el]], [[file:generated/logging.el][logging.el]], [[file:generated/dot.emacs][dot.emacs]], and [[file:generated/cl.el][cl.el]] in the ~generated/~ folder are only included for convenience
 and can be easilly (re)generated from [[file:goodies.org][goodies.org]] using =M-x org-babel-tangle= in =emacs= or just =make=.
 
+* License
+This app released under [[https://mit-license.org/][MIT license]].
 * Support
 You can [[https://liberapay.com/shalaev/donate][support]] this project.

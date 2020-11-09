@@ -9,8 +9,8 @@ generated/macros.el: goodies.org
 	emacsclient -e '(org-babel-tangle-file "goodies.org")'
 	-chgrp tmp generated/*
 	-chmod a-x generated/*
-	-rsync -au generated/* ../cloud/goodies/
-
+	-rsync -au generated/*.el ../cloud/goodies/
+	-rsync -au generated/*.lisp ../simple-log/goodies/
 clean:
 	-rm `find . -type f -group tmp`
 
