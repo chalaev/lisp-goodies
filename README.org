@@ -12,6 +12,6 @@ The files [[file:generated/functions.el][functions.el]], [[file:generated/file-f
 and can be easilly (re)generated from [[file:goodies.org][goodies.org]] using =M-x org-babel-tangle= in =emacs= or just =make=.
 
 * License
-This app released under [[https://mit-license.org/][MIT license]].
+This code is released under [[https://mit-license.org/][MIT license]].
 * Support
 You can [[https://liberapay.com/shalaev/donate][support]] this project.

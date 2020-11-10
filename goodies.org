@@ -997,8 +997,8 @@ Non-recursive directory removal.
 
 Its return result is similar to that of =safe-delete-file= and =safe-mkdir=:
 #+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
-(defun safe-delete-dir (FN)
-  (condition-case err (progn (delete-directory FN) (list t))
+(defun safe-delete-dir (FN &optional recursive)
+  (condition-case err (progn (delete-directory FN recursive) (list t))
     (file-error (cons nil (error-message-string err)))))
 #+END_SRC
 
