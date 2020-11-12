@@ -61,3 +61,14 @@
   "returning first N elments of the list"
   (when (and (< 0 N) (car lista))
     (cons (car lista) (firstN (cdr lista) (1- N)))))
+
+(defvar *good-chars*
+(let ((forbidden-symbols '(?! ?@ ?# ?$ ?% ?& ?* ?\( ?\) ?+ ?= ?/ ?{ ?} ?\[ ?\] ?: ?\; ?< ?> ?_ ?- ?| ?, ?. ?` ?' ?~ ?^ ?\")))
+    (append
+     (loop for i from ?A to ?Z unless (member i forbidden-symbols) collect i)
+     (loop for i from ?a to ?z unless (member i forbidden-symbols) collect i)
+     (loop for i from ?0 to ?9 unless (member i forbidden-symbols) collect i)))
+"safe characters for file names")
+(defun rand-str(N)
+  (apply #'concat
+     (loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))

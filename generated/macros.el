@@ -1,5 +1,17 @@
+(defmacro directory-lock(locked-dir by &rest body)
+(let ((LD (gensym "LD")) (lock-file (gensym "LF")) (mkdir (gensym "MD")) (result (gensym "r")) (unlock (gensym "u")))
+`(let* ((,LD (file-name-as-directory ,locked-dir))
+        (,lock-file (concat ,LD "by"))
+        (,mkdir (safe-mkdir ,LD)))
+  (ifn (car ,mkdir) (cons nil (cons :lock ,mkdir))
+  (write-region ,by nil ,lock-file)
+  (let ((,result (progn ,@body)))
+    (if-let ((,unlock (and (rm ,lock-file) (safe-delete-dir ,LD))))
+      (cons t ,result)
+      (cons nil (cons :unlock (cons ,unlock ,result)))))))))
+
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
+;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
 (defmacro case* (expr test &rest cases)
   "case with arbitrary test function"
   (let ((v (gensym "v")))
@@ -118,17 +130,8 @@
 	       (macroexpand-1 `(needs-set ,(cdr vardefs) ,@body))
 	      (cons 'progn body))))))
 
-(defmacro directory-lock(locked-dir by &rest body)
-(let ((LD (gensym "ld")) (lock-file (gensym "lf")) (mkdir (gensym "md")) (result (gensym "r")) (unlock (gensym "u")))
-`(let* ((,LD (file-name-as-directory ,locked-dir))
-        (,lock-file (concat ,LD "by"))
-        (,mkdir (safe-mkdir ,LD)))
-  (ifn (car ,mkdir) (cons nil (cons :lock ,mkdir))
-  (write-region ,by nil ,lock-file)
-  (let ((,result (progn ,@body)))
-    (if-let ((,unlock (and (safe-delete-file ,lock-file) (safe-delete-dir ,LD))))
-      (cons t ,result)
-      (cons nil (cons :unlock (cons ,unlock ,result)))))))))
-
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))
+
+(defmacro end-push (what where)
+  `(push ,what (cdr (last ,where))))

@@ -10,7 +10,8 @@ generated/macros.el: goodies.org
 	-chgrp tmp generated/*
 	-chmod a-x generated/*
 	-rsync -au generated/*.el ../cloud/goodies/
-	-rsync -au generated/*.lisp ../simple-log/goodies/
+	-rsync -au generated/macros.lisp ../simple-log/goodies/
+	-rsync -au generated/*.lisp ../signal-handler/goodies/
 clean:
 	-rm `find . -type f -group tmp`
 

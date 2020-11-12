@@ -1,5 +1,5 @@
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; Generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
+;; Generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
 ;; See explanations therein. Edit this code before using it.
 
 (defun barename (FN)
@@ -27,3 +27,7 @@ x)))))
 (set-file-modes FN (logand #o666 (perms-from-str (nth 8 (file-attributes FN 'string)))))
     (chgrp "tmp" FN)))
 (add-hook 'org-babel-post-tangle-hook #'after-tangle)
+
+(defun run-init-block ()
+  (org-babel-goto-named-src-block "init")
+  (org-babel-execute-src-block))

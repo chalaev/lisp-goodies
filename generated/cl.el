@@ -1,5 +1,5 @@
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
+;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
 (let ((counter 0))
   (defun gensym(&optional starts-with)
     "for those who miss gensym from Common Lisp"
