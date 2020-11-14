@@ -177,9 +177,9 @@ Common Lisp code is more advanced than the elisp one:
 
 In case we could not unlock the directory, let us not go into the details:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.lisp
-(ifn (car (rm ,lock-file))) (cons nil (cons :file ,result))
-(ifn (car (rmdir ,LD))) (cons nil (cons :dir ,result))
-(cons t ,result)))))))
+(ifn (car (rm ,lock-file)) (cons nil (cons :file ,result))
+(ifn (car (rmdir ,LD)) (cons nil (cons :dir ,result))
+(cons t ,result)))))))))
 #+END_SRC
 
 Example: 
@@ -193,14 +193,12 @@ Formatted result:
 (LET* ((#:|ld490| (UIOP/PATHNAME:ENSURE-DIRECTORY-PATHNAME "/mnt/server/code-name"))
        (#:|md492| (SAFE-MKDIR #:|ld490|)))
   (IFN (CAR #:|md492|) (CONS NIL (CONS :LOCK (CDR #:|md492|)))
-       (LET ((#:LF491 (MERGE-PATHNAMES #P"by" #:|ld490|)))
-         (ECHO-TO-FILE #:LF491 (SYSTEM-NAME))
-         (LET ((#:|r493| (PROGN (BODY-1) (BODY-2))))
-           (IFN (CAR (RM #:LF491)))
-           (CONS NIL (CONS :FILE #:|r493|))
-           (IFN (CAR (RMDIR #:|ld490|)))
-           (CONS NIL (CONS :DIR #:|r493|))
-           (CONS T #:|r493|)))))
+   (LET ((#:LF491 (MERGE-PATHNAMES #P"by" #:|ld490|)))
+     (ECHO-TO-FILE #:LF491 (SYSTEM-NAME))
+     (LET ((#:|r493| (PROGN (BODY-1) (BODY-2))))
+       (IFN (CAR (RM #:LF491)) (CONS NIL (CONS :FILE #:|r493|))
+        (IFN (CAR (RMDIR #:|ld490|)) (CONS NIL (CONS :DIR #:|r493|))
+         (CONS T #:|r493|)))))))
 #+END_SRC
 
 * remo & drop
