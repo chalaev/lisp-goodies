@@ -1,19 +1,20 @@
 * Description
 Useful Emacs Lisp and Common Lisp macros and functions.
 
-(For me "Common Lisp" means "sbcl"; part of the CL-code will probably not work in other CL dialicts.)
+(For me "Common Lisp" means "sbcl"; part of the CL-code will probably not work in other CL dialects.)
 
 * Files
 1. [[file:generated/functions.el][functions.el]], [[file:generated/file-functions.el][file-functions.el]], and [[file:generated/file-functions.lisp][file-functions.lisp]] contains functions that I almost for sure will need in 3+ projects.
 2. [[file:generated/macros.el][macros.el]] and [[file:generated/macros.lisp][macros.lisp]] simplify my lisp code.
-3. [[file:generated/logging.el][logging.el]] is a simple emacs logging system; used mainly for debugging purposes.
+3. [[file:generated/logging.el][logging.el]] is a simple emacs logging system.
 4. [[file:generated/dot.emacs][dot.emacs]] is (almost) a copy of my =~/.emacs=
 5. [[file:generated/cl.el][cl.el]] will probably be used some day as a replacement for the standard ~cl.el~.
 
-The files [[file:generated/functions.el][functions.el]], [[file:generated/file-functions.el][file-functions.el]], [[file:generated/file-functions.lisp][file-functions.lisp]], [[file:generated/macros.el][macros.el]], [[file:generated/macros.lisp][macros.lisp]], [[file:generated/logging.el][logging.el]], [[file:generated/dot.emacs][dot.emacs]], and [[file:generated/cl.el][cl.el]] in the ~generated/~ folder are only included for convenience
-and can be easilly (re)generated from [[file:goodies.org][goodies.org]] using =M-x org-babel-tangle= in =emacs= or just =make=.
+The files in the ~generated/~ folder are only included for convenience and can be easilly (re)generated from [[file:goodies.org][goodies.org]] using =M-x org-babel-tangle= in =emacs= or just =make=.
 
 * License
 This code is released under [[https://mit-license.org/][MIT license]].
 * Support
-You can [[https://liberapay.com/shalaev/donate][support]] this project.
+You can support this project by sending
+1. comments/questions to [[mailto:oleg@chalaev.com][oleg@chalaev.com]] and
+2. donations via [[https://liberapay.com/shalaev/donate][liberapay]] or [[https://www.paypal.com/paypalme/chalaev][paypal]].

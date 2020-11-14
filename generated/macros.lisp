@@ -28,22 +28,18 @@
   `(concatenate 'string ,@strs))
 
 (defmacro directory-lock(locked-dir by &rest body)
-(let ((LD (gensym "ld")) (lock-file (gensym "lf")) (mkdir (gensym "md")) 
-      (result (gensym "r")) (unlock (gensym "u")) (by-file (gensym "BF")))
+(let ((LD (gensym "ld")) (lock-file (gensym "LF")) (mkdir (gensym "md")) 
+      (result (gensym "r")))
 `(let* ((,LD (uiop:ensure-directory-pathname  ,locked-dir))
         (,mkdir (safe-mkdir ,LD)))
-  (ifn (car ,mkdir) (cons nil (cons :lock ,mkdir))
-(let ((,by-file (merge-pathnames #p"by" ,LD)))
-  (echo-to-file ,by-file by)
+  (ifn (car ,mkdir) (cons nil (cons :lock (cdr ,mkdir)))
+(let ((,lock-file (merge-pathnames #p"by" ,LD)))
+  (echo-to-file ,lock-file ,by)
   (let ((,result (progn ,@body)))
 
-(ifn (car (rm ,by-file))) (cons nil (cons :file ,result))
+(ifn (car (rm ,lock-file))) (cons nil (cons :file ,result))
 (ifn (car (rmdir ,LD))) (cons nil (cons :dir ,result))
 (cons t ,result)))))))
-
-(macroexpand-1 '(directory-lock "/mnt/server/code-name" (system-name)
-  (body-1) (body-2)))
-
 
 (defmacro cond-let (&rest conds)
   "cond with let"

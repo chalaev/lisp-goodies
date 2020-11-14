@@ -23,3 +23,9 @@
                         :direction :output
                         :if-does-not-exist :create)
 (format stream "~a~%" str)))
+
+(defun merge-paths(root-dir &rest sub-dirs)
+  (reduce
+   #'(lambda(DN FN) (merge-pathnames FN (uiop:ensure-directory-pathname DN)))
+   sub-dirs
+   :initial-value root-dir))

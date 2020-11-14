@@ -1,3 +1,12 @@
+(defun remo (from-where &rest what)
+  (if (cdr what)
+      (remo
+       (apply #'remo (cons from-where (cdr what)))
+       (car what))
+ (remove (car what) from-where)))
+(defmacro drop (from-where &rest what)
+  `(setf ,from-where (remo ,from-where ,@what)))
+
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 (defun email (addr &optional subject body)
   "fast non-interactive way to send an email"
@@ -11,15 +20,6 @@
     (if (eql e el)
 	(setf r i)
       (incf i)))))
-
-(defun remo (from-where &rest what)
-  (if (cdr what)
-      (remo
-       (apply #'remo (cons from-where (cdr what)))
-       (car what))
- (remove (car what) from-where)))
-(defmacro drop (from-where &rest what)
-  `(setf ,from-where (remo ,from-where ,@what)))
 
 (defun perms-from-str (str)
 "parses file mode string into integer"

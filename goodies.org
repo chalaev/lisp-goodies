@@ -164,18 +164,20 @@ Formatted result:
 Common Lisp code is more advanced than the elisp one:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.lisp
 (defmacro directory-lock(locked-dir by &rest body)
-(let ((LD (gensym "ld")) (lock-file (gensym "lf")) (mkdir (gensym "md")) 
-      (result (gensym "r")) (unlock (gensym "u")) (by-file (gensym "BF")))
+(let ((LD (gensym "ld")) (lock-file (gensym "LF")) (mkdir (gensym "md")) 
+      (result (gensym "r")))
 `(let* ((,LD (uiop:ensure-directory-pathname  ,locked-dir))
         (,mkdir (safe-mkdir ,LD)))
-  (ifn (car ,mkdir) (cons nil (cons :lock ,mkdir))
-(let ((,by-file (merge-pathnames #p"by" ,LD)))
-  (echo-to-file ,by-file by)
+  (ifn (car ,mkdir) (cons nil (cons :lock (cdr ,mkdir)))
+(let ((,lock-file (merge-pathnames #p"by" ,LD)))
+  (echo-to-file ,lock-file ,by)
   (let ((,result (progn ,@body)))
 #+END_SRC
+← requires =echo-to-file= from ~generated/file-functions.lisp~
+
 In case we could not unlock the directory, let us not go into the details:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.lisp
-(ifn (car (rm ,by-file))) (cons nil (cons :file ,result))
+(ifn (car (rm ,lock-file))) (cons nil (cons :file ,result))
 (ifn (car (rmdir ,LD))) (cons nil (cons :dir ,result))
 (cons t ,result)))))))
 #+END_SRC
@@ -188,15 +190,56 @@ Example:
 
 Formatted result:
 #+BEGIN_SRC lisp
-(LET* ((#:|ld855| (UIOP/PATHNAME:ENSURE-DIRECTORY-PATHNAME "/mnt/server/code-name"))
-       (#:|md857| (SAFE-MKDIR #:|ld855|)))
-     (IFN (CAR #:|md857|) (CONS NIL (CONS :LOCK #:|md857|))
-      (LET ((#:BF860 (MERGE-PATHNAMES #P"by" #:|ld855|)))
-        (ECHO-TO-FILE #:BF860 BY)
-        (LET ((#:|r858| (PROGN (BODY-1) (BODY-2))))
-          (IFN (CAR (RM #:BF860))) (CONS NIL (CONS :FILE #:|r858|))
-          (IFN (CAR (RMDIR #:|ld855|))) (CONS NIL (CONS :DIR #:|r858|))
-          (CONS T #:|r858|)))))
+(LET* ((#:|ld490| (UIOP/PATHNAME:ENSURE-DIRECTORY-PATHNAME "/mnt/server/code-name"))
+       (#:|md492| (SAFE-MKDIR #:|ld490|)))
+  (IFN (CAR #:|md492|) (CONS NIL (CONS :LOCK (CDR #:|md492|)))
+       (LET ((#:LF491 (MERGE-PATHNAMES #P"by" #:|ld490|)))
+         (ECHO-TO-FILE #:LF491 (SYSTEM-NAME))
+         (LET ((#:|r493| (PROGN (BODY-1) (BODY-2))))
+           (IFN (CAR (RM #:LF491)))
+           (CONS NIL (CONS :FILE #:|r493|))
+           (IFN (CAR (RMDIR #:|ld490|)))
+           (CONS NIL (CONS :DIR #:|r493|))
+           (CONS T #:|r493|)))))
+#+END_SRC
+
+* remo & drop
+Remo is a helper for =drop= macro which removes elements from an array:
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(defun remo (from-where &rest what)
+  (if (cdr what)
+      (remo
+       (apply #'remo (cons from-where (cdr what)))
+       (car what))
+ (remove (car what) from-where)))
+(defmacro drop (from-where &rest what)
+  `(setf ,from-where (remo ,from-where ,@what)))
+#+END_SRC
+Test:
+#+BEGIN_SRC emacs-lisp :results drawer
+(let ((ll '(1 2 3 4 5 6)))
+  (drop ll 2 4)
+  ll)
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(1 3 5 6)
+:END:
+
+For now CL code will be simpler:
+#+BEGIN_SRC lisp :tangle generated/functions.lisp
+(defun id(x) x)
+(defmacro drop-if (what from-where &key (key #'id) (test #'eql))
+  `(setf ,from-where (remove ,what ,from-where :key ,key :test ,test)))
+#+END_SRC
+
+#+BEGIN_SRC lisp
+(macroexpand-1 '(drop-if name hooks :key #'car :test #'string=))
+#+END_SRC
+results in
+#+BEGIN_SRC lisp
+(SETF HOOKS (REMOVE NAME HOOKS :KEY #'CAR :TEST #'STRING=))
 #+END_SRC
 
 * emacs lisp
@@ -866,30 +909,6 @@ Position of an element in a list:
       (incf i)))))
 #+END_SRC
 
-*** remo & drop
-Remo is a helper for =drop= macro which removes elements from an array:
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun remo (from-where &rest what)
-  (if (cdr what)
-      (remo
-       (apply #'remo (cons from-where (cdr what)))
-       (car what))
- (remove (car what) from-where)))
-(defmacro drop (from-where &rest what)
-  `(setf ,from-where (remo ,from-where ,@what)))
-#+END_SRC
-Test:
-#+BEGIN_SRC emacs-lisp :results drawer
-(let ((ll '(1 2 3 4 5 6)))
-  (drop ll 2 4)
-  ll)
-#+END_SRC
-
-#+RESULTS:
-:RESULTS:
-(1 3 5 6)
-:END:
-
 *** perms-from-str
 When I ask ~emacs~ to show me file's permissions, it provides a text string (e.g., "-rw-rw----") instead of a number.
 The following function produces a number from such a string:
@@ -1205,7 +1224,7 @@ T
 :END:
 
 #+BEGIN_SRC lisp :results drawer
-(macroexpand-1 '(iff 1 2 3 4)); +
+(macroexpand-1 '(iff 1 2 3 4))
 #+END_SRC
 
 #+RESULTS:
@@ -1271,7 +1290,7 @@ T
 – expected to work on SBCL only.
 
 *** echo-to-file
-#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.lisp
+#+BEGIN_SRC lisp :tangle generated/file-functions.lisp
 (defun echo-to-file (FN str)
 (with-open-file (stream FN
                         :direction :output
@@ -1279,3 +1298,11 @@ T
 (format stream "~a~%" str)))
 #+END_SRC
 
+*** merge-paths = generalized merge-pathnames
+#+BEGIN_SRC lisp :tangle generated/file-functions.lisp
+(defun merge-paths(root-dir &rest sub-dirs)
+  (reduce
+   #'(lambda(DN FN) (merge-pathnames FN (uiop:ensure-directory-pathname DN)))
+   sub-dirs
+   :initial-value root-dir))
+#+END_SRC
