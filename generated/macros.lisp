@@ -37,9 +37,9 @@
   (echo-to-file ,lock-file ,by)
   (let ((,result (progn ,@body)))
 
-(ifn (car (rm ,lock-file))) (cons nil (cons :file ,result))
-(ifn (car (rmdir ,LD))) (cons nil (cons :dir ,result))
-(cons t ,result)))))))
+(ifn (car (rm ,lock-file)) (cons nil (cons :file ,result))
+(ifn (car (rmdir ,LD)) (cons nil (cons :dir ,result))
+(cons t ,result)))))))))
 
 (defmacro cond-let (&rest conds)
   "cond with let"
