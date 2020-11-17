@@ -19,9 +19,10 @@
         (otherwise (cons :unknown (sb-posix:syscall-errno c))))))))
 
 (defun echo-to-file (FN str)
-(with-open-file (stream FN
-                        :direction :output
-                        :if-does-not-exist :create)
+  (with-open-file (stream FN
+    :if-exists :overwrite
+    :direction :output
+    :if-does-not-exist :create)
 (format stream "~a~%" str)))
 
 (defun merge-paths(root-dir &rest sub-dirs)
