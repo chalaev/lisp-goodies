@@ -133,5 +133,6 @@
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))
 
-(defmacro end-push (what where)
+(defmacro end-push* (what where)
+  "works only if 'where' is not nil"
   `(push ,what (cdr (last ,where))))

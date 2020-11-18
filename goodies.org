@@ -1151,8 +1151,15 @@ Example:
 
 There is probably some standard function or macro doing this:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
-(defmacro end-push (what where)
+(defmacro end-push* (what where)
+  "works only if 'where' is not nil"
   `(push ,what (cdr (last ,where))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(defun end-push (what where)
+"wrapper over end-push* macro"
+(if where (end-push* what where) (setf where (list what))))
 #+END_SRC
 
 ** file/directory fuctions

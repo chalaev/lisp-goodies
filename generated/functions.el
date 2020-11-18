@@ -72,3 +72,7 @@
 (defun rand-str(N)
   (apply #'concat
      (loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))
+
+(defun end-push (what where)
+"wrapper over end-push* macro"
+(if where (end-push* what where) (setf where (list what))))

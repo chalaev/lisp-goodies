@@ -4,7 +4,7 @@ Useful Emacs Lisp and Common Lisp macros and functions.
 (For me "Common Lisp" means "sbcl"; part of the CL-code will probably not work in other CL dialects.)
 
 * Files
-1. [[file:generated/functions.el][functions.el]], [[file:generated/file-functions.el][file-functions.el]], and [[file:generated/file-functions.lisp][file-functions.lisp]] contains functions,
+1. [[file:generated/functions.el][functions.el]], [[file:generated/file-functions.el][file-functions.el]], and [[file:generated/file-functions.lisp][file-functions.lisp]] contain functions,
 2. [[file:generated/macros.el][macros.el]] and [[file:generated/macros.lisp][macros.lisp]] simplify my lisp code,
 3. [[file:generated/logging.el][logging.el]] is a simple emacs logging system,
 4. [[file:generated/dot.emacs][dot.emacs]] is (almost) a copy of my =~/.emacs=, and
