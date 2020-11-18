@@ -1,3 +1,5 @@
+;; -*- mode: Lisp; -*-
+;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
 (defun safe-mkdir (dirname)
 (handler-case (cons t (sb-posix:mkdir dirname #o770))
   (sb-posix:syscall-error (c)

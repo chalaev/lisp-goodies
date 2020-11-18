@@ -1,3 +1,5 @@
+;; -*- mode: Lisp; -*-
+;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
 (defmacro when-let (vars &rest body)
   "when with let using stndard let-notation"
   (if (caar vars)
@@ -25,7 +27,7 @@
       (progn ,@body)
       ,ifno))
 
-(defmacro needs (vardefs &rest body)
+(defmacro needs(vardefs &rest body)
   "unifying when-let and if-let"
   (let ((vardef (car vardefs)))
     (if (and (listp vardef) (not (functionp (car vardef))))
@@ -45,8 +47,6 @@
 		      (list (macroexpand-1 `(needs ,(cdr vardefs) ,@body)))
 		    body)))))
 
-;; -*- mode: Lisp; -*-
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
 (defmacro iff (test-form then &rest else)
   "elisp-kind of if"
   (if (cdr else)
@@ -75,7 +75,7 @@
 (ifn (car (rmdir ,LD)) (cons nil (cons :dir ,result))
 (cons t ,result)))))))))
 
-(defmacro cond-let (&rest conds)
+(defmacro cond-let(&rest conds)
   "cond with let"
   (let ((c (car conds)) (r (cdr conds)))
     (if (equal (car c) 'otherwise) `(progn ,@(cdr c))

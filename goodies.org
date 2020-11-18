@@ -6,7 +6,7 @@
 #+LATEX_HEADER: \usepackage[letterpaper,hmargin={1.5cm,1.5cm},vmargin={1.3cm,2cm},nohead,nofoot]{geometry}
 #+KEYWORDS: emacs, elisp, common lisp, macros, functions
 
-* introduction
+* Introduction
 The following block is evaluated when this ~.org~ file is loaded:
 #+NAME: init
 #+BEGIN_SRC emacs-lisp :results output none
@@ -31,6 +31,24 @@ Notes:
 
 #+RESULTS: randstr
 : 4pCI.tmp
+
+I am tired of copying ~.lisp~ files to all of my projects, so let me package them.
+Since every lisper probably has his own "goodies", let me make this package unique by naming it "shalaev":
+#+BEGIN_SRC emacs-lisp :tangle generated/header.lisp
+;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
+(in-package :cl-user)
+(defpackage :shalaev
+  (:use :cl)
+  (:export
+#:iff #:ifn #:concat
+#:when-let
+#:if-let #:ifn-let #:cond-let
+#:needs
+#:merge-paths #:safe-mkdir :rmdir #:echo-to-file #:directory-lock
+#:drop-if))
+(in-package :shalaev)
+(declaim (optimize (speed 0) (safety 3) (debug 3)))
+#+END_SRC
 
 * when-let
 =when-let= is one of my most-used macros:
@@ -78,7 +96,8 @@ If we put =nil= instead of the variable name, no local varibale will be created 
 Later I wrote [[needs]] which is more general than =when-let=, and can replace it.
 
 CL code is the same:
-#+BEGIN_SRC lisp :tangle generated/macros.lisp
+#+BEGIN_SRC lisp :tangle generated/macros.lisp :shebang ";; -*- mode: Lisp; -*-"
+;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
 (defmacro when-let (vars &rest body)
   "when with let using stndard let-notation"
   (if (caar vars)
@@ -143,9 +162,9 @@ Usage example:
 
 Usage example:
 #+BEGIN_SRC lisp :results drawer
-(print (macroexpand-1 
+(macroexpand-1 
   '(if-let ((x 1) (y (1+ x)))
-     (+ x y) (- x y) (* x y))))
+     (+ x y) (- x y) (* x y)))
 #+END_SRC
 
 #+RESULTS:
@@ -209,7 +228,7 @@ New =needs= macro is gradually replacing =when-let=:
 #+END_SRC
 
 #+BEGIN_SRC lisp :tangle generated/macros.lisp
-(defmacro needs (vardefs &rest body)
+(defmacro needs(vardefs &rest body)
   "unifying when-let and if-let"
   (let ((vardef (car vardefs)))
     (if (and (listp vardef) (not (functionp (car vardef))))
@@ -384,7 +403,8 @@ result)
 
 In SBCL I must know if the directory =dirname= existed before I attempted to create it,
 so I have to use (low-level) [[https://github.com/sbcl/sbcl/blob/master/contrib/sb-posix/posix-tests.lisp][sb-posix:mkdir]] function:
-#+BEGIN_SRC lisp :tangle generated/file-functions.lisp
+#+BEGIN_SRC lisp :tangle generated/file-functions.lisp :shebang ";; -*- mode: Lisp; -*-"
+;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
 (defun safe-mkdir (dirname)
 (handler-case (cons t (sb-posix:mkdir dirname #o770))
   (sb-posix:syscall-error (c)
@@ -542,7 +562,8 @@ Test:
 :END:
 
 For now CL code will be simpler:
-#+BEGIN_SRC lisp :tangle generated/functions.lisp
+#+BEGIN_SRC lisp :tangle generated/functions.lisp :shebang ";; -*- mode: Lisp; -*-"
+;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
 (defun id(x) x)
 (defmacro drop-if (what from-where &key (key #'id) (test #'eql))
   `(setf ,from-where (remove ,what ,from-where :key ,key :test ,test)))
@@ -978,7 +999,7 @@ Formatted result:
 
 Common Lisp version is the same as elisp one:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.lisp
-(defmacro cond-let (&rest conds)
+(defmacro cond-let(&rest conds)
   "cond with let"
   (let ((c (car conds)) (r (cdr conds)))
     (if (equal (car c) 'otherwise) `(progn ,@(cdr c))
@@ -1297,8 +1318,7 @@ before quitting emacs:
 #+END_SRC
 * common lisp
 ** iff
-#+BEGIN_SRC lisp :tangle generated/macros.lisp :shebang ";; -*- mode: Lisp; -*-"
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
+#+BEGIN_SRC lisp :tangle generated/macros.lisp
 (defmacro iff (test-form then &rest else)
   "elisp-kind of if"
   (if (cdr else)

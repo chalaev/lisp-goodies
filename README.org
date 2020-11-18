@@ -3,12 +3,23 @@ Useful Emacs Lisp and Common Lisp macros and functions.
 
 (For me "Common Lisp" means "sbcl"; part of the CL-code will probably not work in other CL dialects.)
 
+* Quick start
+** Emacs Lisp code
+Copy [[file:generated][generated/]]*.el files into the directory where your ~emacs~ can find them and load them.
+** Common Lisp code
+There are two options:
+1. Copy-paste or load [[file:generated][generated/]]*.lisp into your projects, or
+2. =make= to package them and =(require :shalaev)= in your code.
+   (You might want to update your [[https://www.quicklisp.org/beta/][Quicklisp]] directory in ~Makefile~ before you =make=.)
+
 * Files
 1. [[file:generated/functions.el][functions.el]], [[file:generated/file-functions.el][file-functions.el]], and [[file:generated/file-functions.lisp][file-functions.lisp]] contain functions,
 2. [[file:generated/macros.el][macros.el]] and [[file:generated/macros.lisp][macros.lisp]] simplify my lisp code,
 3. [[file:generated/logging.el][logging.el]] is a simple emacs logging system,
 4. [[file:generated/dot.emacs][dot.emacs]] is (almost) a copy of my =~/.emacs=, and
-5. [[file:generated/cl.el][cl.el]] will probably be used some day as a replacement for the standard ~cl.el~.
+5. [[file:generated/cl.el][cl.el]] will probably be used some day as a replacement for the standard ~cl.el~,
+6. [[file:Makefile][Makefile]] is used by =make=,
+7. [[file:shalaev.asd][shalaev.asd]] describes the Common Lisp package created by =make= according to [[file:Makefile][Makefile]].
 
 The files in the ~generated/~ folder are only included for convenience and can be easilly (re)generated from [[file:goodies.org][goodies.org]] using =M-x org-babel-tangle= in =emacs= or just =make=.
 
