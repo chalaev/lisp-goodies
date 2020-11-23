@@ -29,9 +29,6 @@ Notes:
 (concat (rand-str 4) ".tmp")
 #+END_SRC
 
-#+RESULTS: randstr
-: 4pCI.tmp
-
 I am tired of copying ~.lisp~ files to all of my projects, so let me package them.
 Since every lisper probably has his own "goodies", let me make this package unique by naming it "shalaev":
 #+BEGIN_SRC emacs-lisp :tangle generated/header.lisp
@@ -40,12 +37,12 @@ Since every lisper probably has his own "goodies", let me make this package uniq
 (defpackage :shalaev
   (:use :cl)
   (:export
-#:iff #:ifn #:concat
-#:when-let
-#:if-let #:ifn-let #:cond-let
-#:needs
-#:merge-paths #:safe-mkdir :rmdir #:echo-to-file #:directory-lock
-#:drop-if))
+:iff :ifn :concat
+:when-let
+:if-let :ifn-let :cond-let
+:needs
+:merge-paths :safe-mkdir :rmdir :echo-to-file :directory-lock
+:drop-if))
 (in-package :shalaev)
 (declaim (optimize (speed 0) (safety 3) (debug 3)))
 #+END_SRC
@@ -78,6 +75,8 @@ and, if they are all non-nil, evalueates the body:
 :RESULTS:
 (let ((x 1)) (when x (let ((y (1+ x))) (when y (incf x y) (incf y x)))))
 :END:
+
+=when-let= defined here has the same functionality, as [[https://common-lisp.net/project/alexandria/draft/alexandria.html][alexandria:when-let*]].
 
 If we put =nil= instead of the variable name, no local varibale will be created for this entry:
 #+BEGIN_SRC emacs-lisp :results drawer
@@ -127,6 +126,8 @@ It is somewhat similar to =when-let=, but offers "else" clause:
 	   ,result
 	 ,@body))))
 #+END_SRC
+It has almost the same functionality, as [[https://common-lisp.net/project/alexandria/draft/alexandria.html][alexandria:if-let]]
+except that instead of single =else-form= there can be multiple forms.
 
 Usage example:
 #+BEGIN_SRC emacs-lisp :results drawer
@@ -203,6 +204,7 @@ Sometimes I need slightly changed versions of =if-let=:
 #+END_SRC
 
 * needs
+=needs= macro's philosophy is similar to =deftest= from 
 New =needs= macro is gradually replacing =when-let=:
 
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el

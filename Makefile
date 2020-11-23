@@ -7,12 +7,14 @@ $(quicklispDir)/shalaev.lisp: README.md generated/macros.el $(quicklispDir)
 	cat generated/macros.lisp generated/functions.lisp generated/file-functions.lisp >> $@
 	echo ")" >> $@
 	cp -a shalaev.asd $(quicklispDir)/
+	-chgrp tmp $(quicklispDir)/*
+	-chmod a-x $(quicklispDir)/*
 
 $(quicklispDir):
 	[ -d $(quicklispDir)] || mkdir $(quicklispDir)
 
 README.md: README.org
-	emacsclient -e '(progn (find-file "README.org") (org-md-export-to-markdown))'
+	emacsclient -e '(progn (find-file "README.org") (org-md-export-to-markdown)  (kill-buffer))'
 	-chgrp tmp $@
 
 generated/macros.el: goodies.org
@@ -20,10 +22,10 @@ generated/macros.el: goodies.org
 	-chgrp tmp generated/*
 	-chmod a-x generated/*
 	-rsync -au generated/*.el ../cloud/goodies/
-	# -rsync -au generated/macros.lisp ../simple-log/goodies/
-	# -rsync -au generated/*.lisp ../signal-handler/goodies/
+	-rsync -au generated/macros.lisp ../simple-log/goodies/
+	-rsync -au generated/*.lisp ../signal-handler/goodies/
 
 clean:
-	-rm `find . -type f -group tmp`
+	-rm $(quicklispDir)/* generated/*
 
 .PHONY: clean all
