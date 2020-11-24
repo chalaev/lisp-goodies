@@ -20,6 +20,7 @@ There are two options:
 5. [[file:generated/cl.el][cl.el]] will probably be used some day as a replacement for the standard [[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/cl-lib.el][cl.el]],
 6. [[file:Makefile][Makefile]] is used by =make=,
 7. [[file:shalaev.asd][shalaev.asd]] describes the Common Lisp package created by =make= according to [[file:Makefile][Makefile]].
+8. [[file:headers.org][headers.org]]
 
 The files in the ~generated/~ folder are only included for convenience and can be easilly (re)generated from [[file:goodies.org][goodies.org]] using =M-x org-babel-tangle= in =emacs= or just =make=.
 

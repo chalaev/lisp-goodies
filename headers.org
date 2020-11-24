@@ -1,0 +1,68 @@
+#+TITLE: defpackages
+#+AUTHOR: Oleg Shalaev
+#+EMAIL:  oleg@chalaev.com
+
+The CL-part of the code is separated in two packages (~shalaev/macros~ and ~shalaev/files~)
+united by ~shalaev~, and tested by ~shalaev/tests~.
+
+Together with [[file:shalaev.asd][shalaev.asd]] this file provides the necessary headers
+merged with the main code from [[file:goodies.org][goodies.org]] by [[file:Makefile][Makefile]].
+
+The actual tests are defined (using =deftest=) in the [[file:goodies.org][main file]];
+here we just make necessary preliminary definitions.
+
+#+BEGIN_SRC lisp :tangle generated/headers/tests.lisp
+;;(in-package :cl-user)
+(defpackage :shalaev/tests
+  (:use :cl :shalaev/macros :shalaev/files :sb-rt)
+  (:export :N-failed)
+#+END_SRC
+*compile-tests* ← [[https://github.com/pbing/sb-rt/blob/master/rt.lisp][when true, compile the tests before running them]].
+#+BEGIN_SRC lisp :tangle generated/headers/tests.lisp
+  (:import-from :sb-rt :*compile-tests* :*expected-failures*))
+(in-package :shalaev/tests)
+(defvar N-failed 0 "how many tests failed")
+#+END_SRC
+
+=id= is needed to demonstrate that our macro (e.g., when-let) is not
+evaluating expression many times, inserting it inline wherever it occurs:
+#+BEGIN_SRC lisp
+(declaim (notinline id))
+(defun id(x) x)
+#+END_SRC
+← moved to [[file:goodies.org][goodies.org]] (namely, to ~shalaev/macros~ package).
+
+The variable =N-failed= will be SBCL's exit code used in ~Makefile~:
+#+BEGIN_SRC lisp :tangle generated/headers/tests.lisp :shebang ";; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org"
+(defun run-tests (&key ((:compiled *compile-tests*)))
+  (unless (do-tests) (incf N-failed))) 
+#+END_SRC
+← then, e.g., =(run-tests :compiled nil)= would set =*compile-tests*= to =nil=.
+
+Since every lisper probably has his/her own "goodies", let me make this package unique by naming it "shalaev":
+#+BEGIN_SRC emacs-lisp :tangle generated/headers/shalaev.lisp :shebang ";; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org"
+;;(in-package :cl-user)
+(defpackage :shalaev
+  (:use :cl :shalaev/macros :shalaev/files))
+(in-package :shalaev)
+(declaim (optimize (speed 0) (safety 3) (debug 3)))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/headers/macros.lisp :shebang ";; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org"
+(defpackage :shalaev/macros
+  (:use :cl)
+  (:export :id
+:iff :ifn :concat
+:when-let
+:if-let :ifn-let :cond-let
+:needs
+))
+(in-package :shalaev/macros)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/headers/files.lisp :shebang ";; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org"
+(defpackage :shalaev/files
+  (:use :cl :shalaev/macros)
+  (:export :merge-paths :safe-mkdir :rmdir :echo-to-file :directory-lock))
+(in-package :shalaev/files)
+#+END_SRC
