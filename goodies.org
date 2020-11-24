@@ -29,29 +29,11 @@ Notes:
 (concat (rand-str 4) ".tmp")
 #+END_SRC
 
-I am tired of copying ~.lisp~ files to all of my projects, so let me package them.
-Since every lisper probably has his own "goodies", let me make this package unique by naming it "shalaev":
-#+BEGIN_SRC emacs-lisp :tangle generated/header.lisp
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
-(in-package :cl-user)
-(defpackage :shalaev
-  (:use :cl)
-  (:export
-:iff :ifn :concat
-:when-let
-:if-let :ifn-let :cond-let
-:needs
-:merge-paths :safe-mkdir :rmdir :echo-to-file :directory-lock
-:drop-if))
-(in-package :shalaev)
-(declaim (optimize (speed 0) (safety 3) (debug 3)))
-#+END_SRC
-
 * when-let
 =when-let= is one of my most-used macros:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro when-let (vars &rest body)
-  "when with let using stndard let-notation"
+  "when with let using standard let-notation"
   (if (caar vars)
   `(let ((,(caar vars) ,(cadar vars)))
      ,(if (cdr vars)
@@ -63,6 +45,8 @@ Since every lisper probably has his own "goodies", let me make this package uniq
 	     ,(macroexpand-1 `(when-let ,(cdr vars) ,@body)))
     (append `(when ,(cadar vars)) body))))
 #+END_SRC
+← *probably I should replace macroexpand-1 → eval* in all macro definitions.
+
 Using standard let-syntax, it evaluates varibales in the header one after another,
 and, if they are all non-nil, evalueates the body:
 #+BEGIN_SRC emacs-lisp :results drawer
@@ -76,8 +60,7 @@ and, if they are all non-nil, evalueates the body:
 (let ((x 1)) (when x (let ((y (1+ x))) (when y (incf x y) (incf y x)))))
 :END:
 
-=when-let= defined here has the same functionality, as [[https://common-lisp.net/project/alexandria/draft/alexandria.html][alexandria:when-let*]].
-
+=when-let= defined here has almost the same functionality, as [[https://common-lisp.net/project/alexandria/draft/alexandria.html][alexandria:when-let*]].
 If we put =nil= instead of the variable name, no local varibale will be created for this entry:
 #+BEGIN_SRC emacs-lisp :results drawer
 (print (macroexpand-1
@@ -95,10 +78,9 @@ If we put =nil= instead of the variable name, no local varibale will be created 
 Later I wrote [[needs]] which is more general than =when-let=, and can replace it.
 
 CL code is the same:
-#+BEGIN_SRC lisp :tangle generated/macros.lisp :shebang ";; -*- mode: Lisp; -*-"
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
+#+BEGIN_SRC lisp :tangle generated/macros.lisp :shebang ";; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org"
 (defmacro when-let (vars &rest body)
-  "when with let using stndard let-notation"
+  "when with let using standard let-notation"
   (if (caar vars)
   `(let ((,(caar vars) ,(cadar vars)))
      ,(if (cdr vars)
@@ -111,12 +93,20 @@ CL code is the same:
     (append `(when ,(cadar vars)) body))))
 #+END_SRC
 
+#+BEGIN_SRC lisp :tangle generated/tests.lisp
+(deftest when-let.1
+    (when-let ((x (id :ok)))
+      (setf x (cons x x))
+      x)
+  (:ok . :ok))
+#+END_SRC
+
 * if-let
 Like =when-let=, macro =if-let= is heavily used in my projects.
 It is somewhat similar to =when-let=, but offers "else" clause:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro if-let (vars ifyes &rest body)
-  "if with let using stndard let-notation"
+  "if with let using standard let-notation"
   (let ((if-true (gensym "it")) (result (gensym "r")))
     `(let (,if-true ,result)
        (when-let ,vars
@@ -152,7 +142,7 @@ Usage example:
 
 #+BEGIN_SRC lisp :tangle generated/macros.lisp
 (defmacro if-let (vars ifyes &rest body)
-  "if with let using stndard let-notation"
+  "if with let using standard let-notation"
   (let ((if-true (gensym "it")) (result (gensym "r")))
     `(let (,if-true ,result)
        (when-let ,vars
@@ -203,10 +193,16 @@ Sometimes I need slightly changed versions of =if-let=:
       ,ifno))
 #+END_SRC
 
-* needs
-=needs= macro's philosophy is similar to =deftest= from 
-New =needs= macro is gradually replacing =when-let=:
+#+BEGIN_SRC lisp :tangle generated/tests.lisp
+(deftest if-let.1
+    (if-let ((x (id :ok)))
+            x
+            :bad)
+  :ok)
+#+END_SRC
 
+* needs
+New =needs= macro is gradually replacing =when-let=:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro needs (vardefs &rest body)
   "unifying when-let and if-let"
@@ -405,8 +401,7 @@ result)
 
 In SBCL I must know if the directory =dirname= existed before I attempted to create it,
 so I have to use (low-level) [[https://github.com/sbcl/sbcl/blob/master/contrib/sb-posix/posix-tests.lisp][sb-posix:mkdir]] function:
-#+BEGIN_SRC lisp :tangle generated/file-functions.lisp :shebang ";; -*- mode: Lisp; -*-"
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
+#+BEGIN_SRC lisp :tangle generated/files.lisp :shebang ";; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org"
 (defun safe-mkdir (dirname)
 (handler-case (cons t (sb-posix:mkdir dirname #o770))
   (sb-posix:syscall-error (c)
@@ -511,7 +506,7 @@ Common Lisp code is more advanced than the elisp one:
   (echo-to-file ,lock-file ,by)
   (let ((,result (progn ,@body)))
 #+END_SRC
-← requires =echo-to-file= from ~generated/file-functions.lisp~
+← requires =echo-to-file= from ~generated/files.lisp~
 
 In case we could not unlock the directory, let us not go into the details:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.lisp
@@ -564,8 +559,8 @@ Test:
 :END:
 
 For now CL code will be simpler:
-#+BEGIN_SRC lisp :tangle generated/functions.lisp :shebang ";; -*- mode: Lisp; -*-"
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
+#+BEGIN_SRC lisp :tangle generated/macros.lisp
+(declaim (notinline id))
 (defun id(x) x)
 (defmacro drop-if (what from-where &key (key #'id) (test #'eql))
   `(setf ,from-where (remove ,what ,from-where :key ,key :test ,test)))
@@ -1386,7 +1381,7 @@ T
 
 ** file/directory fuctions
 *** rmdir
-#+BEGIN_SRC lisp :tangle generated/file-functions.lisp
+#+BEGIN_SRC lisp :tangle generated/files.lisp
 (defun rmdir(DN)
   (handler-case (cons t (sb-posix:rmdir DN))
     (sb-posix:syscall-error (c)
@@ -1400,7 +1395,7 @@ T
 – expected to work on SBCL only.
 
 *** echo-to-file
-#+BEGIN_SRC lisp :tangle generated/file-functions.lisp
+#+BEGIN_SRC lisp :tangle generated/files.lisp
 (defun echo-to-file (FN str)
   (with-open-file (stream FN
     :if-exists :overwrite
@@ -1410,7 +1405,7 @@ T
 #+END_SRC
 
 *** merge-paths = generalized merge-pathnames
-#+BEGIN_SRC lisp :tangle generated/file-functions.lisp
+#+BEGIN_SRC lisp :tangle generated/files.lisp
 (defun merge-paths(root-dir &rest sub-dirs)
   (reduce
    #'(lambda(DN FN) (merge-pathnames FN (uiop:ensure-directory-pathname DN)))

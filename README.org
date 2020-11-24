@@ -11,11 +11,9 @@ There are two options:
 1. Copy-paste or load [[file:generated][generated/]]*.lisp into your projects, or
 2. =make= to package them and =(require :shalaev)= in your code.
    (You might want to update your [[https://www.quicklisp.org/beta/][Quicklisp]] directory in ~Makefile~ before you =make=.)
-   Still for the time being I can not replace =(eval-when (:compile-toplevel) (load "macros.lisp"))= with =:depends-on (... :shalaev)= in package declaractions,
-   see the notes in [[https://github.com/chalaev/cl-simple-logger/blob/master/simple-log.org][simple-log package]].
 
 * Files
-1. [[file:generated/functions.el][functions.el]], [[file:generated/file-functions.el][file-functions.el]], and [[file:generated/file-functions.lisp][file-functions.lisp]] contain functions,
+1. [[file:generated/functions.el][functions.el]], [[file:generated/file-functions.el][file-functions.el]], and [[file:generated/files.lisp][files.lisp]] contain functions,
 2. [[file:generated/macros.el][macros.el]] and [[file:generated/macros.lisp][macros.lisp]] simplify my lisp code,
 3. [[file:generated/logging.el][logging.el]] is a simple emacs logging system,
 4. [[file:generated/dot.emacs][dot.emacs]] is (almost) a copy of my =~/.emacs=, and

@@ -1,7 +1,6 @@
-;; -*- mode: Lisp; -*-
 ;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
 (defmacro when-let (vars &rest body)
-  "when with let using stndard let-notation"
+  "when with let using standard let-notation"
   (if (caar vars)
   `(let ((,(caar vars) ,(cadar vars)))
      ,(if (cdr vars)
@@ -14,7 +13,7 @@
     (append `(when ,(cadar vars)) body))))
 
 (defmacro if-let (vars ifyes &rest body)
-  "if with let using stndard let-notation"
+  "if with let using standard let-notation"
   (let ((if-true (gensym "it")) (result (gensym "r")))
     `(let (,if-true ,result)
        (when-let ,vars
@@ -46,6 +45,11 @@
 		  (if (cdr vardefs)
 		      (list (macroexpand-1 `(needs ,(cdr vardefs) ,@body)))
 		    body)))))
+
+(declaim (notinline id))
+(defun id(x) x)
+(defmacro drop-if (what from-where &key (key #'id) (test #'eql))
+  `(setf ,from-where (remove ,what ,from-where :key ,key :test ,test)))
 
 (defmacro iff (test-form then &rest else)
   "elisp-kind of if"
