@@ -32,7 +32,7 @@ generated/headers/macros.lisp: headers.org generated/macros.el $(headersDir)
 	-chmod a-x generated/dot.* generated/*.lisp generated/*/*.lisp generated/*.el
 
 README.md: README.org
-	emacsclient -e '(progn (find-file "README.org") (org-md-export-to-markdown)  (kill-buffer))'
+	emacsclient -e '(progn (find-file "README.org") (org-md-export-to-markdown) (kill-buffer))'
 	-chgrp tmp $@
 
 generated/macros.el: goodies.org $(headersDir)

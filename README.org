@@ -22,7 +22,8 @@ For usage example, see the [[https://github.com/chalaev/cloud][cloud (sync)]] pr
 ** Common Lisp code
 There are two options:
 1. unpack [[file:generated/cl-package.tbz][cl-package.tbz]] into your [[https://www.quicklisp.org/beta/][Quicklisp]] directory:\\
-   =tar xjfv cl-package.tbz --directory=$HOME/quicklisp/local-projects/=\\
+   =tar xjfv cl-package.tbz --directory=$HOME/quicklisp/local-projects/=
+   \\
    and =(require :shalaev)= in your code, or
 2. copy-paste or load [[file:generated][generated/]]*.lisp into your projects.
 
