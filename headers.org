@@ -1,4 +1,4 @@
-#+TITLE: defpackages
+#+TITLE: headers (defpackages)
 #+AUTHOR: Oleg Shalaev
 #+EMAIL:  oleg@chalaev.com
 
@@ -32,7 +32,7 @@ evaluating expression many times, inserting it inline wherever it occurs:
 #+END_SRC
 ← moved to [[file:goodies.org][goodies.org]] (namely, to ~shalaev/macros~ package).
 
-The variable =N-failed= will be SBCL's exit code used in ~Makefile~:
+The variable =N-failed= will be SBCL's exit code used in [[file:Makefile][Makefile]]:
 #+BEGIN_SRC lisp :tangle generated/headers/tests.lisp :shebang ";; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org"
 (defun run-tests (&key ((:compiled *compile-tests*)))
   (unless (do-tests) (incf N-failed))) 

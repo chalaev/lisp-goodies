@@ -45,7 +45,6 @@ Notes:
 	     ,(macroexpand-1 `(when-let ,(cdr vars) ,@body)))
     (append `(when ,(cadar vars)) body))))
 #+END_SRC
-← *probably I should replace macroexpand-1 → eval* in all macro definitions.
 
 Using standard let-syntax, it evaluates varibales in the header one after another,
 and, if they are all non-nil, evalueates the body:
