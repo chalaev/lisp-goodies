@@ -1,4 +1,3 @@
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
 ;;(in-package :cl-user)
 (defpackage :shalaev
   (:use :cl :shalaev/macros :shalaev/files))

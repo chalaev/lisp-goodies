@@ -1,4 +1,3 @@
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
 (defmacro when-let (vars &rest body)
   "when with let using standard let-notation"
   (if (caar vars)
@@ -51,6 +50,10 @@
 (defmacro drop-if (what from-where &key (key #'id) (test #'eql))
   `(setf ,from-where (remove ,what ,from-where :key ,key :test ,test)))
 
+(defmacro end-push (what where)
+  `(if ,where (push ,what (cdr (last ,where)))
+      (push ,what ,where)))
+
 (defmacro iff (test-form then &rest else)
   "elisp-kind of if"
   (if (cdr else)
@@ -64,6 +67,12 @@
 
 (defmacro concat (&rest strs)
   `(concatenate 'string ,@strs))
+
+(defmacro aset(arr pos val)
+  `(setf (aref ,arr ,pos) ,val))
+
+(defmacro hset(arr pos val)
+  `(setf (gethash ,pos ,arr) ,val))
 
 (defmacro directory-lock(locked-dir by &rest body)
 (let ((LD (gensym "ld")) (lock-file (gensym "LF")) (mkdir (gensym "md")) 

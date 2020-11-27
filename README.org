@@ -3,7 +3,7 @@ Useful Emacs Lisp and Common Lisp macros and functions.
 
 (For me "Common Lisp" means "sbcl"; part of the CL-code will probably not work in other CL dialects.)
 
-The (main) file [[file:goodies.org][goodies.org]] contains
+The (main) file [[file:shalaev.org][shalaev.org]] contains
 - source code,
 - examples, and
 - tests
@@ -40,6 +40,7 @@ For usage example, see the [[https://github.com/chalaev/cl-simple-logger][simple
 7. [[file:shalaev.asd][shalaev.asd]] and [[file:headers.org][headers.org]] describe Common Lisp packages created by =make= according to [[file:Makefile][Makefile]].
 
 The files in the ~generated/~ folder are only included for convenience and can be easilly (re)generated using =make=.
+(If =make= freezes, that's probably because =emacs= is waiting for your permission to evaluate the code at the beginning of [[file:shalaev.org][shalaev.org]].)
 
 * License
 This code is released under [[https://mit-license.org/][MIT license]].

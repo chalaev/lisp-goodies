@@ -3,51 +3,56 @@ SBCL = ~/local/bin/sbcl
 quicklispDir = $$HOME/quicklisp/local-projects/shalaev
 headersDir = generated/headers
 
-all: test README.md
+LFNs = macros files tests shalaev
+LISPs = $(addsuffix .lisp, $(LFNs))
+package = $(LISPs) shalaev.asd
 
-test: $(quicklispDir)/shalaev.lisp $(quicklispDir)/files.lisp $(quicklispDir)/macros.lisp $(quicklispDir)/tests.lisp $(quicklispDir) shalaev.asd
-	rsync -avu shalaev.asd $(quicklispDir)/
-	-chgrp tmp $(quicklispDir)/*
-	-chmod a-x $(quicklispDir)/*
-	@echo "Starting tests..."
+OFNs = shalaev packaging
+ORGs = $(addsuffix .org, $(OFNs))
+
+# unless I mention generated/from/*.org files here, they will be considered temporary and auto-erased so emacsclient will always be called on every make:
+all: quicklisp README.md generated/shalaev.tbz $(addprefix generated/from/, $(ORGs)) git
+quicklisp: $(quicklispDir)/ $(addprefix $(quicklispDir)/, $(package)) $(addprefix generated/from/, $(ORGs))
+
+generated/shalaev.tbz: quicklisp
+	@echo "Testing before we package it:"
 	@$(SBCL) --eval "(asdf:operate 'asdf:test-op :shalaev)" --eval "(uiop:quit shalaev/tests:N-failed)"
-	@echo "\n\nALL TESTS PASSED :)\n"
-	tar jcfv generated/cl-package.tbz --directory=$(quicklispDir)/..  shalaev
-
-# I am annnoyed by these GNU make restrictions that force me to write false dependences, see my el-make project:
-$(quicklispDir)/shalaev.lisp: generated/headers/macros.lisp generated/macros.lisp
-	cat generated/headers/shalaev.lisp > $@
-
-$(quicklispDir)/files.lisp: generated/headers/macros.lisp generated/macros.lisp
-	cat generated/headers/files.lisp generated/files.lisp > $@
-
-$(quicklispDir)/macros.lisp: generated/headers/macros.lisp generated/macros.lisp
-	cat generated/headers/macros.lisp generated/macros.lisp > $@
-
-$(quicklispDir)/tests.lisp: generated/headers/macros.lisp generated/macros.lisp
-	cat generated/headers/tests.lisp generated/tests.lisp > $@
-
-generated/headers/macros.lisp: headers.org generated/macros.el $(headersDir)
-	emacsclient -e '(org-babel-tangle-file "headers.org")'
-	-chmod a-x generated/dot.* generated/*.lisp generated/*/*.lisp generated/*.el
-
-README.md: README.org
-	emacsclient -e '(progn (find-file "README.org") (org-md-export-to-markdown) (kill-buffer))'
+	@echo "\n\n`date '+%m/%d %H:%M'` ALL TESTS PASSED :)\n"
+	tar jcfv $@ --directory=$(quicklispDir)/..  shalaev
 	-chgrp tmp $@
 
-generated/macros.el: goodies.org $(headersDir)
-	emacsclient -e '(org-babel-tangle-file "goodies.org")'
-	-chgrp -R tmp generated
-	-chmod a-x generated/dot.* generated/*.lisp generated/*.el
-	-rsync -au generated/*.el ../cloud/goodies/
+$(quicklispDir)/%.lisp: generated/from/shalaev.org generated/from/packaging.org
+	cat generated/headers/$(notdir $@) generated/$(notdir $@) > $@
+	-chgrp tmp $@
+
+$(quicklispDir)/%.asd: %.asd
+	cat $< > $@
+	-chgrp tmp $@
+
+$(quicklispDir)/%.org: %.org
+	cat $< > $@
+	-chgrp tmp $@
+
+generated/from/%.org: %.org generated/from/ generated/headers/
+	echo `emacsclient -e '(printangle "$<")'` | sed 's/"//g' > $@
+	-chgrp tmp $@ `cat $@`
+	-chmod a-x `cat $@`
+
+README.md: README.org
+	emacsclient -e '(progn (find-file "README.org") (org-md-export-to-markdown))'
+	-chgrp tmp $@
+	-chmod a-x $@
 
 clean:
-	-rm -rf $(quicklispDir)/* generated/*
+	-$(SBCL) --quit --eval '(progn (asdf:clear-system :shalaev) (asdf:clear-system :shalaev/tests))'
+	-rm -r $(quicklispDir) generated
 
-.PHONY: clean test all
+.PHONY: clean quicklisp all git
 
-$(quicklispDir):
-	[ -d $(quicklispDir) ] || mkdir $(quicklispDir)
+%/:
+	[ -d $@ ] || mkdir -p $@
 
-$(headersDir):
-	[ -d $(headersDir) ] || mkdir -p $(headersDir)
+git: generated/shalaev.tbz next-commit.txt README.md
+	@echo "===="
+	@echo "git commit -am '"`head -n1 next-commit.txt`"'"
+	@echo "git push origin master"

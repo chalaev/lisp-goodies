@@ -40,7 +40,7 @@ The variable =N-failed= will be SBCL's exit code used in [[file:Makefile][Makefi
 ← then, e.g., =(run-tests :compiled nil)= would set =*compile-tests*= to =nil=.
 
 Since every lisper probably has his/her own "goodies", let me make this package unique by naming it "shalaev":
-#+BEGIN_SRC emacs-lisp :tangle generated/headers/shalaev.lisp :shebang ";; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org"
+#+BEGIN_SRC emacs-lisp :tangle generated/headers/shalaev.lisp
 ;;(in-package :cl-user)
 (defpackage :shalaev
   (:use :cl :shalaev/macros :shalaev/files))
@@ -48,11 +48,15 @@ Since every lisper probably has his/her own "goodies", let me make this package 
 (declaim (optimize (speed 0) (safety 3) (debug 3)))
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp :tangle generated/shalaev.lisp
+;; this line exists only to simplify Makefile
+#+END_SRC
+
 #+BEGIN_SRC emacs-lisp :tangle generated/headers/macros.lisp :shebang ";; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org"
 (defpackage :shalaev/macros
   (:use :cl)
   (:export :id
-:iff :ifn :concat
+:end-push :iff :ifn :concat :aset :hset
 :when-let
 :if-let :ifn-let :cond-let
 :needs

@@ -1,10 +1,15 @@
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; Generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
+;; Generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
 ;; See explanations therein. Edit this code before using it.
 
 (defun barename (FN)
   (let ((SS (split-string (file-name-nondirectory FN)  "\\." t)))
     (mapconcat #'(lambda(x)x) (butlast SS) ".")))
+
+(defun printangle(FN)
+  "to be used in Makefile instead of org-babel-tangle-file"
+  (let ((l (length default-directory)))
+     (apply #'concat (mapcar #'(lambda(x) (substring (format "%s " x) l)) (org-babel-tangle-file FN)))))
 
 (defvar *loaded* nil "prevents duplicate evaluation of files")
 (defun load-file* (x &optional el-prefix)

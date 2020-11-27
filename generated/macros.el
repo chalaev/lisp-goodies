@@ -75,7 +75,7 @@
       (cons nil (cons :unlock (cons ,unlock ,result)))))))))
 
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
+;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
 (defmacro case* (expr test &rest cases)
   "case with arbitrary test function"
   (let ((v (gensym "v")))
@@ -132,7 +132,3 @@
 
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))
-
-(defmacro end-push* (what where)
-  "works only if 'where' is not nil"
-  `(push ,what (cdr (last ,where))))
