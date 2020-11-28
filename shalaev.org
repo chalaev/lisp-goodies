@@ -1175,6 +1175,12 @@ Example:
 #+END_SRC
 
 There is probably some standard function or macro doing this:
+#+BEGIN_SRC lisp :tangle generated/macros.el
+(defmacro end-push (what where)
+  `(if ,where (push ,what (cdr (last ,where)))
+      (push ,what ,where)))
+#+END_SRC
+
 #+BEGIN_SRC lisp :tangle generated/macros.lisp
 (defmacro end-push (what where)
   `(if ,where (push ,what (cdr (last ,where)))

@@ -1,0 +1,3 @@
+0.2.2
+← generated 11/28 11:16 from change-log.org
+by [[file:derive-version.el][derive-version.el]]

@@ -1,3 +1,7 @@
+(defmacro end-push (what where)
+  `(if ,where (push ,what (cdr (last ,where)))
+      (push ,what ,where)))
+
 (defmacro when-let (vars &rest body)
   "when with let using standard let-notation"
   (if (caar vars)

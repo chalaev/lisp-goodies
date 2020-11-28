@@ -1,40 +1,40 @@
-(asdf:defsystem "shalaev"
+(defsystem "shalaev"
   :class :package-inferred-system
   :description "my lisp goodies"
   :author "Oleg Shalaev"
   :mailto "oleg@chalaev.com"
   :licence "MIT"
-  :version "0"
+  :version (:read-file-line "version.org")
   :depends-on (:shalaev/files :shalaev/macros)
   :components ((:file "shalaev"))
   :in-order-to ((test-op (test-op "shalaev/tests"))))
 
-(asdf:defsystem "shalaev/macros"
+(defsystem "shalaev/macros"
   :class :package-inferred-system
   :description "my lisp goodies"
   :author "Oleg Shalaev"
   :mailto "oleg@chalaev.com"
   :licence "MIT"
-  :version "0"
+  :version (:read-file-line "version.org")
   :components ((:file "macros")))
 
-(asdf:defsystem "shalaev/files"
+(defsystem "shalaev/files"
   :class :package-inferred-system
   :description "my lisp goodies"
   :author "Oleg Shalaev"
   :mailto "oleg@chalaev.com"
   :licence "MIT"
-  :version "0"
+  :version (:read-file-line "version.org")
   :depends-on (:shalaev/macros)
   :components ((:file "files")))
 
-(asdf:defsystem "shalaev/tests"
+(defsystem "shalaev/tests"
   :class :package-inferred-system
   :description "testing"
   :author "Oleg Shalaev"
   :mailto "oleg@chalaev.com"
   :licence "MIT"
-  :version "0"
+  :version (:read-file-line "version.org")
   :depends-on (:shalaev :sb-rt)
   :components ((:file "tests"))
   :perform (test-op (o c)

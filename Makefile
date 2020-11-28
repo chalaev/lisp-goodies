@@ -5,7 +5,7 @@ headersDir = generated/headers
 
 LFNs = macros files tests shalaev
 LISPs = $(addsuffix .lisp, $(LFNs))
-package = $(LISPs) shalaev.asd
+package = $(LISPs) shalaev.asd version.org
 
 OFNs = shalaev packaging
 ORGs = $(addsuffix .org, $(OFNs))
@@ -19,33 +19,40 @@ generated/shalaev.tbz: quicklisp
 	@$(SBCL) --eval "(asdf:operate 'asdf:test-op :shalaev)" --eval "(uiop:quit shalaev/tests:N-failed)"
 	@echo "\n\n`date '+%m/%d %H:%M'` ALL TESTS PASSED :)\n"
 	tar jcfv $@ --directory=$(quicklispDir)/..  shalaev
-	-chgrp tmp $@
+	-@chgrp tmp $@
 
 $(quicklispDir)/%.lisp: generated/from/shalaev.org generated/from/packaging.org
 	cat generated/headers/$(notdir $@) generated/$(notdir $@) > $@
-	-chgrp tmp $@
+	-@chgrp tmp $@
 
 $(quicklispDir)/%.asd: %.asd
 	cat $< > $@
-	-chgrp tmp $@
+	-@chgrp tmp $@
 
 $(quicklispDir)/%.org: %.org
 	cat $< > $@
-	-chgrp tmp $@
+	-@chgrp tmp $@
+
+version.org: change-log.org derive-version.el
+	emacsclient -e '(progn (load "$(CURDIR)/derive-version.el") (format-version "$<"))' | sed 's/"//g' > $@
+	echo "← generated `date '+%m/%d %H:%M'` from $<" >> $@
+	echo "by [[file:derive-version.el][derive-version.el]]" >> $@
+	-@chgrp tmp $@
 
 generated/from/%.org: %.org generated/from/ generated/headers/
-	echo `emacsclient -e '(printangle "$<")'` | sed 's/"//g' > $@
-	-chgrp tmp $@ `cat $@`
-	-chmod a-x `cat $@`
+	@echo "\nNow emacs is probably waiting for your responce..."
+	@echo `emacsclient -e '(printangle "$<")'` | sed 's/"//g' > $@
+	-@chgrp tmp $@ `cat $@`
+	-@chmod a-x `cat $@`
 
 README.md: README.org
 	emacsclient -e '(progn (find-file "README.org") (org-md-export-to-markdown))'
-	-chgrp tmp $@
-	-chmod a-x $@
+	-@chgrp tmp $@
+	-@chmod a-x $@
 
 clean:
 	-$(SBCL) --quit --eval '(progn (asdf:clear-system :shalaev) (asdf:clear-system :shalaev/tests))'
-	-rm -r $(quicklispDir) generated
+	-rm -r $(quicklispDir) generated version.org
 
 .PHONY: clean quicklisp all git
 
@@ -54,5 +61,5 @@ clean:
 
 git: generated/shalaev.tbz next-commit.txt README.md
 	@echo "===="
-	@echo "git commit -am '"`head -n1 next-commit.txt`"'"
+	-@echo "git commit -am '"`head -n1 next-commit.txt`"'"
 	@echo "git push origin master"
