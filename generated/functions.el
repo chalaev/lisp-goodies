@@ -1,3 +1,7 @@
+(defun land(args)
+"'and' for a list"
+  (reduce #'(lambda(x y) (and x y)) args :initial-value t))
+
 (defun remo (from-where &rest what)
   (if (cdr what)
       (remo

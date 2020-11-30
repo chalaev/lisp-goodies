@@ -11,13 +11,20 @@ OFNs = shalaev packaging
 ORGs = $(addsuffix .org, $(OFNs))
 
 # unless I mention generated/from/*.org files here, they will be considered temporary and auto-erased so emacsclient will always be called on every make:
-all: quicklisp README.md generated/shalaev.tbz $(addprefix generated/from/, $(ORGs)) git
+all: quicklisp README.md generated/el-shalaev.tbz generated/cl-shalaev.tbz $(addprefix generated/from/, $(ORGs)) git
 quicklisp: $(quicklispDir)/ $(addprefix $(quicklispDir)/, $(package)) $(addprefix generated/from/, $(ORGs))
 
-generated/shalaev.tbz: quicklisp
+generated/el-shalaev.tbz: generated/from/shalaev.org
+	@echo "Testing before we package it:"
+	emacs --no-site-file --batch -l ert  --eval "(require 'cl)" -l generated/macros.el -l generated/functions.el -l generated/file-functions.el -l generated/tests.el -f ert-run-tests-batch-and-exit
+	@echo "`date '+%m/%d %H:%M'` EL TESTS PASSED :)\n"
+	tar jcfv $@ --transform s/^generated/shalaev/ generated/*.el
+	-@chgrp tmp $@
+
+generated/cl-shalaev.tbz: quicklisp
 	@echo "Testing before we package it:"
 	@$(SBCL) --eval "(asdf:operate 'asdf:test-op :shalaev)" --eval "(uiop:quit shalaev/tests:N-failed)"
-	@echo "\n\n`date '+%m/%d %H:%M'` ALL TESTS PASSED :)\n"
+	@echo "\n\n`date '+%m/%d %H:%M'` CL TESTS PASSED :)\n"
 	tar jcfv $@ --directory=$(quicklispDir)/..  shalaev
 	-@chgrp tmp $@
 
@@ -33,10 +40,10 @@ $(quicklispDir)/%.org: %.org
 	cat $< > $@
 	-@chgrp tmp $@
 
-version.org: change-log.org derive-version.el
-	emacsclient -e '(progn (load "$(CURDIR)/derive-version.el") (format-version "$<"))' | sed 's/"//g' > $@
-	echo "← generated `date '+%m/%d %H:%M'` from $<" >> $@
-	echo "by [[file:derive-version.el][derive-version.el]]" >> $@
+version.org: change-log.org helpers/derive-version.el
+	emacsclient -e '(progn (load "$(CURDIR)/helpers/derive-version.el") (format-version "$<"))' | sed 's/"//g' > $@
+	echo "← generated `date '+%m/%d %H:%M'` from [[file:$<][$<]]" >> $@
+	echo "by [[file:helpers/derive-version.el][derive-version.el]]" >> $@
 	-@chgrp tmp $@
 
 generated/from/%.org: %.org generated/from/ generated/headers/
@@ -47,6 +54,7 @@ generated/from/%.org: %.org generated/from/ generated/headers/
 
 README.md: README.org
 	emacsclient -e '(progn (find-file "README.org") (org-md-export-to-markdown))'
+	sed -i "s/\.md)/.org)/g"  $@
 	-@chgrp tmp $@
 	-@chmod a-x $@
 
@@ -59,7 +67,7 @@ clean:
 %/:
 	[ -d $@ ] || mkdir -p $@
 
-git: generated/shalaev.tbz next-commit.txt README.md
+git: generated/el-shalaev.tbz generated/cl-shalaev.tbz next-commit.txt README.md
 	@echo "===="
 	-@echo "git commit -am '"`head -n1 next-commit.txt`"'"
 	@echo "git push origin master"

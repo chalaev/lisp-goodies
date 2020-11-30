@@ -10,18 +10,6 @@
             :bad)
   :ok)
 
-(deftest end-push.1
-(let (container)
-  (end-push 1 container)
-  container)
-(1))
-(deftest end-push.2
-(let (container)
-  (end-push 1 container)
-  (end-push 2 container)
-  container)
-(1 2))
-
 (deftest concat
   (concat "/etc/" "dqoE.tmp")
 "/etc/dqoE.tmp")

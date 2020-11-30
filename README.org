@@ -10,22 +10,25 @@ The (main) file [[file:shalaev.org][shalaev.org]] contains
 
 for both elisp and Common Lisp macros and functions.
 
-The Common Lisp part of the code is packaged into [[file:generated/shalaev.tbz][shalaev.tbz]]
+The Common Lisp part of the code is packaged into [[file:generated/cl-shalaev.tbz][cl-shalaev.tbz]]
 and should be ready to use after\\
-=tar xjfv shalaev.tbz --directory=$HOME/quicklisp/local-projects/=
+=tar xjfv cl-shalaev.tbz --directory=$HOME/quicklisp/local-projects/=
 
 * Quick start
 ** Emacs Lisp code
-Copy [[file:generated][generated/]]*.el files into the directory where your ~emacs~ can find them and load them.
+Either
+1. copy-paste or load [[file:generated][generated/]]*.el into your projects or
+2. unpack [[file:generated/el-shalaev.tbz][el-shalaev.tbz]] into your =~/.emacs.d/= directory:\\
+   =tar xjfv el-shalaev.tbz --directory=$HOME/.emacs.d/=
+
+   and include =~/.emacs.d/shalaev/= into emacs'es source directory list.
 
 For usage example, see the [[https://github.com/chalaev/cloud][cloud (sync)]] project.
 ** Common Lisp code
-There are two options:
-1. unpack [[file:generated/shalaev.tbz][shalaev.tbz]] into your [[https://www.quicklisp.org/beta/][Quicklisp]] directory:\\
-   =tar xjfv shalaev.tbz --directory=$HOME/quicklisp/local-projects/=
-   \\
-   and =(require :shalaev)= in your code, or
-2. copy-paste or load [[file:generated][generated/]]*.lisp into your projects.
+Unpack [[file:generated/cl-shalaev.tbz][cl-shalaev.tbz]] into your [[https://www.quicklisp.org/beta/][Quicklisp]] directory:\\
+=tar xjfv cl-shalaev.tbz --directory=$HOME/quicklisp/local-projects/=
+
+and =(require :shalaev)= in your code.
 
 For usage example, see the [[https://github.com/chalaev/cl-simple-logger][simple-logger]] project.
 
@@ -33,11 +36,12 @@ For usage example, see the [[https://github.com/chalaev/cl-simple-logger][simple
 1. [[file:generated/functions.el][functions.el]], [[file:generated/file-functions.el][file-functions.el]], and [[file:generated/files.lisp][files.lisp]] contain functions,
 2. [[file:generated/macros.el][macros.el]] and [[file:generated/macros.lisp][macros.lisp]] simplify my lisp code,
 3. [[file:generated/logging.el][logging.el]] is a simple emacs logging system,
-4. [[file:generated/dot.emacs][dot.emacs]] is (almost) a copy of my =~/.emacs=, and
+4. [[file:generated/dot.emacs][dot.emacs]] is (almost) a copy of my =~/.emacs=,
 5. [[file:generated/cl.el][cl.el]] will probably be used some day as a replacement for the standard [[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/cl-lib.el][cl.el]],
 6. [[file:Makefile][Makefile]] is used by =make= to test the code and to create package in =$HOME/quicklisp/local-projects/=;
-   the resulting package files are archived in [[file:generated/shalaev.tbz][shalaev.tbz]]
-7. [[file:shalaev.asd][shalaev.asd]] and [[file:headers.org][headers.org]] describe Common Lisp packages created by =make= according to [[file:Makefile][Makefile]].
+   the resulting package files are archived in [[file:generated/cl-shalaev.tbz][cl-shalaev.tbz]],
+7. [[file:shalaev.asd][shalaev.asd]] and [[file:headers.org][headers.org]] describe Common Lisp packages created by =make= according to [[file:Makefile][Makefile]],
+8. [[file:helpers/][helpers/*]] assist compilation.
 
 The files in the ~generated/~ folder are only included for convenience and can be easilly (re)generated using =make=.
 (If =make= freezes, that's probably because =emacs= is waiting for your permission to evaluate the code at the beginning of [[file:shalaev.org][shalaev.org]].)

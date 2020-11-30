@@ -34,3 +34,8 @@
 (defun format-version(change-log.org)
   (let ((r (derive-version change-log.org)))
     (format "%d.%d.%d" (first r) (second r) (third r))))
+
+(defun printangle(FN)
+  "to be used in Makefile instead of org-babel-tangle-file"
+  (let ((l (length default-directory)))
+    (apply #'concat (mapcar #'(lambda(x) (substring (format "%s " x) l)) (org-babel-tangle-file FN)))))

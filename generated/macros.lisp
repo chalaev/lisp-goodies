@@ -50,10 +50,6 @@
 (defmacro drop-if (what from-where &key (key #'id) (test #'eql))
   `(setf ,from-where (remove ,what ,from-where :key ,key :test ,test)))
 
-(defmacro end-push (what where)
-  `(if ,where (push ,what (cdr (last ,where)))
-      (push ,what ,where)))
-
 (defmacro iff (test-form then &rest else)
   "elisp-kind of if"
   (if (cdr else)
