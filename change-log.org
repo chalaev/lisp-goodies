@@ -7,9 +7,10 @@ Decided to share some of my macros
 Started adding tests for elisp code.
 
 *** 2020-12-02
-1. Renamed ~find~ → ~s-find~ in order to distinguish it from ~find~ defined in ~cl.el~.
+1. Renamed ~find~ → ~s-find~ in order to distinguish it from ~find~ defined in standard ~cl.el~.
    Added tests for ~s-find~.
-2. Added =(defun select ...)=
+2. Updated [[file:helpers/derive-version.el][derive-version.el]]
+3. Added =(defun s-select ...)=
 
 ** 2020-11-18
 packaged the Common Lisp part of the code

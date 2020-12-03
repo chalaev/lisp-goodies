@@ -1,3 +1,6 @@
+(defmacro string-from-macro(m)
+`(format "%s" (print (macroexpand-1 ,m) #'(lambda(x) (format "%s" x)))))
+
 (defmacro when-let (vars &rest body)
   "when with let using standard let-notation"
   (if (caar vars)
@@ -77,13 +80,14 @@
 (defmacro drop (from-where &rest what)
 `(setf ,from-where (without ,from-where ,@what)))
 
-(defmacro define-vars (&rest varDefs)
+(defmacro define-vars (varDefs)
   "to make switching between local/global variables easier"
-  `(progn
-    ,@(dolist-collect (VD varDefs)
-      (if (consp VD)
-	  `(defvar ,@VD)
-	`(defvar ,VD nil)))))
+(cons 'progn
+(mapcar #'(lambda(VD)
+  (if (consp VD)
+      `(defvar ,@VD)
+      `(defvar ,VD nil)))
+varDefs)))
 
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org

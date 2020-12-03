@@ -26,6 +26,10 @@
   (drop test-list 12 24)
   (should (equal '(4 22 11 33 77) test-list))))
 
+(ert-deftest define-vars()
+(should(string= "(progn (defvar a nil) (defvar b nil))" (string-from-macro '(define-vars (a b)))))
+(should(string= "(progn (defvar a 1) (defvar b nil) (defvar c 2))" (string-from-macro '(define-vars ((a 1) b (c 2)))))))
+
 (ert-deftest end-push()
 (should (equal '(1)
 (let (container)
