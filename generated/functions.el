@@ -1,16 +1,3 @@
-(defun land(args)
-"'and' for a list"
-  (reduce #'(lambda(x y) (and x y)) args :initial-value t))
-
-(defun remo (from-where &rest what)
-  (if (cdr what)
-      (remo
-       (apply #'remo (cons from-where (cdr what)))
-       (car what))
- (remove (car what) from-where)))
-(defmacro drop (from-where &rest what)
-  `(setf ,from-where (remo ,from-where ,@what)))
-
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 (defun email (addr &optional subject body)
   "fast non-interactive way to send an email"
@@ -76,3 +63,7 @@
 (defun rand-str(N)
   (apply #'concat
      (loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))
+
+(defun land(args)
+"'and' for a list"
+  (reduce #'(lambda(x y) (and x y)) args :initial-value t))

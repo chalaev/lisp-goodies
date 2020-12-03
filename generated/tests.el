@@ -1,3 +1,31 @@
+(declaim (notinline id))
+(defun id(x) x)
+
+(ert-deftest s-find()
+  (should (equal '(3 4) (s-find 4 '((1 2) (3 4) (5 6)) #'cadr)))
+  (should (= 3 (s-find 3 '(1 2 3 4 5))))
+(let ((cumbersome-list '(141 142 143 144)))
+  (should (= (s-find (* 12 12) cumbersome-list nil #'=) 144))
+  (should (= (s-find (/ 144 2) cumbersome-list nil #'(lambda(x y) (= (* 2 x) y))) 144))
+  (should (= (s-find 12 cumbersome-list nil #'(lambda(x y) (= (* x x) y))) 144)))
+(let ((cumbersome-list '((141 142) (143 144))))
+  (should (equal (s-find 12 cumbersome-list #'cadr #'(lambda(x y) (= y (* x x)))) '(143 144)))))
+
+(ert-deftest s-select()
+(let ((test-list  '(4 22 11 33 12 24 77)))
+  (should (not (s-select test-list #'zerop)))
+  (should (equal '(11 33 77) (s-select test-list #'oddp)))
+  (should (equal '(4 22 12 24) (s-select test-list #'evenp)))))
+
+(ert-deftest without()
+(let ((test-list  '(4 22 11 33 12 24 77)))
+  (should (equal '(4 22 11 33 77) (without test-list 12 24)))))
+
+(ert-deftest drop()
+(let ((test-list  '(4 22 11 33 12 24 77)))
+  (drop test-list 12 24)
+  (should (equal '(4 22 11 33 77) test-list))))
+
 (ert-deftest end-push()
 (should (equal '(1)
 (let (container)

@@ -11,15 +11,16 @@ OFNs = shalaev packaging
 ORGs = $(addsuffix .org, $(OFNs))
 
 # unless I mention generated/from/*.org files here, they will be considered temporary and auto-erased so emacsclient will always be called on every make:
-all: quicklisp README.md generated/el-shalaev.tbz generated/cl-shalaev.tbz $(addprefix generated/from/, $(ORGs)) git
+all: quicklisp README.md generated/el-shalaev.tbz generated/cl-shalaev.tbz $(addprefix generated/from/, $(ORGs))
 quicklisp: $(quicklispDir)/ $(addprefix $(quicklispDir)/, $(package)) $(addprefix generated/from/, $(ORGs))
 
 generated/el-shalaev.tbz: generated/from/shalaev.org
 	@echo "Testing before we package it:"
-	emacs --no-site-file --batch -l ert  --eval "(require 'cl)" -l generated/macros.el -l generated/functions.el -l generated/file-functions.el -l generated/tests.el -f ert-run-tests-batch-and-exit
+	emacs --no-site-file --batch -l ert  --eval "(require 'cl)" -l generated/macros.el -l generated/functions.el -l generated/file-functions.el -l generated/cl.el -l generated/tests.el -f ert-run-tests-batch-and-exit
 	@echo "`date '+%m/%d %H:%M'` EL TESTS PASSED :)\n"
 	tar jcfv $@ --transform s/^generated/shalaev/ generated/*.el
 	-@chgrp tmp $@
+	-@rsync -avu generated/*.el ../cloud/goodies/
 
 generated/cl-shalaev.tbz: quicklisp
 	@echo "Testing before we package it:"
@@ -48,7 +49,7 @@ version.org: change-log.org helpers/derive-version.el
 
 generated/from/%.org: %.org generated/from/ generated/headers/
 	@echo "\nNow emacs is probably waiting for your responce..."
-	@echo `emacsclient -e '(printangle "$<")'` | sed 's/"//g' > $@
+	@echo `emacsclient -e '(progn (load "$(CURDIR)/helpers/derive-version.el") (printangle "$<"))'` | sed 's/"//g' > $@
 	-@chgrp tmp $@ `cat $@`
 	-@chmod a-x `cat $@`
 
@@ -62,12 +63,7 @@ clean:
 	-$(SBCL) --quit --eval '(progn (asdf:clear-system :shalaev) (asdf:clear-system :shalaev/tests))'
 	-rm -r $(quicklispDir) generated version.org
 
-.PHONY: clean quicklisp all git
+.PHONY: clean quicklisp all
 
 %/:
 	[ -d $@ ] || mkdir -p $@
-
-git: generated/el-shalaev.tbz generated/cl-shalaev.tbz next-commit.txt README.md
-	@echo "===="
-	-@echo "git commit -am '"`head -n1 next-commit.txt`"'"
-	@echo "git push origin master"

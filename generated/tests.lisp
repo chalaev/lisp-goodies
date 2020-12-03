@@ -1,10 +1,13 @@
-(deftest when-let.1
+(declaim (notinline id))
+(defun id(x) x)
+
+(deftest when-let
     (when-let ((x (id :ok)))
       (setf x (cons x x))
       x)
   (:ok . :ok))
 
-(deftest if-let.1
+(deftest if-let
     (if-let ((x (id :ok)))
             x
             :bad)

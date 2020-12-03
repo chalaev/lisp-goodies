@@ -6,6 +6,16 @@
 #+LATEX_HEADER: \usepackage[letterpaper,hmargin={1.5cm,1.5cm},vmargin={1.3cm,2cm},nohead,nofoot]{geometry}
 #+KEYWORDS: emacs, elisp, common lisp, macros, functions
 
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(declaim (notinline id))
+(defun id(x) x)
+#+END_SRC
+
+#+BEGIN_SRC lisp :tangle generated/tests.lisp
+(declaim (notinline id))
+(defun id(x) x)
+#+END_SRC
+
 * Introduction
 The following block is evaluated when this ~.org~ file is loaded:
 #+NAME: init
@@ -93,7 +103,7 @@ CL code is the same:
 #+END_SRC
 
 #+BEGIN_SRC lisp :tangle generated/tests.lisp
-(deftest when-let.1
+(deftest when-let
     (when-let ((x (id :ok)))
       (setf x (cons x x))
       x)
@@ -193,7 +203,7 @@ Sometimes I need slightly changed versions of =if-let=:
 #+END_SRC
 
 #+BEGIN_SRC lisp :tangle generated/tests.lisp
-(deftest if-let.1
+(deftest if-let
     (if-let ((x (id :ok)))
             x
             :bad)
@@ -533,52 +543,15 @@ Formatted result:
          (CONS T #:|r493|)))))))
 #+END_SRC
 
-* remo & drop
-Remo is a helper for =drop= macro which removes elements from an array:
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun remo (from-where &rest what)
-  (if (cdr what)
-      (remo
-       (apply #'remo (cons from-where (cdr what)))
-       (car what))
- (remove (car what) from-where)))
-(defmacro drop (from-where &rest what)
-  `(setf ,from-where (remo ,from-where ,@what)))
-#+END_SRC
-Test:
-#+BEGIN_SRC emacs-lisp :results drawer
-(let ((ll '(1 2 3 4 5 6)))
-  (drop ll 2 4)
-  ll)
-#+END_SRC
-
-#+RESULTS:
-:RESULTS:
-(1 3 5 6)
-:END:
-
-For now CL code will be simpler:
-#+BEGIN_SRC lisp :tangle generated/macros.lisp
-(declaim (notinline id))
-(defun id(x) x)
-(defmacro drop-if (what from-where &key (key #'id) (test #'eql))
-  `(setf ,from-where (remove ,what ,from-where :key ,key :test ,test)))
-#+END_SRC
-
-#+BEGIN_SRC lisp
-(macroexpand-1 '(drop-if name hooks :key #'car :test #'string=))
-#+END_SRC
-results in
-#+BEGIN_SRC lisp
-(SETF HOOKS (REMOVE NAME HOOKS :KEY #'CAR :TEST #'STRING=))
-#+END_SRC
-
 * emacs lisp
 ** emacs configuration in ~/.emacs
 You probably want to adjust this code to your needs before pasting it into your =~/.emacs=:
 #+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 ;; Generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
 ;; See explanations therein. Edit this code before using it.
+
+(make-temp-file "emacs-" nil ".pid" (format "%d
+" (emacs-pid))); saving emacs'es PID
 
 (defun barename (FN)
   (let ((SS (split-string (file-name-nondirectory FN)  "\\." t)))
@@ -591,7 +564,7 @@ You probably want to adjust this code to your needs before pasting it into your 
   (let ((l (length default-directory)))
      (apply #'concat (mapcar #'(lambda(x) (substring (format "%s " x) l)) (org-babel-tangle-file FN)))))
 #+END_SRC
-← I am using it in my [[https://github.com/chalaev/cl-simple-logger/blob/master/Makefile][Makefile]]s.
+← my [[https://github.com/chalaev/cl-simple-logger/blob/master/Makefile][Makefile]]s load its definition from [[file:helpers/derive-version.el][derive-version.el]].
 
 Obsoleted by =file-name-nondirectory=:
 #+BEGIN_SRC 
@@ -678,36 +651,38 @@ apparently it is widely used; for example, =M-x org-babel-tangle= uses =cl.el= (
 (let ((a3 0)) (1+ a3))
 :END:
 
-*** find
+*** s-find
+~s-find~ stands for "shalaev-find"; note that it is *not* compatible with ~find~ from ~cl.el~:
 #+BEGIN_SRC emacs-lisp :tangle generated/cl.el
-(defun find(item seq &optional key test)
-  (when seq
+(defun s-find(item seq &optional key test)
   (let ((test (or test #'=)))
-    (when-let ((CS (car seq)))
-      (if-let ((found (funcall test
-			       item
-			       (if key (funcall key CS) CS))))
-	  CS
-	(find item (cdr seq) key test))))))
+    (dolist (CS seq)
+      (when (funcall test item (if key (funcall key CS) CS))
+	(return CS)))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :results drawer
-(find 3 '( 1 2 3 4 5))
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(ert-deftest s-find()
+  (should (equal '(3 4) (s-find 4 '((1 2) (3 4) (5 6)) #'cadr)))
+  (should (= 3 (s-find 3 '(1 2 3 4 5))))
+(let ((cumbersome-list '(141 142 143 144)))
+  (should (= (s-find (* 12 12) cumbersome-list nil #'=) 144))
+  (should (= (s-find (/ 144 2) cumbersome-list nil #'(lambda(x y) (= (* 2 x) y))) 144))
+  (should (= (s-find 12 cumbersome-list nil #'(lambda(x y) (= (* x x) y))) 144)))
+(let ((cumbersome-list '((141 142) (143 144))))
+  (should (equal (s-find 12 cumbersome-list #'cadr #'(lambda(x y) (= y (* x x)))) '(143 144)))))
 #+END_SRC
 
-#+RESULTS:
-:RESULTS:
-3
-:END:
-
-#+BEGIN_SRC emacs-lisp :results drawer
-(find 4 '((1 2) (3 4) (5 6)) #'cadr)
+Note the difference from ~find~ defined in ~cl.el~: instead of
+#+BEGIN_SRC emacs-lisp
+(let ((cumbersome-list '((141 142) (143 144) (145 146))))
+  (find 12 cumbersome-list :key #'cadr :test #'(lambda(x y) (= y (* x x)))))
 #+END_SRC
-
-#+RESULTS:
-:RESULTS:
-(3 4)
-:END:
+we write
+#+BEGIN_SRC emacs-lisp
+(let ((cumbersome-list '((141 142) (143 144) (145 146))))
+  (s-find 12 cumbersome-list #'cadr #'(lambda(x y) (= y (* x x)))))
+#+END_SRC
 
 *** decf and incf
 #+BEGIN_SRC emacs-lisp :tangle generated/cl.el
@@ -756,6 +731,77 @@ It uses =macrolet= which is also defined in  =cl.el= :)
 
 To be improved: variable names in =macrolet= should be generated by =gensym=.
 
+*** select, without, and drop
+#+BEGIN_SRC emacs-lisp :tangle generated/cl.el
+(defun s-select (from-where match-test)
+  "select items matching the test"
+    (let (collected)
+       (dolist (list-item from-where)
+	 (when (funcall match-test list-item)
+	   (push list-item collected)))
+      (reverse collected)))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(ert-deftest s-select()
+(let ((test-list  '(4 22 11 33 12 24 77)))
+  (should (not (s-select test-list #'zerop)))
+  (should (equal '(11 33 77) (s-select test-list #'oddp)))
+  (should (equal '(4 22 12 24) (s-select test-list #'evenp)))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/cl.el
+(defun without(source &rest wrong-items)
+  "returns (copy of) source without wrong-items"
+  (s-select source #'(lambda(x) (not (member x wrong-items)))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(ert-deftest without()
+(let ((test-list  '(4 22 11 33 12 24 77)))
+  (should (equal '(4 22 11 33 77) (without test-list 12 24)))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+(defmacro drop (from-where &rest what)
+`(setf ,from-where (without ,from-where ,@what)))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(ert-deftest drop()
+(let ((test-list  '(4 22 11 33 12 24 77)))
+  (drop test-list 12 24)
+  (should (equal '(4 22 11 33 77) test-list))))
+#+END_SRC
+
+*** define-vars
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+(defmacro define-vars (&rest varDefs)
+  "to make switching between local/global variables easier"
+  `(progn
+    ,@(dolist-collect (VD varDefs)
+      (if (consp VD)
+	  `(defvar ,@VD)
+	`(defvar ,VD nil)))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :results drawer
+(macroexpand-1 `(define-vars a b))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(progn (defvar a nil) (defvar b nil))
+:END:
+
+#+BEGIN_SRC emacs-lisp :results drawer
+(macroexpand-1 `(define-vars (a 1) b (c 2)))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(progn (defvar a 1) (defvar b nil) (defvar c 2))
+:END:
 
 *** to do
 reduce, …
@@ -1179,13 +1225,13 @@ Example:
 #+END_SRC
 
 There is probably some standard function or macro doing this:
-#+BEGIN_SRC elisp :tangle generated/macros.el
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro end-push (what where)
   `(if ,where (push ,what (cdr (last ,where)))
       (push ,what ,where)))
 #+END_SRC
 
-#+BEGIN_SRC elisp :tangle generated/tests.el
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
 (ert-deftest end-push()
 (should (equal '(1)
 (let (container)
@@ -1198,13 +1244,13 @@ There is probably some standard function or macro doing this:
   container))))
 #+END_SRC
 
-#+BEGIN_SRC elisp :tangle generated/functions.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun land(args)
 "'and' for a list"
   (reduce #'(lambda(x y) (and x y)) args :initial-value t))
 #+END_SRC
 
-#+BEGIN_SRC elisp :tangle generated/tests.el
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
 (ert-deftest land()
   (should (land '(t t t t 1 2)))
   (should (not (land '(t t t nil 1 2)))))

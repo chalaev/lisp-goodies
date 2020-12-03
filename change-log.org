@@ -4,7 +4,12 @@ Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 Decided to share some of my macros
 
 ** 2020-11-28
-started adding tests for elisp code
+Started adding tests for elisp code.
+
+*** 2020-12-02
+1. Renamed ~find~ → ~s-find~ in order to distinguish it from ~find~ defined in ~cl.el~.
+   Added tests for ~s-find~.
+2. Added =(defun select ...)=
 
 ** 2020-11-18
 packaged the Common Lisp part of the code

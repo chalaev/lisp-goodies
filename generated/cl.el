@@ -12,15 +12,11 @@
       (incf counter)
       sym)))
 
-(defun find(item seq &optional key test)
-  (when seq
+(defun s-find(item seq &optional key test)
   (let ((test (or test #'=)))
-    (when-let ((CS (car seq)))
-      (if-let ((found (funcall test
-			       item
-			       (if key (funcall key CS) CS))))
-	  CS
-	(find item (cdr seq) key test))))))
+    (dolist (CS seq)
+      (when (funcall test item (if key (funcall key CS) CS))
+	(return CS)))))
 
 (unless (or (boundp 'decf) (functionp 'decf) (macrop 'decf))
 (defmacro decf (var &optional amount)
@@ -40,3 +36,15 @@
 (macrolet ,(mapcar #'(lambda(FD)
 (list (car FD) (cadr FD) `(funcall ,(cdr (assoc (car FD) GSs)) ,@(cadr FD)))) fun-defs)
  ,@body))))
+
+(defun s-select (from-where match-test)
+  "select items matching the test"
+    (let (collected)
+       (dolist (list-item from-where)
+	 (when (funcall match-test list-item)
+	   (push list-item collected)))
+      (reverse collected)))
+
+(defun without(source &rest wrong-items)
+  "returns (copy of) source without wrong-items"
+  (s-select source #'(lambda(x) (not (member x wrong-items)))))

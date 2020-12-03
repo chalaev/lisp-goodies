@@ -2,6 +2,9 @@
 ;; Generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
 ;; See explanations therein. Edit this code before using it.
 
+(make-temp-file "emacs-" nil ".pid" (format "%d
+" (emacs-pid))); saving emacs'es PID
+
 (defun barename (FN)
   (let ((SS (split-string (file-name-nondirectory FN)  "\\." t)))
     (mapconcat #'(lambda(x)x) (butlast SS) ".")))
