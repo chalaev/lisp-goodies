@@ -6,7 +6,7 @@
 #+LATEX_HEADER: \usepackage[letterpaper,hmargin={1.5cm,1.5cm},vmargin={1.3cm,2cm},nohead,nofoot]{geometry}
 #+KEYWORDS: emacs, elisp, common lisp, macros, functions
 
-#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 (declaim (notinline id))
 (defun id(x) x)
 #+END_SRC
@@ -40,7 +40,7 @@ Notes:
 #+END_SRC
 
 For testing puprposes it is useful to convert macro expansions to string:
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 (defmacro string-from-macro(m)
 `(format "%s" (print (macroexpand-1 ,m) #'(lambda(x) (format "%s" x)))))
 #+END_SRC
@@ -386,7 +386,7 @@ Its argument ~dirname~
 - may start with "~/" and
 - may or may not end with "/".
 
-#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
+#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 (defun safe-mkdir (dirname)
 "creates a directory returning the report"
 (condition-case err
@@ -551,31 +551,54 @@ Formatted result:
 
 * emacs lisp
 ** emacs configuration in ~/.emacs
-You probably want to adjust this code to your needs before pasting it into your =~/.emacs=:
-#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
-;; Generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
-;; See explanations therein. Edit this code before using it.
-
+*** creating PID file
+Before launching emacs server in my [[file:.login][~/.login]] file, I check PID file created by
+#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
 (make-temp-file "emacs-" nil ".pid" (format "%d
-" (emacs-pid))); saving emacs'es PID
+" (emacs-pid))); requires version(emacs) > 26
+#+END_SRC
+← *fails* on emacs version 25.1, but works on 26.1.
 
+*** Placing/Finding local packages
+The following 3 blocks allow me to require simple (consisting of one file) locally created packages, for example, this one – =(require 'shalaev)=:
+
+Defining important directories:
+#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+(defvar ~ (file-name-as-directory (getenv "HOME")))
+(defvar emacs-d (concat ~ (file-name-as-directory ".emacs.d")))
+#+END_SRC
+
+Inform ~emacs~ about new directory =~/.emacs.d/local-packages/= containing package files
+(and create it if necessary):
+#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
+(unless (assoc "local-packages" package-archives)
+  (push (cons  "local-packages" (concat emacs-d (file-name-as-directory "local-packages")))
+	package-archives))
+(make-directory (cdr (assoc "local-packages" package-archives)) t)
+#+END_SRC
+
+Adjusting [[https://www.emacswiki.org/emacs/LoadPath][load-path]]:
+#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
+(unless (member (cdr (assoc "local-packages" package-archives)) load-path)
+  (add-to-list 'load-path (cdr (assoc "local-packages" package-archives))))
+#+END_SRC
+
+*** Preventing multiple load of the seame file
+
+#+BEGIN_SRC emacs-lisp
 (defun barename (FN)
   (let ((SS (split-string (file-name-nondirectory FN)  "\\." t)))
     (mapconcat #'(lambda(x)x) (butlast SS) ".")))
 #+END_SRC
+
 =printangle= returns the list of exported (tangled) files
-#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
+#+BEGIN_SRC emacs-lisp
 (defun printangle(FN)
   "to be used in Makefile instead of org-babel-tangle-file"
   (let ((l (length default-directory)))
      (apply #'concat (mapcar #'(lambda(x) (substring (format "%s " x) l)) (org-babel-tangle-file FN)))))
 #+END_SRC
 ← my [[https://github.com/chalaev/cl-simple-logger/blob/master/Makefile][Makefile]]s load its definition from [[file:helpers/derive-version.el][derive-version.el]].
-
-Obsoleted by =file-name-nondirectory=:
-#+BEGIN_SRC 
-(defun basename (FN) (car(last(split-string FN "/" t))))
-#+END_SRC
 
 The following function is designed to prevent multiple evaluation of one and the same file:
 #+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
@@ -584,21 +607,24 @@ The following function is designed to prevent multiple evaluation of one and the
   (let ((FN (file-chase-links 
              (if (= ?/ (aref x 0)) x
                (concat (or el-prefix 
- (concat (getenv "HOME") "/"))
+ (file-name-as-directory (getenv "HOME")))
 x)))))
     (unless (member (car (last (split-string FN "\\." t))) '("el" "elc"))
       (setf FN (concat FN ".el")))
     (unless (member FN *loaded*) (load-file FN) (push (barename FN) *loaded*))))
 #+END_SRC
-Every time I start emacs, I load several files:
-#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
-(mapcar #'(lambda(x) (load-file* x "~/programming/emacs/"))
+
+Usage example:
+#+BEGIN_SRC emacs-lisp
+(mapcar #'(lambda(x) (load-file* x "~/programming/"))
 	'("macros" "functions" "logging"  ....))
 #+END_SRC
 
-My ~backup~ system does not save files having the group ~tmp~.
+*** for using in Makefiles
+My [[https://github.com/chalaev/backup2l.conf][backup]] system does not save files having the group ~tmp~.
 I use this group to mark all generated (tangled) files:
 #+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
+(require 'shalaev) ; ← needed for perms-from-str
 (defun after-tangle()
   "mark tangled files as non-backupable (chgrp tmp files) and non-excecutable"
   (let ((FN (buffer-file-name)))
@@ -611,6 +637,17 @@ The following line is equivalent to =chmod a-x FN=:
 #+END_SRC
 so they are not backuped.
 
+My literate programming relies on rmacs or mode and its =M-x org-babel-tangle= command, which I want to output the names of the generated files.
+So in [[file:Makefile][Makefiles]] I often use ~printangle~:
+#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
+(defun printangle(FN)
+  "to be used in Makefile instead of org-babel-tangle-file"
+  (let ((l (length default-directory)))
+    (apply #'concat (mapcar #'(lambda(x) (substring (format "%s " x) l)) (org-babel-tangle-file FN)))))
+#+END_SRC
+(together with =xargs= for unquoting emacs'es output).
+
+*** Other stuff
 (found online) =run-init-block=  runs ~init~ code block when loading an org-file:
 #+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
 (defun run-init-block ()
@@ -632,8 +669,6 @@ apparently it is widely used; for example, =M-x org-babel-tangle= uses =cl.el= (
 
 *** gensym
 #+BEGIN_SRC emacs-lisp :tangle generated/cl.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
-;; Some day this file will probably replace standard cl.el in my projects
 (let ((counter 0))
   (defun gensym(&optional starts-with)
     "for those who miss gensym from Common Lisp"
@@ -739,28 +774,29 @@ It uses =macrolet= which is also defined in  =cl.el= :)
 To be improved: variable names in =macrolet= should be generated by =gensym=.
 
 *** select, without, and drop
-#+BEGIN_SRC emacs-lisp :tangle generated/cl.el
-(defun s-select (from-where match-test)
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+(defun select (from-where match-test)
   "select items matching the test"
-    (let (collected)
+    (let (collected wasted)
        (dolist (list-item from-where)
-	 (when (funcall match-test list-item)
-	   (push list-item collected)))
-      (reverse collected)))
+	 (if (funcall match-test list-item)
+	   (push list-item collected)
+	   (push list-item wasted)))
+(cons (reverse collected) (reverse wasted))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/tests.el
-(ert-deftest s-select()
+(ert-deftest select()
 (let ((test-list  '(4 22 11 33 12 24 77)))
-  (should (not (s-select test-list #'zerop)))
-  (should (equal '(11 33 77) (s-select test-list #'oddp)))
-  (should (equal '(4 22 12 24) (s-select test-list #'evenp)))))
+  (should (not (car (select test-list #'zerop))))
+  (should (equal '(11 33 77) (car (select test-list #'oddp))))
+  (should (equal '(4 22 12 24) (car (select test-list #'evenp))))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/cl.el
 (defun without(source &rest wrong-items)
   "returns (copy of) source without wrong-items"
-  (s-select source #'(lambda(x) (not (member x wrong-items)))))
+  (car (select source #'(lambda(x) (not (member x wrong-items))))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/tests.el
@@ -808,8 +844,7 @@ reduce, …
 *** case*
 ~case*~ is not identical to =case= from =cl.el=:
 it uses arbitrary test function:
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro case* (expr test &rest cases)
   "case with arbitrary test function"
   (let ((v (gensym "v")))
@@ -1062,7 +1097,7 @@ Common Lisp version is the same as elisp one:
 
 *** email
 A non-interactive =email= function:
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun email (addr &optional subject body)
   "fast non-interactive way to send an email"
   (compose-mail addr (if subject subject ""))
@@ -1256,8 +1291,7 @@ There is probably some standard function or macro doing this:
 
 ** file/directory fuctions
 *** chgrp
-#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
+#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
 (defun chgrp(group file-name)
   (= 0 (call-process "chgrp" nil nil nil group file-name)))
 #+END_SRC
@@ -1323,10 +1357,8 @@ Every message is formatted similarly to how it is done by =format= function.
 Global variable =*log-level*= controls how much information should be logged: the (default) zero value means
 that all types of log-messages (:debug :warning :info :error) should be logged (saved);
 the value 3 means that only error messages (marked with :error) will be logged:
-#+BEGIN_SRC emacs-lisp :tangle generated/logging.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
+#+BEGIN_SRC emacs-lisp :tangle generated/logging.el
 (unless (boundp '*log-level*) (defvar *log-level* 0))
-(unless (boundp '*emacs-d*) (defvar *emacs-d* (concat (getenv "HOME") "/.emacs.d/")))
 #+END_SRC
 Log messages are accumulated in =*file-acc-buffer*=
 #+BEGIN_SRC emacs-lisp :tangle generated/logging.el
@@ -1345,7 +1377,7 @@ and once in a while (when the number of queued messages >30 or before quitting ~
 	  (insert today-str) (newline))
 	(dolist (msg (reverse *file-acc-buffer*))
 	  (insert msg) (newline)))
-      (append-to-file (point-min) (point-max) (concat *emacs-d* "elisp.log")))
+      (append-to-file (point-min) (point-max) (concat emacs-d "elisp.log")))
     (setf *file-acc-buffer* nil)))
 #+END_SRC
 Since we have [[https://www.emacswiki.org/emacs/EmacsLispLimitations][no multi-threading in elisp]], we do not need to introduce any lock functions.

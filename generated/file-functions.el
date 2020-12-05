@@ -1,3 +1,4 @@
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 (defun safe-mkdir (dirname)
 "creates a directory returning the report"
 (condition-case err
@@ -5,8 +6,6 @@
  (file-already-exists (cons nil :exists))
  (file-error (cons nil :permission))))
 
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
 (defun chgrp(group file-name)
   (= 0 (call-process "chgrp" nil nil nil group file-name)))
 

@@ -1,3 +1,4 @@
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 (declaim (notinline id))
 (defun id(x) x)
 
@@ -11,11 +12,11 @@
 (let ((cumbersome-list '((141 142) (143 144))))
   (should (equal (s-find 12 cumbersome-list #'cadr #'(lambda(x y) (= y (* x x)))) '(143 144)))))
 
-(ert-deftest s-select()
+(ert-deftest select()
 (let ((test-list  '(4 22 11 33 12 24 77)))
-  (should (not (s-select test-list #'zerop)))
-  (should (equal '(11 33 77) (s-select test-list #'oddp)))
-  (should (equal '(4 22 12 24) (s-select test-list #'evenp)))))
+  (should (not (car (select test-list #'zerop))))
+  (should (equal '(11 33 77) (car (select test-list #'oddp))))
+  (should (equal '(4 22 12 24) (car (select test-list #'evenp))))))
 
 (ert-deftest without()
 (let ((test-list  '(4 22 11 33 12 24 77)))

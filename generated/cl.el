@@ -1,6 +1,4 @@
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
-;; Some day this file will probably replace standard cl.el in my projects
 (let ((counter 0))
   (defun gensym(&optional starts-with)
     "for those who miss gensym from Common Lisp"
@@ -38,14 +36,6 @@
 (list (car FD) (cadr FD) `(funcall ,(cdr (assoc (car FD) GSs)) ,@(cadr FD)))) fun-defs)
  ,@body))))
 
-(defun s-select (from-where match-test)
-  "select items matching the test"
-    (let (collected)
-       (dolist (list-item from-where)
-	 (when (funcall match-test list-item)
-	   (push list-item collected)))
-      (reverse collected)))
-
 (defun without(source &rest wrong-items)
   "returns (copy of) source without wrong-items"
-  (s-select source #'(lambda(x) (not (member x wrong-items)))))
+  (car (select source #'(lambda(x) (not (member x wrong-items))))))

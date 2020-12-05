@@ -1,4 +1,13 @@
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+(defun select (from-where match-test)
+  "select items matching the test"
+    (let (collected wasted)
+       (dolist (list-item from-where)
+	 (if (funcall match-test list-item)
+	   (push list-item collected)
+	   (push list-item wasted)))
+(cons (reverse collected) (reverse wasted))))
+
 (defun email (addr &optional subject body)
   "fast non-interactive way to send an email"
   (compose-mail addr (if subject subject ""))

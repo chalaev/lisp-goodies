@@ -1,3 +1,4 @@
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 (defmacro string-from-macro(m)
 `(format "%s" (print (macroexpand-1 ,m) #'(lambda(x) (format "%s" x)))))
 
@@ -89,8 +90,6 @@
       `(defvar ,VD nil)))
 varDefs)))
 
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
 (defmacro case* (expr test &rest cases)
   "case with arbitrary test function"
   (let ((v (gensym "v")))

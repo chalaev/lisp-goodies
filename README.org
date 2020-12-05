@@ -1,7 +1,7 @@
 * Description
 Useful Emacs Lisp and Common Lisp macros and functions.
 
-(For me "Common Lisp" means "sbcl"; part of the CL-code will probably not work in other CL dialects.)
+(For me "Common Lisp" means [[http://sbcl.org/][sbcl]]; part of the CL-code will probably not work in other CL dialects.)
 
 The (main) file [[file:shalaev.org][shalaev.org]] contains
 - source code,
@@ -10,22 +10,15 @@ The (main) file [[file:shalaev.org][shalaev.org]] contains
 
 for both elisp and Common Lisp macros and functions.
 
-The Common Lisp part of the code is packaged into [[file:generated/cl-shalaev.tbz][cl-shalaev.tbz]]
-and should be ready to use after\\
-=tar xjfv cl-shalaev.tbz --directory=$HOME/quicklisp/local-projects/=
-
 * Quick start
 ** Emacs Lisp code
-Either
-1. copy-paste or load [[file:generated][generated/]]*.el into your projects or
-2. unpack [[file:generated/el-shalaev.tbz][el-shalaev.tbz]] into your =~/.emacs.d/= directory:\\
-   =tar xjfv el-shalaev.tbz --directory=$HOME/.emacs.d/=
-
-   and include =~/.emacs.d/shalaev/= into emacs'es source directory list.
+1. Either copy-paste or load [[file:generated][generated/]]*.el into your projects, or
+2. copy [[file:packaged/shalaev.el][shalaev.el]] into your =~/.emacs.d/local-packages/=, [[file:generated/dot.emacs][configure emacs]] ([[file:Makefile][Makefile]] does that), and
+    =(require 'shalaev)= in your el-code.
 
 For usage example, see the [[https://github.com/chalaev/cloud][cloud (sync)]] project.
 ** Common Lisp code
-Unpack [[file:generated/cl-shalaev.tbz][cl-shalaev.tbz]] into your [[https://www.quicklisp.org/beta/][Quicklisp]] directory:\\
+Unpack [[file:packaged/cl-shalaev.tbz][cl-shalaev.tbz]] into your [[https://www.quicklisp.org/beta/][Quicklisp]] directory:\\
 =tar xjfv cl-shalaev.tbz --directory=$HOME/quicklisp/local-projects/=
 
 and =(require :shalaev)= in your code.
@@ -38,10 +31,10 @@ For usage example, see the [[https://github.com/chalaev/cl-simple-logger][simple
 3. [[file:generated/logging.el][logging.el]] is a simple emacs logging system,
 4. [[file:generated/dot.emacs][dot.emacs]] is (almost) a copy of my =~/.emacs=,
 5. [[file:generated/cl.el][cl.el]] will probably be used some day as a replacement for the standard [[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/cl-lib.el][cl.el]],
-6. [[file:Makefile][Makefile]] is used by =make= to test the code and to create package in =$HOME/quicklisp/local-projects/=;
-   the resulting package files are archived in [[file:generated/cl-shalaev.tbz][cl-shalaev.tbz]],
+6. [[file:Makefile][Makefile]] is used by =make= to compile, test, and package;
+   the resulting package files are available in [[file:packaged/][packaged/]] directory.
 7. [[file:shalaev.asd][shalaev.asd]] and [[file:headers.org][headers.org]] describe Common Lisp packages created by =make= according to [[file:Makefile][Makefile]],
-8. [[file:helpers/][helpers/*]] assist compilation.
+8. [[file:helpers/][helpers/*]] assist compilation in [[file:Makefile][Makefile]].
 
 The files in the ~generated/~ folder are only included for convenience and can be easilly (re)generated using =make=.
 (If =make= freezes, that's probably because =emacs= is waiting for your permission to evaluate the code at the beginning of [[file:shalaev.org][shalaev.org]].)

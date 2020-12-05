@@ -1,7 +1,4 @@
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
 (unless (boundp '*log-level*) (defvar *log-level* 0))
-(unless (boundp '*emacs-d*) (defvar *emacs-d* (concat (getenv "HOME") "/.emacs.d/")))
 
 (unless (boundp '*file-acc-buffer*) (defvar *file-acc-buffer* nil))
 (defvar *last-FLD* nil "saves last day printed to the log file")
@@ -16,7 +13,7 @@
 	  (insert today-str) (newline))
 	(dolist (msg (reverse *file-acc-buffer*))
 	  (insert msg) (newline)))
-      (append-to-file (point-min) (point-max) (concat *emacs-d* "elisp.log")))
+      (append-to-file (point-min) (point-max) (concat emacs-d "elisp.log")))
     (setf *file-acc-buffer* nil)))
 
 (defun file-acc-push(msg)

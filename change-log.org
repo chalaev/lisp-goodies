@@ -1,16 +1,20 @@
 Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 
+* Packaging eLisp code
+** 2020-12-04
+1. (See [[file:Makefile][Makefile]].) Packaged el-code by putting =generated/*.el=  (except for ~dot.emacs~) into =~/.emacs.d/local-packages/shalaev.el=; later I will probably split it into different files.
+2. Updated section "emacs configuration in ~/.emacs" in [[file:shalaev.org][shalaev.org]]
+
 * September-October 2020
-Decided to share some of my macros
+Decided to share some of my macros and functions
 
 ** 2020-11-28
 Started adding tests for elisp code.
 
 *** 2020-12-02
-1. Renamed ~find~ → ~s-find~ in order to distinguish it from ~find~ defined in standard ~cl.el~.
+1. Added ~dolist-collect~ replacing CL's =(loop for x in my-list collect ...)=.
+2. Renamed ~find~ → ~s-find~ in order to distinguish it from ~find~ defined in ~cl.el~.
    Added tests for ~s-find~.
-2. Updated [[file:helpers/derive-version.el][derive-version.el]]
-3. Added =(defun s-select ...)=
 
 ** 2020-11-18
 packaged the Common Lisp part of the code
