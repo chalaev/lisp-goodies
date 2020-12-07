@@ -45,6 +45,10 @@ For testing puprposes it is useful to convert macro expansions to string:
 `(format "%s" (print (macroexpand-1 ,m) #'(lambda(x) (format "%s" x)))))
 #+END_SRC
 
+#+BEGIN_SRC lisp :tangle generated/shalaev.lisp
+;; empty file needed for Makefile
+#+END_SRC
+
 * when-let
 =when-let= is one of my most-used macros:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
@@ -67,12 +71,12 @@ and, if they are all non-nil, evalueates the body:
 #+BEGIN_SRC emacs-lisp :results drawer
 (print (macroexpand-1 
   '(when-let ((x 1) (y (1+ x)))
-       (incf x y) (incf y x))))
+       (s-incf x y) (s-incf y x))))
 #+END_SRC
 
 #+RESULTS:
 :RESULTS:
-(let ((x 1)) (when x (let ((y (1+ x))) (when y (incf x y) (incf y x)))))
+(let ((x 1)) (when x (let ((y (1+ x))) (when y (s-incf x y) (s-incf y x)))))
 :END:
 
 =when-let= defined here has almost the same functionality, as [[https://common-lisp.net/project/alexandria/draft/alexandria.html][alexandria:when-let*]].
@@ -122,7 +126,7 @@ It is somewhat similar to =when-let=, but offers "else" clause:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro if-let (vars ifyes &rest body)
   "if with let using standard let-notation"
-  (let ((if-true (gensym "it")) (result (gensym "r")))
+  (let ((if-true (s-gensym "it")) (result (s-gensym "r")))
     `(let (,if-true ,result)
        (when-let ,vars
 		 (setf ,if-true t
@@ -395,6 +399,7 @@ Its argument ~dirname~
  (file-error (cons nil :permission))))
 #+END_SRC
 
+*The following is going to be my general (standard) way of reporting results of a file operation both in EL and CL:*
 =safe-mkdir= returns =cons=; its =car= is
 - ~nil~ in case the directory can not be created (then =cdr= explains why), or
 - ~t~ in case the directory was sucessfully created,
@@ -465,7 +470,7 @@ In this case, =(cdr (directory-lock ...))= contains the result of ~body~ evaluat
 
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro directory-lock(locked-dir by &rest body)
-(let ((LD (gensym "LD")) (lock-file (gensym "LF")) (mkdir (gensym "MD")) (result (gensym "r")) (unlock (gensym "u")))
+(let ((LD (s-gensym "LD")) (lock-file (s-gensym "LF")) (mkdir (s-gensym "MD")) (result (s-gensym "r")) (unlock (s-gensym "u")))
 `(let* ((,LD (file-name-as-directory ,locked-dir))
         (,lock-file (concat ,LD "by"))
         (,mkdir (safe-mkdir ,LD)))
@@ -512,8 +517,8 @@ Formatted result:
 Common Lisp code is more advanced than the elisp one:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.lisp
 (defmacro directory-lock(locked-dir by &rest body)
-(let ((LD (gensym "ld")) (lock-file (gensym "LF")) (mkdir (gensym "md")) 
-      (result (gensym "r")))
+(let ((LD (s-gensym "ld")) (lock-file (s-gensym "LF")) (mkdir (s-gensym "md")) 
+      (result (s-gensym "r")))
 `(let* ((,LD (uiop:ensure-directory-pathname  ,locked-dir))
         (,mkdir (safe-mkdir ,LD)))
   (ifn (car ,mkdir) (cons nil (cons :lock (cdr ,mkdir)))
@@ -553,24 +558,31 @@ Formatted result:
 ** emacs configuration in ~/.emacs
 *** creating PID file
 Before launching emacs server in my [[file:.login][~/.login]] file, I check PID file created by
-#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
+#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+;;
+;; creating PID file for emacs; useful when it gets started from ~/.login
+;; see https://github.com/chalaev/lisp-goodies/blob/master/.login
 (make-temp-file "emacs-" nil ".pid" (format "%d
 " (emacs-pid))); requires version(emacs) > 26
 #+END_SRC
 ← *fails* on emacs version 25.1, but works on 26.1.
 
 *** Placing/Finding local packages
-The following 3 blocks allow me to require simple (consisting of one file) locally created packages, for example, this one – =(require 'shalaev)=:
+The following 3 blocks allow me to require simple (consisting of one file) locally created packages, for example, this one – =(require 'shalaev)=;
+I load the resulting [[file:generated/local-packages.el][local-packages.el]] from my [[file:generated/dot.emacs][~/.emacs]] and assume that whoever uses [[https://github.com/search?q=user%3Achalaev+language%3A%22Emacs+Lisp%22&type=Repositories&ref=advsearch&l=Emacs+Lisp&l=][my lisp packages]] does the same thing.
 
 Defining important directories:
-#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 (defvar ~ (file-name-as-directory (getenv "HOME")))
-(defvar emacs-d (concat ~ (file-name-as-directory ".emacs.d")))
+(defun tilde(x) (replace-regexp-in-string (concat "^" ~) "~/" x))
+(defun untilde(x) (replace-regexp-in-string "^~/" ~ x))
+(defvar emacs-d (concat "~/" (file-name-as-directory ".emacs.d")))
 #+END_SRC
 
 Inform ~emacs~ about new directory =~/.emacs.d/local-packages/= containing package files
 (and create it if necessary):
-#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
+#+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el
+(require 'package)
 (unless (assoc "local-packages" package-archives)
   (push (cons  "local-packages" (concat emacs-d (file-name-as-directory "local-packages")))
 	package-archives))
@@ -578,17 +590,9 @@ Inform ~emacs~ about new directory =~/.emacs.d/local-packages/= containing packa
 #+END_SRC
 
 Adjusting [[https://www.emacswiki.org/emacs/LoadPath][load-path]]:
-#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
+#+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el
 (unless (member (cdr (assoc "local-packages" package-archives)) load-path)
   (add-to-list 'load-path (cdr (assoc "local-packages" package-archives))))
-#+END_SRC
-
-*** Preventing multiple load of the seame file
-
-#+BEGIN_SRC emacs-lisp
-(defun barename (FN)
-  (let ((SS (split-string (file-name-nondirectory FN)  "\\." t)))
-    (mapconcat #'(lambda(x)x) (butlast SS) ".")))
 #+END_SRC
 
 =printangle= returns the list of exported (tangled) files
@@ -600,37 +604,24 @@ Adjusting [[https://www.emacswiki.org/emacs/LoadPath][load-path]]:
 #+END_SRC
 ← my [[https://github.com/chalaev/cl-simple-logger/blob/master/Makefile][Makefile]]s load its definition from [[file:helpers/derive-version.el][derive-version.el]].
 
-The following function is designed to prevent multiple evaluation of one and the same file:
 #+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
-(defvar *loaded* nil "prevents duplicate evaluation of files")
-(defun load-file* (x &optional el-prefix)
-  (let ((FN (file-chase-links 
-             (if (= ?/ (aref x 0)) x
-               (concat (or el-prefix 
- (file-name-as-directory (getenv "HOME")))
-x)))))
-    (unless (member (car (last (split-string FN "\\." t))) '("el" "elc"))
-      (setf FN (concat FN ".el")))
-    (unless (member FN *loaded*) (load-file FN) (push (barename FN) *loaded*))))
-#+END_SRC
-
-Usage example:
-#+BEGIN_SRC emacs-lisp
-(mapcar #'(lambda(x) (load-file* x "~/programming/"))
-	'("macros" "functions" "logging"  ....))
+;; see https://github.com/chalaev/lisp-goodies/blob/master/packaged/private.el
+(load-file "/path-to/private.el")
+;; see https://github.com/chalaev/lisp-goodies/blob/master/generated/local-packages.el
+(load-file "/path-to/local-packages.el")
 #+END_SRC
 
 *** for using in Makefiles
 My [[https://github.com/chalaev/backup2l.conf][backup]] system does not save files having the group ~tmp~.
 I use this group to mark all generated (tangled) files:
-#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
-(require 'shalaev) ; ← needed for perms-from-str
+#+BEGIN_SRC emacs-lisp :tangle generated/make.el
+(require 'shalaev) ; ← needed for perms-from-str unless you have loaded it in another way
 (defun after-tangle()
   "mark tangled files as non-backupable (chgrp tmp files) and non-excecutable"
   (let ((FN (buffer-file-name)))
 #+END_SRC
 The following line is equivalent to =chmod a-x FN=:
-#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
+#+BEGIN_SRC emacs-lisp :tangle generated/make.el
     (set-file-modes FN (logand #o666 (perms-from-str (nth 8 (file-attributes FN 'string)))))
     (chgrp "tmp" FN)))
 (add-hook 'org-babel-post-tangle-hook #'after-tangle)
@@ -639,7 +630,7 @@ so they are not backuped.
 
 My literate programming relies on rmacs or mode and its =M-x org-babel-tangle= command, which I want to output the names of the generated files.
 So in [[file:Makefile][Makefiles]] I often use ~printangle~:
-#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
+#+BEGIN_SRC emacs-lisp :tangle generated/make.el
 (defun printangle(FN)
   "to be used in Makefile instead of org-babel-tangle-file"
   (let ((l (length default-directory)))
@@ -649,8 +640,9 @@ So in [[file:Makefile][Makefiles]] I often use ~printangle~:
 
 *** Other stuff
 (found online) =run-init-block=  runs ~init~ code block when loading an org-file:
-#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
+#+BEGIN_SRC emacs-lisp :tangle generated/make.el
 (defun run-init-block ()
+"runs code block labeled 'init' when an org-file is opened in emacs"
   (org-babel-goto-named-src-block "init")
   (org-babel-execute-src-block))
 #+END_SRC
@@ -660,30 +652,30 @@ Just following Stallman's advice, I try to avoid using =cl.el=;
 =generated/cl.el= will be my (incomplete for now) replacement for  =cl.el=
 to be loaded as follows:
 #+BEGIN_SRC emacs-lisp
-(unless (functionp 'gensym)
+(unless (functionp 's-gensym)
   (load (concat (file-name-as-directory "generated") "cl.el")))
 #+END_SRC
 
 *Problem:* I am not sure if eliminating =cl.el= really makes sence because
 apparently it is widely used; for example, =M-x org-babel-tangle= uses =cl.el= (although does not require it).
 
-*** gensym
+*** s-gensym
 #+BEGIN_SRC emacs-lisp :tangle generated/cl.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 (let ((counter 0))
-  (defun gensym(&optional starts-with)
-    "for those who miss gensym from Common Lisp"
+  (defun s-gensym(&optional starts-with)
+    "for those who miss s-gensym from Common Lisp"
     (unless starts-with (setf starts-with "gs"))
     (let (sym)
       (while (progn
                (setf sym (make-symbol (concat starts-with (number-to-string counter))))
                (or (special-form-p sym) (functionp sym) (macrop sym) (boundp sym)))
-        (incf counter))
-      (incf counter)
+        (s-incf counter))
+      (s-incf counter)
       sym)))
 #+END_SRC
-=gensym= is used in macros, e.g.
+=s-gensym= is used in macros, e.g.
 #+BEGIN_SRC emacs-lisp :results drawer
-(let ((ms (gensym "a")))
+(let ((ms (s-gensym "a")))
   `(let ((,ms 0))
      (1+ ,ms)))
 #+END_SRC
@@ -726,27 +718,25 @@ we write
   (s-find 12 cumbersome-list #'cadr #'(lambda(x y) (= y (* x x)))))
 #+END_SRC
 
-*** decf and incf
+*** s-decf and s-incf
 #+BEGIN_SRC emacs-lisp :tangle generated/cl.el
-(unless (or (boundp 'decf) (functionp 'decf) (macrop 'decf))
-(defmacro decf (var &optional amount)
+(defmacro s-decf (var &optional amount)
   (unless amount (setf amount 1))
-  `(setf ,var (- ,var ,amount))))
+  `(setf ,var (- ,var ,amount)))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/cl.el
-(unless (or (boundp 'incf) (functionp 'incf) (macrop 'incf))
-(defmacro incf (var &optional amount)
+(defmacro s-incf (var &optional amount)
   (unless amount (setf amount 1))
-  `(setf ,var (+ ,var ,amount))))
+  `(setf ,var (+ ,var ,amount)))
 #+END_SRC
 
 *** flet
 It uses =macrolet= which is also defined in  =cl.el= :)
 
 #+BEGIN_SRC emacs-lisp :tangle generated/cl.el
-(defmacro flet(fun-defs &rest body)
-(let ((GSs (mapcar #'(lambda(FD) (cons (car FD) (gensym))) fun-defs)))
+(defmacro s-flet(fun-defs &rest body)
+(let ((GSs (mapcar #'(lambda(FD) (cons (car FD) (s-gensym))) fun-defs)))
 `(let ,(mapcar #'(lambda(FD)
 (list (cdr (assoc (car FD) GSs))
 `(lambda ,(cadr FD) ,@(cddr FD)))) fun-defs)
@@ -756,7 +746,7 @@ It uses =macrolet= which is also defined in  =cl.el= :)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :results drawer
-(print (macroexpand-1 '(flet ((f1(x) (1+ x)) (f2(x) (1- x)))
+(print (macroexpand-1 '(s-flet ((f1(x) (1+ x)) (f2(x) (1- x)))
 (+ 1 2 (f1 3))
 (* 1 2 (f2 3)))))
 #+END_SRC
@@ -771,7 +761,7 @@ It uses =macrolet= which is also defined in  =cl.el= :)
  (* 1 2 (f2 3))))
 :END:
 
-To be improved: variable names in =macrolet= should be generated by =gensym=.
+To be improved: variable names in =macrolet= should be generated by =s-gensym=.
 
 *** select, without, and drop
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
@@ -793,7 +783,7 @@ To be improved: variable names in =macrolet= should be generated by =gensym=.
   (should (equal '(4 22 12 24) (car (select test-list #'evenp))))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/cl.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun without(source &rest wrong-items)
   "returns (copy of) source without wrong-items"
   (car (select source #'(lambda(x) (not (member x wrong-items))))))
@@ -847,7 +837,7 @@ it uses arbitrary test function:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro case* (expr test &rest cases)
   "case with arbitrary test function"
-  (let ((v (gensym "v")))
+  (let ((v (s-gensym "v")))
     `(let ((,v ,expr))
        (cond
         ,@(mapcar #'(lambda (VR)
@@ -932,7 +922,7 @@ Global variable values will *not* be set to ~nil~.
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro when-set (vars &rest body)
   "when-let using global variable instead of defining local one"
-(let ((GV (gensym)))
+(let ((GV (s-gensym)))
   `(let ((,GV ,(cadar vars)))
      ,(if (cdr vars)
 	  `(when ,GV
@@ -960,7 +950,7 @@ Global variable values will *not* be set to ~nil~.
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro unless-set (vars &rest body)
   "unless-let using global variable instead of defining local one"
-(let ((GV (gensym)))
+(let ((GV (s-gensym)))
   `(let ((,GV ,(cadar vars)))
      ,(if (cdr vars)
 	  `(if ,GV
@@ -990,7 +980,7 @@ Global variable values will *not* be set to ~nil~.
 *** if-set
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro if-set (vars &rest body)
-  (let ((if-true (gensym "it")) (result (gensym "r")))
+  (let ((if-true (s-gensym "it")) (result (s-gensym "r")))
     `(let (,if-true ,result)
        (setf ,result (when-set ,vars
 		  (setf ,if-true t)
@@ -1114,68 +1104,32 @@ Position of an element in a list:
   (dolist (e ll r)
     (if (eql e el)
 	(setf r i)
-      (incf i)))))
+      (s-incf i)))))
 #+END_SRC
 
 *** perms-from-str
 When I ask ~emacs~ to show me file's permissions, it provides a text string (e.g., "-rw-rw----") instead of a number.
 The following function produces a number from such a string:
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
+(require 'cl); hopefully one day I will remove this line
 (defun perms-from-str (str)
 "parses file mode string into integer"
   (let ((text-mode (reverse (cdr (append str nil)))) (mode 0) (fac 1))
     (loop for c in text-mode for i from 0
-          unless (= c ?-) do (incf mode fac)
+          unless (= c ?-) do (s-incf mode fac)
           do (setf fac (* 2 fac)))
     mode))
 #+END_SRC
-Usage example:
-#+BEGIN_SRC emacs-lisp :results drawer
-(perms-from-str "-rw-rw----")
-#+END_SRC
 
-#+RESULTS:
-:RESULTS:
-432
-:END:
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(ert-deftest perms-from-str()
+  (should (= 432 (perms-from-str "-rw-rw----"))))
+#+END_SRC
 
 *** perms-to-str
 =perms-to-str= is just the opposite of [[perms-from-str]].
-#+BEGIN_SRC emacs-lisp :results drawer
-(let ((ll '((1 . 0))))
-  (dotimes (i 8 ll)
-     (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll)))
-#+END_SRC
 
-#+RESULTS:
-:RESULTS:
-((256 . 2) (128 . 1) (64 . 0) (32 . 2) (16 . 1) (8 . 0) (4 . 2) (2 . 1) (1 . 0))
-:END:
-
-#+BEGIN_SRC emacs-lisp :results drawer
-(let ((ll '((1 . 0))))
-  (dotimes (i 8 ll)
-     (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll)))
-#+END_SRC
-
-#+RESULTS:
-:RESULTS:
-((256 . 2) (128 . 1) (64 . 0) (32 . 2) (16 . 1) (8 . 0) (4 . 2) (2 . 1) (1 . 0))
-:END:
-
-#+BEGIN_SRC emacs-lisp :results drawer
-(let ((ll '((1 . 0))) (file-mode #o664))
-  (apply #'concat (mapcar
-		   #'(lambda(x) (format "%c" (if (= 0 (logand file-mode (car x))) ?- (aref "xwr" (cdr x)))))
-  (dotimes (i 8 ll)
-     (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll)))))
-#+END_SRC
-
-#+RESULTS:
-:RESULTS:
-rw-rw-r--
-:END:
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
 (defun perms-to-str(file-mode)
 "formats integer file mode into string"
 (let ((ll '((1 . 0))))
@@ -1184,15 +1138,11 @@ rw-rw-r--
   (dotimes (i 8 ll)
      (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll))))))
 #+END_SRC
-Usage example:
-#+BEGIN_SRC emacs-lisp :results drawer
-(perms-to-str #o667)
-#+END_SRC
 
-#+RESULTS:
-:RESULTS:
-rw-rw-rwx
-:END:
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(ert-deftest perms-to-str()
+  (should (string= "rw-rw-rwx" (perms-to-str #o667))))
+#+END_SRC
 
 *** parsing time and date
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
@@ -1251,7 +1201,7 @@ Example:
      (loop for i from ?A to ?Z unless (member i forbidden-symbols) collect i)
      (loop for i from ?a to ?z unless (member i forbidden-symbols) collect i)
      (loop for i from ?0 to ?9 unless (member i forbidden-symbols) collect i)))
-"safe characters for file names")
+"safe characters for file names: everuthing allowed except for what is forbidden")
 (defun rand-str(N)
   (apply #'concat
      (loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))
@@ -1260,6 +1210,7 @@ Example:
 There is probably some standard function or macro doing this:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro end-push (what where)
+"adds an item to the end of the list, resembles 'add-to-list'"
   `(if ,where (push ,what (cdr (last ,where)))
       (push ,what ,where)))
 #+END_SRC
@@ -1358,47 +1309,47 @@ Global variable =*log-level*= controls how much information should be logged: th
 that all types of log-messages (:debug :warning :info :error) should be logged (saved);
 the value 3 means that only error messages (marked with :error) will be logged:
 #+BEGIN_SRC emacs-lisp :tangle generated/logging.el
-(unless (boundp '*log-level*) (defvar *log-level* 0))
+(defvar *log-level* 0)
 #+END_SRC
-Log messages are accumulated in =*file-acc-buffer*=
+Log messages are accumulated in =*log-buffer*=
 #+BEGIN_SRC emacs-lisp :tangle generated/logging.el
-(unless (boundp '*file-acc-buffer*) (defvar *file-acc-buffer* nil))
-(defvar *last-FLD* nil "saves last day printed to the log file")
+(defvar *log-buffer* nil)
 #+END_SRC
 and once in a while (when the number of queued messages >30 or before quitting ~emacs~) appended to the file =~/.emacs.d/elisp.log=:
 #+BEGIN_SRC emacs-lisp :tangle generated/logging.el
-(defun clog-flush()
+(let (last-FLD); saves last day printed to the log file
+(defun log-flush()
   "save log messages to file for debugging"
   (when (= 0 *log-level*)
     (with-temp-buffer
       (let ((today-str (format-time-string "%04Y-%02m-%02d" (current-time))))
-	(unless (string= today-str *last-FLD*)
-	  (setf *last-FLD* today-str)
+	(unless (string= today-str last-FLD)
+	  (setf last-FLD today-str)
 	  (insert today-str) (newline))
-	(dolist (msg (reverse *file-acc-buffer*))
+	(dolist (msg (reverse *log-buffer*))
 	  (insert msg) (newline)))
       (append-to-file (point-min) (point-max) (concat emacs-d "elisp.log")))
-    (setf *file-acc-buffer* nil)))
-#+END_SRC
-Since we have [[https://www.emacswiki.org/emacs/EmacsLispLimitations][no multi-threading in elisp]], we do not need to introduce any lock functions.
-#+BEGIN_SRC emacs-lisp :tangle generated/logging.el
-(defun file-acc-push(msg)
-  (push msg *file-acc-buffer*)
-  (when (< 30 (length *file-acc-buffer*)) (clog-flush)))
+    (setf *log-buffer* nil))))
 #+END_SRC
 The main logging function:
 #+BEGIN_SRC emacs-lisp :tangle generated/logging.el
 (defun clog (level fstr &rest args)
   "simple logging function" ; level is one of → :debug :info :warning :error
-  (when (<= *log-level* (or (pos level '(:debug :info :warning :error)) 0))
-    (let ((log-msg
+(let ((log-push (lambda(msg)
+  (push msg *log-buffer*)
+  (when (< 30 (length *log-buffer*)) (log-flush)))))
+#+END_SRC
+Since we have [[https://www.emacswiki.org/emacs/EmacsLispLimitations][no multi-threading in elisp]], we do not need to introduce any lock functions.
+#+BEGIN_SRC emacs-lisp :tangle generated/logging.el
+(when (<= *log-level* (or (pos level '(:debug :info :warning :error)) 0))
+  (let ((log-msg
 	   (cons
 	    (concat "%s " (format-time-string "%H:%M:%S "
 (apply 'encode-time (butlast (decode-time (current-time)) 3)))
 		    fstr)
 	    (cons (symbol-name level) args))))
-      (file-acc-push (apply #'format log-msg))
-      (apply #'message log-msg)) nil))
+      (funcall log-push (apply #'format log-msg))
+      (apply #'message log-msg)) nil)))
 #+END_SRC
 where I inserted =nil= at the end just for convenience, since I often use
 =clog= for error messages:
@@ -1413,11 +1364,35 @@ Let us not forget to flush the log
 #+BEGIN_SRC emacs-lisp :tangle generated/logging.el
 (defun on-emacs-exit()
   (clog :debug "flushing comments before quiting emacs")
-  (clog-flush))
+  (log-flush))
 #+END_SRC
 before quitting emacs:
 #+BEGIN_SRC emacs-lisp :tangle generated/logging.el
 (add-hook 'kill-emacs-hook 'on-emacs-exit)
+#+END_SRC
+
+** load*
+Preventing multiple load of the seame file:
+#+BEGIN_SRC emacs-lisp :tangle generated/load.el
+(defun barename (FN)
+  (let ((SS (split-string (file-name-nondirectory FN)  "\\." t)))
+    (mapconcat #'(lambda(x)x) (butlast SS) ".")))
+#+END_SRC
+
+The following function is designed to prevent multiple evaluation of one and the same file:
+#+BEGIN_SRC emacs-lisp :tangle generated/load.el
+(let (loaded); prevents duplicate evaluation of files
+(defun load* (x &optional el-prefix)
+  (let ((FN (tilde (file-chase-links (concat (or el-prefix "~/") x)))))
+    (unless (member (car (last (split-string FN "\\." t))) '("el" "elc"))
+      (setf FN (concat FN ".el")))
+    (unless (member FN loaded) (load-file FN) (push (barename FN) loaded)))))
+#+END_SRC
+
+Usage example:
+#+BEGIN_SRC emacs-lisp
+(mapcar #'(lambda(x) (load* x "~/programming/"))
+	'("macros" "functions" "logging"  ....))
 #+END_SRC
 
 * common lisp

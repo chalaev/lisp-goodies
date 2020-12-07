@@ -11,23 +11,31 @@ OFNs = shalaev packaging
 ORGs = $(addsuffix .org, $(OFNs))
 
 # unless I mention generated/from/*.org files here, they will be considered temporary and auto-erased so emacsclient will always be called on every make:
-all: quicklisp README.md packaged/el-shalaev.tbz packaged/shalaev.el packaged/cl-shalaev.tbz $(addprefix generated/from/, $(ORGs))
+all: packaged/private.el quicklisp README.md packaged/el-shalaev.tbz packaged/shalaev.el packaged/cl-shalaev.tbz $(addprefix generated/from/, $(ORGs))
 quicklisp: $(quicklispDir)/ $(addprefix $(quicklispDir)/, $(package)) $(addprefix generated/from/, $(ORGs))
 
 packaged/el-shalaev.tbz: generated/from/shalaev.org packaged/
 	@echo "\nTesting before we package it:"
-	emacs --no-site-file --batch -l ert  --eval "(require 'cl)" -l generated/macros.el -l generated/functions.el -l generated/file-functions.el -l generated/cl.el -l generated/tests.el -f ert-run-tests-batch-and-exit
+	emacs --no-site-file --batch -l ert  --eval "(require 'cl)" -l generated/macros.el -l generated/functions.el -l generated/file-functions.el -l generated/load.el -l generated/cl.el -l generated/tests.el -f ert-run-tests-batch-and-exit
 	@echo "`date '+%m/%d %H:%M'` EL TESTS PASSED :)\n"
 	tar jcfv $@ --transform s/^generated/shalaev/ generated/*.el
 	-@chgrp tmp $@
-	-@rsync -avu generated/*.el ../cloud/goodies/
 
 packaged/shalaev.el: version.org header.el packaged/
 	sed "s/the-version/`head -n1 $<`/" header.el > $@
-	cat generated/cl.el  generated/file-functions.el  generated/functions.el  generated/logging.el  generated/macros.el >> $@
+	cat generated/cl.el  generated/file-functions.el generated/functions.el generated/logging.el generated/macros.el >> $@
 	echo "(provide 'shalaev)" >> $@
 	echo ";;; shalaev.el ends here" >> $@
-	emacsclient -e '(cdr (assoc "local-packages" package-archives))' | xargs cp $@
+	emacsclient -e '(untilde (cdr (assoc "local-packages" package-archives)))' | xargs cp $@
+	echo ";; -*- lexical-binding: t; -*-" > packaged/private.el
+	echo "\n;; I load this file at startup\n"  >> packaged/private.el
+	cat generated/local-packages.el generated/make.el generated/load.el >> packaged/private.el
+	-@chgrp tmp $@
+
+packaged/private.el: generated/local-packages.el generated/make.el generated/load.el packaged/
+	echo ";; -*- lexical-binding: t; -*-" > $@
+	echo "\n;; I load this file at startup\n"  >> $@
+	cat generated/local-packages.el generated/make.el generated/load.el >> $@
 	-@chgrp tmp $@
 
 packaged/cl-shalaev.tbz: quicklisp packaged/

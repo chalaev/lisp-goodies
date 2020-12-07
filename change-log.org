@@ -1,6 +1,12 @@
 Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 
 * Packaging eLisp code
+** 2020-12-07
+Moved some code out of [[file:packaged/shalaev.el][shalaev.el]] adding bew files:
+1. [[file:generated/load.el][load.el]] provides =load*= function for loading non-packaged code,
+2. [[file:generated/local-packages.el][local-packages.el]] helps to =require= local (unavailable from ELPA) packages like [[file:packaged/shalaev.el][shalaev.el]], and
+3. [[file:generated/make.el][make.el]] contains elisp code used in [[file:Makefile][Makefile]]s.
+
 ** 2020-12-04
 1. (See [[file:Makefile][Makefile]].) Packaged el-code by putting =generated/*.el=  (except for ~dot.emacs~) into =~/.emacs.d/local-packages/shalaev.el=; later I will probably split it into different files.
 2. Updated section "emacs configuration in ~/.emacs" in [[file:shalaev.org][shalaev.org]]

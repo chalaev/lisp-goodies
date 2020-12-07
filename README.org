@@ -12,9 +12,9 @@ for both elisp and Common Lisp macros and functions.
 
 * Quick start
 ** Emacs Lisp code
-1. Either copy-paste or load [[file:generated][generated/]]*.el into your projects, or
-2. copy [[file:packaged/shalaev.el][shalaev.el]] into your =~/.emacs.d/local-packages/=, [[file:generated/dot.emacs][configure emacs]] ([[file:Makefile][Makefile]] does that), and
-    =(require 'shalaev)= in your el-code.
+Either copy-paste or load [[file:generated][generated/]]*.el into your projects, or
+1. paste [[file:local-packages.el][local-packages.el]] into your =~/.emacs=, and
+2. copy [[file:packaged/shalaev.el][shalaev.el]] into your =~/.emacs.d/local-packages/=, [[file:generated/dot.emacs][configure emacs]], and =(require 'shalaev)= in your el-code.
 
 For usage example, see the [[https://github.com/chalaev/cloud][cloud (sync)]] project.
 ** Common Lisp code

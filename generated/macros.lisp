@@ -66,8 +66,8 @@
   `(setf (gethash ,pos ,arr) ,val))
 
 (defmacro directory-lock(locked-dir by &rest body)
-(let ((LD (gensym "ld")) (lock-file (gensym "LF")) (mkdir (gensym "md")) 
-      (result (gensym "r")))
+(let ((LD (s-gensym "ld")) (lock-file (s-gensym "LF")) (mkdir (s-gensym "md")) 
+      (result (s-gensym "r")))
 `(let* ((,LD (uiop:ensure-directory-pathname  ,locked-dir))
         (,mkdir (safe-mkdir ,LD)))
   (ifn (car ,mkdir) (cons nil (cons :lock (cdr ,mkdir)))

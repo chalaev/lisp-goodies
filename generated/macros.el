@@ -17,7 +17,7 @@
 
 (defmacro if-let (vars ifyes &rest body)
   "if with let using standard let-notation"
-  (let ((if-true (gensym "it")) (result (gensym "r")))
+  (let ((if-true (s-gensym "it")) (result (s-gensym "r")))
     `(let (,if-true ,result)
        (when-let ,vars
 		 (setf ,if-true t
@@ -67,7 +67,7 @@
 	      `(progn ,@body))))))
 
 (defmacro directory-lock(locked-dir by &rest body)
-(let ((LD (gensym "LD")) (lock-file (gensym "LF")) (mkdir (gensym "MD")) (result (gensym "r")) (unlock (gensym "u")))
+(let ((LD (s-gensym "LD")) (lock-file (s-gensym "LF")) (mkdir (s-gensym "MD")) (result (s-gensym "r")) (unlock (s-gensym "u")))
 `(let* ((,LD (file-name-as-directory ,locked-dir))
         (,lock-file (concat ,LD "by"))
         (,mkdir (safe-mkdir ,LD)))
@@ -92,7 +92,7 @@ varDefs)))
 
 (defmacro case* (expr test &rest cases)
   "case with arbitrary test function"
-  (let ((v (gensym "v")))
+  (let ((v (s-gensym "v")))
     `(let ((,v ,expr))
        (cond
         ,@(mapcar #'(lambda (VR)
@@ -104,7 +104,7 @@ varDefs)))
 
 (defmacro when-set (vars &rest body)
   "when-let using global variable instead of defining local one"
-(let ((GV (gensym)))
+(let ((GV (s-gensym)))
   `(let ((,GV ,(cadar vars)))
      ,(if (cdr vars)
 	  `(when ,GV
@@ -114,7 +114,7 @@ varDefs)))
 
 (defmacro unless-set (vars &rest body)
   "unless-let using global variable instead of defining local one"
-(let ((GV (gensym)))
+(let ((GV (s-gensym)))
   `(let ((,GV ,(cadar vars)))
      ,(if (cdr vars)
 	  `(if ,GV
@@ -123,7 +123,7 @@ varDefs)))
 	(append `(if ,GV (setf ,(caar vars) ,GV)) body)))))
 
 (defmacro if-set (vars &rest body)
-  (let ((if-true (gensym "it")) (result (gensym "r")))
+  (let ((if-true (s-gensym "it")) (result (s-gensym "r")))
     `(let (,if-true ,result)
        (setf ,result (when-set ,vars
 		  (setf ,if-true t)
@@ -148,5 +148,6 @@ varDefs)))
 `(if (not ,test) ,ifnot ,@ifyes))
 
 (defmacro end-push (what where)
+"adds an item to the end of the list, resembles 'add-to-list'"
   `(if ,where (push ,what (cdr (last ,where)))
       (push ,what ,where)))

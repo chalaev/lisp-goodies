@@ -8,6 +8,10 @@
 	   (push list-item wasted)))
 (cons (reverse collected) (reverse wasted))))
 
+(defun without(source &rest wrong-items)
+  "returns (copy of) source without wrong-items"
+  (car (select source #'(lambda(x) (not (member x wrong-items))))))
+
 (defun email (addr &optional subject body)
   "fast non-interactive way to send an email"
   (compose-mail addr (if subject subject ""))
@@ -19,23 +23,7 @@
   (dolist (e ll r)
     (if (eql e el)
 	(setf r i)
-      (incf i)))))
-
-(defun perms-from-str (str)
-"parses file mode string into integer"
-  (let ((text-mode (reverse (cdr (append str nil)))) (mode 0) (fac 1))
-    (loop for c in text-mode for i from 0
-          unless (= c ?-) do (incf mode fac)
-          do (setf fac (* 2 fac)))
-    mode))
-
-(defun perms-to-str(file-mode)
-"formats integer file mode into string"
-(let ((ll '((1 . 0))))
-  (apply #'concat (mapcar
-		   #'(lambda(x) (format "%c" (if (= 0 (logand file-mode (car x))) ?- (aref "xwr" (cdr x)))))
-  (dotimes (i 8 ll)
-     (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll))))))
+      (s-incf i)))))
 
 (defun parse-date (str)
   (mapcar 'string-to-number
@@ -68,7 +56,7 @@
      (loop for i from ?A to ?Z unless (member i forbidden-symbols) collect i)
      (loop for i from ?a to ?z unless (member i forbidden-symbols) collect i)
      (loop for i from ?0 to ?9 unless (member i forbidden-symbols) collect i)))
-"safe characters for file names")
+"safe characters for file names: everuthing allowed except for what is forbidden")
 (defun rand-str(N)
   (apply #'concat
      (loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))

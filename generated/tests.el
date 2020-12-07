@@ -31,6 +31,12 @@
 (should(string= "(progn (defvar a nil) (defvar b nil))" (string-from-macro '(define-vars (a b)))))
 (should(string= "(progn (defvar a 1) (defvar b nil) (defvar c 2))" (string-from-macro '(define-vars ((a 1) b (c 2)))))))
 
+(ert-deftest perms-from-str()
+  (should (= 432 (perms-from-str "-rw-rw----"))))
+
+(ert-deftest perms-to-str()
+  (should (string= "rw-rw-rwx" (perms-to-str #o667))))
+
 (ert-deftest end-push()
 (should (equal '(1)
 (let (container)
