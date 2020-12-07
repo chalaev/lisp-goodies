@@ -11,7 +11,7 @@ OFNs = shalaev packaging
 ORGs = $(addsuffix .org, $(OFNs))
 
 # unless I mention generated/from/*.org files here, they will be considered temporary and auto-erased so emacsclient will always be called on every make:
-all: packaged/private.el quicklisp README.md packaged/el-shalaev.tbz packaged/shalaev.el packaged/cl-shalaev.tbz $(addprefix generated/from/, $(ORGs))
+all: packaged/start.el quicklisp README.md packaged/el-shalaev.tbz packaged/shalaev.el packaged/cl-shalaev.tbz $(addprefix generated/from/, $(ORGs))
 quicklisp: $(quicklispDir)/ $(addprefix $(quicklispDir)/, $(package)) $(addprefix generated/from/, $(ORGs))
 
 packaged/el-shalaev.tbz: generated/from/shalaev.org packaged/
@@ -27,12 +27,12 @@ packaged/shalaev.el: version.org header.el packaged/
 	echo "(provide 'shalaev)" >> $@
 	echo ";;; shalaev.el ends here" >> $@
 	emacsclient -e '(untilde (cdr (assoc "local-packages" package-archives)))' | xargs cp $@
-	echo ";; -*- lexical-binding: t; -*-" > packaged/private.el
-	echo "\n;; I load this file at startup\n"  >> packaged/private.el
-	cat generated/local-packages.el generated/make.el generated/load.el >> packaged/private.el
+	echo ";; -*- lexical-binding: t; -*-" > packaged/start.el
+	echo "\n;; I load this file at startup\n"  >> packaged/start.el
+	cat generated/local-packages.el generated/make.el generated/load.el >> packaged/start.el
 	-@chgrp tmp $@
 
-packaged/private.el: generated/local-packages.el generated/make.el generated/load.el packaged/
+packaged/start.el: generated/local-packages.el generated/make.el generated/load.el packaged/
 	echo ";; -*- lexical-binding: t; -*-" > $@
 	echo "\n;; I load this file at startup\n"  >> $@
 	cat generated/local-packages.el generated/make.el generated/load.el >> $@

@@ -569,7 +569,6 @@ Before launching emacs server in my [[file:.login][~/.login]] file, I check PID 
 
 *** Placing/Finding local packages
 The following 3 blocks allow me to require simple (consisting of one file) locally created packages, for example, this one – =(require 'shalaev)=;
-I load the resulting [[file:generated/local-packages.el][local-packages.el]] from my [[file:generated/dot.emacs][~/.emacs]] and assume that whoever uses [[https://github.com/search?q=user%3Achalaev+language%3A%22Emacs+Lisp%22&type=Repositories&ref=advsearch&l=Emacs+Lisp&l=][my lisp packages]] does the same thing.
 
 Defining important directories:
 #+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
@@ -595,20 +594,9 @@ Adjusting [[https://www.emacswiki.org/emacs/LoadPath][load-path]]:
   (add-to-list 'load-path (cdr (assoc "local-packages" package-archives))))
 #+END_SRC
 
-=printangle= returns the list of exported (tangled) files
-#+BEGIN_SRC emacs-lisp
-(defun printangle(FN)
-  "to be used in Makefile instead of org-babel-tangle-file"
-  (let ((l (length default-directory)))
-     (apply #'concat (mapcar #'(lambda(x) (substring (format "%s " x) l)) (org-babel-tangle-file FN)))))
-#+END_SRC
-← my [[https://github.com/chalaev/cl-simple-logger/blob/master/Makefile][Makefile]]s load its definition from [[file:helpers/derive-version.el][derive-version.el]].
-
 #+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
-;; see https://github.com/chalaev/lisp-goodies/blob/master/packaged/private.el
-(load-file "/path-to/private.el")
-;; see https://github.com/chalaev/lisp-goodies/blob/master/generated/local-packages.el
-(load-file "/path-to/local-packages.el")
+;; see https://github.com/chalaev/lisp-goodies/blob/master/packaged/start.el
+(load-file "/path-to/start.el")
 #+END_SRC
 
 *** for using in Makefiles
@@ -629,14 +617,14 @@ The following line is equivalent to =chmod a-x FN=:
 so they are not backuped.
 
 My literate programming relies on rmacs or mode and its =M-x org-babel-tangle= command, which I want to output the names of the generated files.
-So in [[file:Makefile][Makefiles]] I often use ~printangle~:
+So in [[file:Makefile][Makefiles]] I often use ~printangle~ [it returns the list of exported (tangled) files]:
 #+BEGIN_SRC emacs-lisp :tangle generated/make.el
 (defun printangle(FN)
   "to be used in Makefile instead of org-babel-tangle-file"
   (let ((l (length default-directory)))
     (apply #'concat (mapcar #'(lambda(x) (substring (format "%s " x) l)) (org-babel-tangle-file FN)))))
 #+END_SRC
-(together with =xargs= for unquoting emacs'es output).
+← my [[https://github.com/chalaev/cl-simple-logger/blob/master/Makefile][Makefile]]s load its definition from [[file:helpers/derive-version.el][derive-version.el]].
 
 *** Other stuff
 (found online) =run-init-block=  runs ~init~ code block when loading an org-file:

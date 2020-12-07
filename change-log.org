@@ -7,6 +7,10 @@ Moved some code out of [[file:packaged/shalaev.el][shalaev.el]] adding bew files
 2. [[file:generated/local-packages.el][local-packages.el]] helps to =require= local (unavailable from ELPA) packages like [[file:packaged/shalaev.el][shalaev.el]], and
 3. [[file:generated/make.el][make.el]] contains elisp code used in [[file:Makefile][Makefile]]s.
 
+These files are merged into [[file:packaged/start.el][packaged/start.el]] which is loaded by my =~/.emacs= at start:
+
+=(load-file "~/Private/work/lisp-goodies/packaged/start.el")=
+
 ** 2020-12-04
 1. (See [[file:Makefile][Makefile]].) Packaged el-code by putting =generated/*.el=  (except for ~dot.emacs~) into =~/.emacs.d/local-packages/shalaev.el=; later I will probably split it into different files.
 2. Updated section "emacs configuration in ~/.emacs" in [[file:shalaev.org][shalaev.org]]
