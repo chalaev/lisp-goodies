@@ -2,9 +2,13 @@
 (defun safe-mkdir (dirname)
 "creates a directory returning the report"
 (condition-case err
-  (progn (make-directory dirname)  (list t))
+  (progn (make-directory dirname t)  (list t))
  (file-already-exists (cons nil :exists))
  (file-error (cons nil :permission))))
+
+(defun ensure-dir-exists (dirname)
+(let ((SMD (safe-mkdir dirname)))
+  (or (car SMD) (eql (cdr SMD) :exists))))
 
 (require 'cl); hopefully one day I will remove this line
 (defun perms-from-str (str)

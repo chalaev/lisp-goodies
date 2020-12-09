@@ -34,9 +34,11 @@ packaged/shalaev.el: version.org header.el packaged/
 
 packaged/start.el: generated/local-packages.el generated/make.el generated/load.el packaged/
 	echo ";; -*- lexical-binding: t; -*-" > $@
+	echo "\n;; This file is a part of https://github.com/chalaev/lisp-goodies"  >> $@
 	echo "\n;; I load this file at startup\n"  >> $@
 	cat generated/local-packages.el generated/make.el generated/load.el >> $@
 	-@chgrp tmp $@
+	-for d in ../*/goodies/ ; do rsync -avu $@ $$d ; done
 
 packaged/cl-shalaev.tbz: quicklisp packaged/
 	@echo "\nTesting before we package it:"

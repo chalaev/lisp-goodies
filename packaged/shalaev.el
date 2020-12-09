@@ -3,7 +3,7 @@
 ;; Copyright (C) 2020 Oleg Shalaev <oleg@chalaev.com>
 
 ;; Author:     Oleg Shalaev <oleg@chalaev.com>
-;; Version:    1.2.0
+;; Version:    1.2.1
 
 ;; URL:        https://github.com/chalaev/lisp-goodies
 
@@ -52,9 +52,13 @@
 (defun safe-mkdir (dirname)
 "creates a directory returning the report"
 (condition-case err
-  (progn (make-directory dirname)  (list t))
+  (progn (make-directory dirname t)  (list t))
  (file-already-exists (cons nil :exists))
  (file-error (cons nil :permission))))
+
+(defun ensure-dir-exists (dirname)
+(let ((SMD (safe-mkdir dirname)))
+  (or (car SMD) (eql (cdr SMD) :exists))))
 
 (require 'cl); hopefully one day I will remove this line
 (defun perms-from-str (str)
@@ -205,17 +209,6 @@
       `(when ,(cadar vars)
 	     ,(macroexpand-1 `(when-let ,(cdr vars) ,@body)))
     (append `(when ,(cadar vars)) body))))
-
-(defmacro if-let (vars ifyes &rest body)
-  "if with let using standard let-notation"
-  (let ((if-true (s-gensym "it")) (result (s-gensym "r")))
-    `(let (,if-true ,result)
-       (when-let ,vars
-		 (setf ,if-true t
-		  ,result ,ifyes))
-       (if ,if-true
-	   ,result
-	 ,@body))))
 
 (defmacro ifn-let (vars ifno &rest body)
   `(if-let ,vars

@@ -15,17 +15,6 @@
 	     ,(macroexpand-1 `(when-let ,(cdr vars) ,@body)))
     (append `(when ,(cadar vars)) body))))
 
-(defmacro if-let (vars ifyes &rest body)
-  "if with let using standard let-notation"
-  (let ((if-true (s-gensym "it")) (result (s-gensym "r")))
-    `(let (,if-true ,result)
-       (when-let ,vars
-		 (setf ,if-true t
-		  ,result ,ifyes))
-       (if ,if-true
-	   ,result
-	 ,@body))))
-
 (defmacro ifn-let (vars ifno &rest body)
   `(if-let ,vars
       (progn ,@body)

@@ -121,43 +121,10 @@ CL code is the same:
 #+END_SRC
 
 * if-let
-Like =when-let=, macro =if-let= is heavily used in my projects.
-It is somewhat similar to =when-let=, but offers "else" clause:
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
-(defmacro if-let (vars ifyes &rest body)
-  "if with let using standard let-notation"
-  (let ((if-true (s-gensym "it")) (result (s-gensym "r")))
-    `(let (,if-true ,result)
-       (when-let ,vars
-		 (setf ,if-true t
-		  ,result ,ifyes))
-       (if ,if-true
-	   ,result
-	 ,@body))))
-#+END_SRC
+For ELisp: =if-let= is defined in ~subr-x.el~.
+
 It has almost the same functionality, as [[https://common-lisp.net/project/alexandria/draft/alexandria.html][alexandria:if-let]]
 except that instead of single =else-form= there can be multiple forms.
-
-Usage example:
-#+BEGIN_SRC emacs-lisp :results drawer
-(print (macroexpand-1 
-  '(if-let ((x 1) (y (1+ x)))
-     (+ x y) (- x y) (* x y))))
-#+END_SRC
-
-#+RESULTS:
-:RESULTS:
-(let (it40 r41) (when-let ((x 1) (y (1+ x))) (setf it40 t r41 (+ x y))) (if it40 r41 (- x y) (* x y)))
-:END:
-
-#+BEGIN_SRC emacs-lisp
-(let (it40 r41) 
-(when-let ((x 1) (y (1+ x))) 
-  (setf it40 t
-         r41 (+ x y)))
-(if it40 r41
-   (- x y) (* x y)))
-#+END_SRC
 
 #+BEGIN_SRC lisp :tangle generated/macros.lisp
 (defmacro if-let (vars ifyes &rest body)
@@ -394,7 +361,7 @@ Its argument ~dirname~
 (defun safe-mkdir (dirname)
 "creates a directory returning the report"
 (condition-case err
-  (progn (make-directory dirname)  (list t))
+  (progn (make-directory dirname t)  (list t))
  (file-already-exists (cons nil :exists))
  (file-error (cons nil :permission))))
 #+END_SRC
@@ -418,6 +385,14 @@ result)
 | o.k.           | t   | nil         |
 | not allowed to | nil | :permission |
 | already exists | nil | :exists     |
+
+
+#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
+(defun ensure-dir-exists (dirname)
+(let ((SMD (safe-mkdir dirname)))
+  (or (car SMD) (eql (cdr SMD) :exists))))
+#+END_SRC
+
 
 In SBCL I must know if the directory =dirname= existed before I attempted to create it,
 so I have to use (low-level) [[https://github.com/sbcl/sbcl/blob/master/contrib/sb-posix/posix-tests.lisp][sb-posix:mkdir]] function:
@@ -1278,7 +1253,7 @@ Example #3 – an attempt to remove a directory produces an error:
 To (non-recursively) remove a directory, one can use =safe-delete-dir= instead:
 
 *** safe-delete-dir
-Non-recursive directory removal.
+Optionally recursive directory removal.
 
 Its return result is similar to that of =rm= and =safe-mkdir=:
 #+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
