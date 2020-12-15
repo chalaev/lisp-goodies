@@ -1,6 +1,15 @@
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-(declaim (notinline id))
-(defun id(x) x)
+(ert-deftest when-let()
+  "Testing here when-let and when-let* defined in subr-x.el"
+(should (string= "ba" (when-let (a "a") (concat "b" a))))
+(should (string= "ba" (when-let ((a "a")) (concat "b" a))))
+(should (string= "ba" (when-let ((a "a") (b "b")) (concat b a))))
+(should (string= "aba" (when-let ((a "a") (b (concat a "b"))) (concat b "a"))))
+(should (string= "aba" (when-let* ((a "a") (b (concat a "b"))) (concat b "a")))))
+
+(ert-deftest if-let*()
+  "Testing here if-let* defined in subr-x.el"
+(should (= 1 (if-let* ((a 3)) 1 2)))
+(should (= 12 (if-let* ((a 3) (b (* 3 a))) (+ a b) (- a b)))))
 
 (ert-deftest s-find()
   (should (equal '(3 4) (s-find 4 '((1 2) (3 4) (5 6)) #'cadr)))
@@ -51,3 +60,29 @@
 (ert-deftest land()
   (should (land '(t t t t 1 2)))
   (should (not (land '(t t t nil 1 2)))))
+
+(ert-deftest mv()
+(let ((mv-result (mv "/tmp" "/ptm"))
+      (tmp-dir (file-name-as-directory (make-temp-file "elisp-test-mv." t nil))))
+(should (and (consp mv-result) (not(car mv-result))))
+(let ((fileA (concat tmp-dir "file.A"))
+      (fileB (concat tmp-dir "file.B")))
+(write-region "1234" nil fileA) (write-region "5678" nil fileB)
+(let ((mv-result (mv fileA fileB)))
+   (should (and (consp mv-result) (car mv-result) (not (file-exists-p fileA)) (file-exists-p fileB)
+   (with-temp-buffer (insert-file-contents fileB)
+   (string= "1234" (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))))
+(safe-delete-dir tmp-dir t))))
+
+(ert-deftest cp()
+(let ((cp-result (cp "/tmp" "/ptm"))
+      (tmp-dir (file-name-as-directory (make-temp-file "elisp-test-cp." t nil))))
+(should (and (consp cp-result) (not(car cp-result))))
+(let ((fileA (concat tmp-dir "file.A"))
+      (fileB (concat tmp-dir "file.B")))
+(write-region "1234" nil fileA) (write-region "5678" nil fileB)
+(let ((cp-result (cp fileA fileB)))
+   (should (and (consp cp-result) (car cp-result) (file-exists-p fileA) (file-exists-p fileB)
+   (with-temp-buffer (insert-file-contents fileB)
+   (string= "1234" (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))))
+(safe-delete-dir tmp-dir t))))

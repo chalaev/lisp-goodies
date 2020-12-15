@@ -32,6 +32,7 @@ For usage example, see the [[https://github.com/chalaev/cl-simple-logger][simple
 4. [[file:generated/dot.emacs][dot.emacs]] is (almost) a copy of my =~/.emacs=,
 5. [[file:generated/cl.el][cl.el]] will probably be used some day as a replacement for the standard [[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/cl-lib.el][cl.el]],
 6. [[file:Makefile][Makefile]] is used by =make= to compile, test, and package;
+   typical output of successful =make= is saved in [[file:make.log][make.log]] and
    the resulting package files are available in [[file:packaged/][packaged/]] directory,
 7. [[file:shalaev.asd][shalaev.asd]] and [[file:headers.org][headers.org]] describe Common Lisp packages created by =make= according to [[file:Makefile][Makefile]],
 8. [[file:helpers/][helpers/*]] assist compilation in [[file:Makefile][Makefile]], and

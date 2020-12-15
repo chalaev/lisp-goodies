@@ -1,4 +1,4 @@
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*-  lexical-binding: t; -*-
 (defun select (from-where match-test)
   "select items matching the test"
     (let (collected wasted)
@@ -50,6 +50,7 @@
   (when (and (< 0 N) (car lista))
     (cons (car lista) (firstN (cdr lista) (1- N)))))
 
+(require 'cl)
 (defvar *good-chars*
 (let ((forbidden-symbols '(?! ?@ ?# ?$ ?% ?& ?* ?\( ?\) ?+ ?= ?/ ?{ ?} ?\[ ?\] ?: ?\; ?< ?> ?_ ?- ?| ?, ?. ?` ?' ?~ ?^ ?\")))
     (append

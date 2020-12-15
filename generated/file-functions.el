@@ -1,5 +1,5 @@
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-(defun safe-mkdir (dirname)
+;; -*-  lexical-binding: t; -*-
+(defun safe-mkdir(dirname)
 "creates a directory returning the report"
 (condition-case err
   (progn (make-directory dirname t)  (list t))
@@ -29,6 +29,16 @@
 
 (defun chgrp(group file-name)
   (= 0 (call-process "chgrp" nil nil nil group file-name)))
+
+(defun mv(FN-1 FN-2)
+"renaming/moving files (not dirs)"
+  (condition-case err (cons t (rename-file FN-1 FN-2 t))
+    (file-error (cons nil (error-message-string err)))))
+
+(defun cp(FN-1 FN-2)
+"copying ONE file (not dirs)"
+  (condition-case err (cons t (copy-file FN-1 FN-2 t))
+    (file-error (cons nil (error-message-string err)))))
 
 (defun rm(FN)
 "erases files only, not directories"

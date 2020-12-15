@@ -1,3 +1,4 @@
+;; -*-  lexical-binding: t; -*-
 (declaim (notinline id))
 (defun id(x) x)
 

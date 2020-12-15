@@ -6,12 +6,11 @@
 #+LATEX_HEADER: \usepackage[letterpaper,hmargin={1.5cm,1.5cm},vmargin={1.3cm,2cm},nohead,nofoot]{geometry}
 #+KEYWORDS: emacs, elisp, common lisp, macros, functions
 
-#+BEGIN_SRC emacs-lisp :tangle generated/tests.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
-(declaim (notinline id))
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el :shebang ";; -*-  lexical-binding: t; -*-"
 (defun id(x) x)
 #+END_SRC
 
-#+BEGIN_SRC lisp :tangle generated/tests.lisp
+#+BEGIN_SRC lisp :tangle generated/tests.lisp :shebang ";; -*-  lexical-binding: t; -*-"
 (declaim (notinline id))
 (defun id(x) x)
 #+END_SRC
@@ -40,7 +39,7 @@ Notes:
 #+END_SRC
 
 For testing puprposes it is useful to convert macro expansions to string:
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro string-from-macro(m)
 `(format "%s" (print (macroexpand-1 ,m) #'(lambda(x) (format "%s" x)))))
 #+END_SRC
@@ -50,52 +49,33 @@ For testing puprposes it is useful to convert macro expansions to string:
 #+END_SRC
 
 * when-let
-=when-let= is one of my most-used macros:
+** Emacs Lisp
+=when-let= and =when-let*= are defined in ~subr-x.el~:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
-(defmacro when-let (vars &rest body)
-  "when with let using standard let-notation"
-  (if (caar vars)
-  `(let ((,(caar vars) ,(cadar vars)))
-     ,(if (cdr vars)
-	  `(when ,(caar vars)
-	     ,(macroexpand-1 `(when-let ,(cdr vars) ,@body)))
-	(append `(when ,(caar vars)) body)))
-  (if (cdr vars)
-      `(when ,(cadar vars)
-	     ,(macroexpand-1 `(when-let ,(cdr vars) ,@body)))
-    (append `(when ,(cadar vars)) body))))
+(require 'subr-x)
 #+END_SRC
 
-Using standard let-syntax, it evaluates varibales in the header one after another,
-and, if they are all non-nil, evalueates the body:
-#+BEGIN_SRC emacs-lisp :results drawer
-(print (macroexpand-1 
-  '(when-let ((x 1) (y (1+ x)))
-       (s-incf x y) (s-incf y x))))
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(ert-deftest when-let()
+  "Testing here when-let and when-let* defined in subr-x.el"
+(should (string= "ba" (when-let (a "a") (concat "b" a))))
+(should (string= "ba" (when-let ((a "a")) (concat "b" a))))
+(should (string= "ba" (when-let ((a "a") (b "b")) (concat b a))))
+(should (string= "aba" (when-let ((a "a") (b (concat a "b"))) (concat b "a"))))
+(should (string= "aba" (when-let* ((a "a") (b (concat a "b"))) (concat b "a")))))
 #+END_SRC
+← =when-let= is /almost/ identical to =when-let*=.
 
-#+RESULTS:
-:RESULTS:
-(let ((x 1)) (when x (let ((y (1+ x))) (when y (s-incf x y) (s-incf y x)))))
-:END:
-
-=when-let= defined here has almost the same functionality, as [[https://common-lisp.net/project/alexandria/draft/alexandria.html][alexandria:when-let*]].
-If we put =nil= instead of the variable name, no local varibale will be created for this entry:
-#+BEGIN_SRC emacs-lisp :results drawer
-(print (macroexpand-1
- `(when-let ((CN (clouded (aref newDBrec cipher))) (nil (not (file-exists-p CN))))
-    (+ 1 2)
-    (- 1 2))))
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(ert-deftest if-let*()
+  "Testing here if-let* defined in subr-x.el"
+(should (= 1 (if-let* ((a 3)) 1 2)))
+(should (= 12 (if-let* ((a 3) (b (* 3 a))) (+ a b) (- a b)))))
 #+END_SRC
-
-#+RESULTS:
-:RESULTS:
-(let ((CN (clouded (aref newDBrec cipher)))) (when CN (when (not (file-exists-p CN)) (+ 1 2) (- 1 2))))
-:END:
-– this double =when= is ugly and inefficient, but for ~elisp~ it is probably o.k. because we do not need as much efficiency here, as in Common Lisp.
 
 Later I wrote [[needs]] which is more general than =when-let=, and can replace it.
 
+** Common Lisp
 CL code is the same:
 #+BEGIN_SRC lisp :tangle generated/macros.lisp
 (defmacro when-let (vars &rest body)
@@ -121,9 +101,11 @@ CL code is the same:
 #+END_SRC
 
 * if-let
-For ELisp: =if-let= is defined in ~subr-x.el~.
+** Emacs Lisp
+Similarly to [[when-let]], =if-let= is defined in ~subr-x.el~.
 
-It has almost the same functionality, as [[https://common-lisp.net/project/alexandria/draft/alexandria.html][alexandria:if-let]]
+** Common Lisp
+My =if-let= has almost the same functionality, as [[https://common-lisp.net/project/alexandria/draft/alexandria.html][alexandria:if-let]]
 except that instead of single =else-form= there can be multiple forms.
 
 #+BEGIN_SRC lisp :tangle generated/macros.lisp
@@ -167,10 +149,14 @@ Sometimes I need slightly changed versions of =if-let=:
 
 #+RESULTS:
 :RESULTS:
-(if-let ((x (+ 1 2)))
- (progn (+ 6 5) (+ 7 9))
- (+ 3 4))
+(if-let ((x (+ 1 2))) (progn (+ 6 5) (+ 7 9)) (+ 3 4))
 :END:
+
+#+BEGIN_SRC emacs-lisp
+(if-let ((x (+ 1 2))) (progn (+ 6 5) (+ 7 9)) (+ 3 4))
+(if-let ((x (+ 1 2))) 1 2)
+(if-let ((x t)) 1 2)
+#+END_SRC
 
 #+BEGIN_SRC lisp :tangle generated/macros.lisp
 (defmacro ifn-let (vars ifno &rest body)
@@ -249,7 +235,7 @@ it has an optional third argument – a form to be evaluated in case the variabl
 (let ((x (f 1))) (if x (let ((y (g x))) (if y (progn (message let's rock) (- x y)) (message could not define y))) (message could not define x)))
 :END:
 
-← let me format the output:
+Formated output:
 #+BEGIN_SRC emacs-lisp
 (let ((x (f 1)))
   (if x
@@ -357,8 +343,8 @@ Its argument ~dirname~
 - may start with "~/" and
 - may or may not end with "/".
 
-#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
-(defun safe-mkdir (dirname)
+#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el :shebang ";; -*-  lexical-binding: t; -*-"
+(defun safe-mkdir(dirname)
 "creates a directory returning the report"
 (condition-case err
   (progn (make-directory dirname t)  (list t))
@@ -531,24 +517,48 @@ Formatted result:
 
 * emacs lisp
 ** emacs configuration in ~/.emacs
+*** "System" emacs functions
+#+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el
+(unless (functionp 'caddr) (defun caddr(x) (car(cddr x)))); for emacs versions <26
+(unless (functionp 'cadar) (defun cadar(x) (car (cdar x))))
+
+(defun emacs-ver()
+  (mapcar #'string-to-number (split-string
+   (caddr (split-string (emacs-version))) "\\.")))
+#+END_SRC
+
+Let us upgrade =upgrade-make-temp-file= on older emacs versions, allowing this novel ~TEXT~ argument:
+#+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el
+(unless (< 25 (car (emacs-ver)))
+  (defun upgrade-make-temp-file(old-function PREFIX &optional DIR-FLAG SUFFIX TEXT)
+    (let((FN (funcall old-function PREFIX DIR-FLAG SUFFIX)))
+      (when (and TEXT (stringp TEXT))
+      (write-region TEXT nil FN))
+    FN))
+(add-function :around (symbol-function 'make-temp-file) #'upgrade-make-temp-file))
+#+END_SRC
+← otherwise my =make-temp-file= code *fails* on emacs version 25.1.1 (but works on 26.1).
+
 *** creating PID file
 Before launching emacs server in my [[file:.login][~/.login]] file, I check PID file created by
-#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs :shebang ";; -*-  lexical-binding: t; -*-"
 ;;
+;; see https://github.com/chalaev/lisp-goodies/blob/master/packaged/start.el
+(load-file "/path-to/start.el")
+
 ;; creating PID file for emacs; useful when it gets started from ~/.login
 ;; see https://github.com/chalaev/lisp-goodies/blob/master/.login
 (make-temp-file "emacs-" nil ".pid" (format "%d
 " (emacs-pid))); requires version(emacs) > 26
 #+END_SRC
-← *fails* on emacs version 25.1, but works on 26.1.
 
 *** Placing/Finding local packages
 The following 3 blocks allow me to require simple (consisting of one file) locally created packages, for example, this one – =(require 'shalaev)=;
 
 Defining important directories:
-#+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el :shebang ";; -*-  lexical-binding: t; -*-"
 (defvar ~ (file-name-as-directory (getenv "HOME")))
-(defun tilde(x) (replace-regexp-in-string (concat "^" ~) "~/" x))
+(defun   tilde(x) (replace-regexp-in-string (concat "^" ~) "~/" x))
 (defun untilde(x) (replace-regexp-in-string "^~/" ~ x))
 (defvar emacs-d (concat "~/" (file-name-as-directory ".emacs.d")))
 #+END_SRC
@@ -569,10 +579,6 @@ Adjusting [[https://www.emacswiki.org/emacs/LoadPath][load-path]]:
   (add-to-list 'load-path (cdr (assoc "local-packages" package-archives))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs
-;; see https://github.com/chalaev/lisp-goodies/blob/master/packaged/start.el
-(load-file "/path-to/start.el")
-#+END_SRC
 
 *** for using in Makefiles
 My [[https://github.com/chalaev/backup2l.conf][backup]] system does not save files having the group ~tmp~.
@@ -623,7 +629,7 @@ to be loaded as follows:
 apparently it is widely used; for example, =M-x org-babel-tangle= uses =cl.el= (although does not require it).
 
 *** s-gensym
-#+BEGIN_SRC emacs-lisp :tangle generated/cl.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/cl.el :shebang ";; -*-  lexical-binding: t; -*-"
 (let ((counter 0))
   (defun s-gensym(&optional starts-with)
     "for those who miss s-gensym from Common Lisp"
@@ -727,7 +733,7 @@ It uses =macrolet= which is also defined in  =cl.el= :)
 To be improved: variable names in =macrolet= should be generated by =s-gensym=.
 
 *** select, without, and drop
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el :shebang ";; -*-  lexical-binding: t; -*-"
 (defun select (from-where match-test)
   "select items matching the test"
     (let (collected wasted)
@@ -1158,6 +1164,7 @@ Example:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(require 'cl)
 (defvar *good-chars*
 (let ((forbidden-symbols '(?! ?@ ?# ?$ ?% ?& ?* ?\( ?\) ?+ ?= ?/ ?{ ?} ?\[ ?\] ?: ?\; ?< ?> ?_ ?- ?| ?, ?. ?` ?' ?~ ?^ ?\")))
     (append
@@ -1210,6 +1217,53 @@ There is probably some standard function or macro doing this:
   (= 0 (call-process "chgrp" nil nil nil group file-name)))
 #+END_SRC
 See also =dired-do-chown=.
+
+*** mv (for files)
+#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
+(defun mv(FN-1 FN-2)
+"renaming/moving files (not dirs)"
+  (condition-case err (cons t (rename-file FN-1 FN-2 t))
+    (file-error (cons nil (error-message-string err)))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(ert-deftest mv()
+(let ((mv-result (mv "/tmp" "/ptm"))
+      (tmp-dir (file-name-as-directory (make-temp-file "elisp-test-mv." t nil))))
+(should (and (consp mv-result) (not(car mv-result))))
+(let ((fileA (concat tmp-dir "file.A"))
+      (fileB (concat tmp-dir "file.B")))
+(write-region "1234" nil fileA) (write-region "5678" nil fileB)
+(let ((mv-result (mv fileA fileB)))
+   (should (and (consp mv-result) (car mv-result) (not (file-exists-p fileA)) (file-exists-p fileB)
+   (with-temp-buffer (insert-file-contents fileB)
+   (string= "1234" (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))))
+(safe-delete-dir tmp-dir t))))
+#+END_SRC
+
+*** cp (for files)
+#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
+(defun cp(FN-1 FN-2)
+"copying ONE file (not dirs)"
+  (condition-case err (cons t (copy-file FN-1 FN-2 t))
+    (file-error (cons nil (error-message-string err)))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(ert-deftest cp()
+(let ((cp-result (cp "/tmp" "/ptm"))
+      (tmp-dir (file-name-as-directory (make-temp-file "elisp-test-cp." t nil))))
+(should (and (consp cp-result) (not(car cp-result))))
+(let ((fileA (concat tmp-dir "file.A"))
+      (fileB (concat tmp-dir "file.B")))
+(write-region "1234" nil fileA) (write-region "5678" nil fileB)
+(let ((cp-result (cp fileA fileB)))
+   (should (and (consp cp-result) (car cp-result) (file-exists-p fileA) (file-exists-p fileB)
+   (with-temp-buffer (insert-file-contents fileB)
+   (string= "1234" (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))))
+(safe-delete-dir tmp-dir t))))
+#+END_SRC
+
 *** rm (for files)
 =rm= is a condition-free wrapper on top of =delete-file=.
 #+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el

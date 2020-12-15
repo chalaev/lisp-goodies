@@ -9,7 +9,17 @@ Moved some code out of [[file:packaged/shalaev.el][shalaev.el]] adding bew files
 
 These files are merged into [[file:packaged/start.el][packaged/start.el]] which is loaded by my =~/.emacs= at start:
 
-=(load-file "~/Private/work/lisp-goodies/packaged/start.el")=
+=(load-file "~/projects/lisp-goodies/packaged/start.el")=
+
+*** 2020-12-14
+1. upgraded =make-temp-file= on emacs versions ≤25
+2. (ELisp) removed =when-let= and  =if-let=
+3. added [[file:make.log][make.log]]
+
+*** 2020-12-11
+1. added (ELisp) =emacs-ver=
+2. added =mv=, =cp=, =when-let*= 
+3. updated =when-let=
 
 *** 2020-12-09
 It was all about ELisp this time.

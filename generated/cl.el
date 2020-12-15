@@ -1,4 +1,4 @@
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*-  lexical-binding: t; -*-
 (let ((counter 0))
   (defun s-gensym(&optional starts-with)
     "for those who miss s-gensym from Common Lisp"

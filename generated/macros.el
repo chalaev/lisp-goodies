@@ -1,19 +1,10 @@
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*-  lexical-binding: t; -*-
+(defun id(x) x)
+
 (defmacro string-from-macro(m)
 `(format "%s" (print (macroexpand-1 ,m) #'(lambda(x) (format "%s" x)))))
 
-(defmacro when-let (vars &rest body)
-  "when with let using standard let-notation"
-  (if (caar vars)
-  `(let ((,(caar vars) ,(cadar vars)))
-     ,(if (cdr vars)
-	  `(when ,(caar vars)
-	     ,(macroexpand-1 `(when-let ,(cdr vars) ,@body)))
-	(append `(when ,(caar vars)) body)))
-  (if (cdr vars)
-      `(when ,(cadar vars)
-	     ,(macroexpand-1 `(when-let ,(cdr vars) ,@body)))
-    (append `(when ,(cadar vars)) body))))
+(require 'subr-x)
 
 (defmacro ifn-let (vars ifno &rest body)
   `(if-let ,vars

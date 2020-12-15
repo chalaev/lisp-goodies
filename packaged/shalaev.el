@@ -1,9 +1,9 @@
-;;; shalaev.el --- my useful macros and functions     -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;;; shalaev.el --- my useful macros and functions  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020 Oleg Shalaev <oleg@chalaev.com>
 
 ;; Author:     Oleg Shalaev <oleg@chalaev.com>
-;; Version:    1.2.1
+;; Version:    1.2.3
 
 ;; URL:        https://github.com/chalaev/lisp-goodies
 
@@ -13,7 +13,7 @@
   
 ;;; Code:
 
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*-  lexical-binding: t; -*-
 (let ((counter 0))
   (defun s-gensym(&optional starts-with)
     "for those who miss s-gensym from Common Lisp"
@@ -48,8 +48,8 @@
 (macrolet ,(mapcar #'(lambda(FD)
 (list (car FD) (cadr FD) `(funcall ,(cdr (assoc (car FD) GSs)) ,@(cadr FD)))) fun-defs)
  ,@body))))
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-(defun safe-mkdir (dirname)
+;; -*-  lexical-binding: t; -*-
+(defun safe-mkdir(dirname)
 "creates a directory returning the report"
 (condition-case err
   (progn (make-directory dirname t)  (list t))
@@ -80,6 +80,16 @@
 (defun chgrp(group file-name)
   (= 0 (call-process "chgrp" nil nil nil group file-name)))
 
+(defun mv(FN-1 FN-2)
+"renaming/moving files (not dirs)"
+  (condition-case err (cons t (rename-file FN-1 FN-2 t))
+    (file-error (cons nil (error-message-string err)))))
+
+(defun cp(FN-1 FN-2)
+"copying ONE file (not dirs)"
+  (condition-case err (cons t (copy-file FN-1 FN-2 t))
+    (file-error (cons nil (error-message-string err)))))
+
 (defun rm(FN)
 "erases files only, not directories"
   (condition-case err (cons t (delete-file FN))
@@ -88,7 +98,7 @@
 (defun safe-delete-dir (FN &optional recursive)
   (condition-case err (progn (delete-directory FN recursive) (list t))
     (file-error (cons nil (error-message-string err)))))
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*-  lexical-binding: t; -*-
 (defun select (from-where match-test)
   "select items matching the test"
     (let (collected wasted)
@@ -140,6 +150,7 @@
   (when (and (< 0 N) (car lista))
     (cons (car lista) (firstN (cdr lista) (1- N)))))
 
+(require 'cl)
 (defvar *good-chars*
 (let ((forbidden-symbols '(?! ?@ ?# ?$ ?% ?& ?* ?\( ?\) ?+ ?= ?/ ?{ ?} ?\[ ?\] ?: ?\; ?< ?> ?_ ?- ?| ?, ?. ?` ?' ?~ ?^ ?\")))
     (append
@@ -193,22 +204,13 @@
   (log-flush))
 
 (add-hook 'kill-emacs-hook 'on-emacs-exit)
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*-  lexical-binding: t; -*-
+(defun id(x) x)
+
 (defmacro string-from-macro(m)
 `(format "%s" (print (macroexpand-1 ,m) #'(lambda(x) (format "%s" x)))))
 
-(defmacro when-let (vars &rest body)
-  "when with let using standard let-notation"
-  (if (caar vars)
-  `(let ((,(caar vars) ,(cadar vars)))
-     ,(if (cdr vars)
-	  `(when ,(caar vars)
-	     ,(macroexpand-1 `(when-let ,(cdr vars) ,@body)))
-	(append `(when ,(caar vars)) body)))
-  (if (cdr vars)
-      `(when ,(cadar vars)
-	     ,(macroexpand-1 `(when-let ,(cdr vars) ,@body)))
-    (append `(when ,(cadar vars)) body))))
+(require 'subr-x)
 
 (defmacro ifn-let (vars ifno &rest body)
   `(if-let ,vars

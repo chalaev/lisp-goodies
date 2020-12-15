@@ -1,0 +1,175 @@
+Now emacs is probably waiting for your responce...
+emacsclient -e '(progn (load "/home/shalaev/projects/lisp-goodies/helpers/derive-version.el") (printangle "shalaev.org"))' | xargs > generated/from/shalaev.org
+sed "s/the-version/`head -n1 version.org`/" header.el > packaged/shalaev.el
+cat generated/cl.el  generated/file-functions.el generated/functions.el generated/logging.el generated/macros.el >> packaged/shalaev.el
+echo "(provide 'shalaev)" >> packaged/shalaev.el
+echo ";;; shalaev.el ends here" >> packaged/shalaev.el
+emacsclient -e '(untilde (cdr (assoc "local-packages" package-archives)))' | xargs cp packaged/shalaev.el
+echo ";; -*- lexical-binding: t; -*-" > packaged/start.el
+echo "\n;; I load this file at startup\n"  >> packaged/start.el
+cat generated/local-packages.el generated/make.el generated/load.el >> packaged/start.el
+echo ";; -*- lexical-binding: t; -*-" > packaged/start.el
+echo "\n;; This file is a part of https://github.com/chalaev/lisp-goodies"  >> packaged/start.el
+echo "\n;; I load this file at startup\n"  >> packaged/start.el
+cat generated/local-packages.el generated/make.el generated/load.el >> packaged/start.el
+for d in ../*/goodies/ ; do rsync -avu packaged/start.el $d ; done
+sending incremental file list
+start.el
+
+sent 2,789 bytes  received 35 bytes  5,648.00 bytes/sec
+total size is 2,686  speedup is 0.95
+sending incremental file list
+start.el
+
+sent 2,789 bytes  received 35 bytes  5,648.00 bytes/sec
+total size is 2,686  speedup is 0.95
+sending incremental file list
+start.el
+
+sent 2,789 bytes  received 35 bytes  5,648.00 bytes/sec
+total size is 2,686  speedup is 0.95
+sending incremental file list
+start.el
+
+sent 2,789 bytes  received 35 bytes  5,648.00 bytes/sec
+total size is 2,686  speedup is 0.95
+sending incremental file list
+start.el
+
+sent 2,789 bytes  received 35 bytes  5,648.00 bytes/sec
+total size is 2,686  speedup is 0.95
+[ -d $HOME/quicklisp/local-projects/shalaev/ ] || mkdir -p $HOME/quicklisp/local-projects/shalaev/
+
+Now emacs is probably waiting for your responce...
+emacsclient -e '(progn (load "/home/shalaev/projects/lisp-goodies/helpers/derive-version.el") (printangle "headers.org"))' | xargs > generated/from/headers.org
+cat generated/headers/macros.lisp generated/macros.lisp > $HOME/quicklisp/local-projects/shalaev/macros.lisp
+cat generated/headers/files.lisp generated/files.lisp > $HOME/quicklisp/local-projects/shalaev/files.lisp
+cat generated/headers/tests.lisp generated/tests.lisp > $HOME/quicklisp/local-projects/shalaev/tests.lisp
+cat generated/headers/shalaev.lisp generated/shalaev.lisp > $HOME/quicklisp/local-projects/shalaev/shalaev.lisp
+cat shalaev.asd > $HOME/quicklisp/local-projects/shalaev/shalaev.asd
+cat version.org > $HOME/quicklisp/local-projects/shalaev/version.org
+
+Now emacs is probably waiting for your responce...
+emacsclient -e '(progn (load "/home/shalaev/projects/lisp-goodies/helpers/derive-version.el") (printangle "packaging.org"))' | xargs > generated/from/packaging.org
+
+Testing before we package it:
+emacs -q --no-site-file --batch -l ert -l generated/macros.el -l generated/functions.el -l generated/file-functions.el -l generated/load.el -l generated/cl.el -l generated/tests.el -f ert-run-tests-batch-and-exit
+Running 13 tests (2020-12-15 18:41:11-0500)
+   passed   1/13  cp
+   passed   2/13  define-vars
+   passed   3/13  drop
+   passed   4/13  end-push
+   passed   5/13  if-let*
+   passed   6/13  land
+   passed   7/13  mv
+   passed   8/13  perms-from-str
+   passed   9/13  perms-to-str
+   passed  10/13  s-find
+   passed  11/13  select
+   passed  12/13  when-let
+   passed  13/13  without
+
+Ran 13 tests, 13 results as expected (2020-12-15 18:41:11-0500)
+
+12/15 18:41 EL TESTS PASSED :)
+
+tar jcfv packaged/el-shalaev.tbz --transform s/^generated/shalaev/ generated/*.el
+generated/cl.el
+generated/file-functions.el
+generated/functions.el
+generated/load.el
+generated/local-packages.el
+generated/logging.el
+generated/macros.el
+generated/make.el
+generated/tests.el
+
+Testing before we package it:
+This is SBCL 2.0.10, an implementation of ANSI Common Lisp.
+More information about SBCL is available at <http://www.sbcl.org/>.
+
+SBCL is free software, provided as is, with absolutely no warranty.
+It is mostly in the public domain; some portions are provided under
+BSD-style licenses.  See the CREDITS and COPYING files in the
+distribution for more information.
+; compiling file "/home/shalaev/quicklisp/local-projects/shalaev/macros.lisp" (written 15 DEC 2020 06:41:11 PM):
+; processing (DEFPACKAGE :SHALAEV/MACROS ...)
+; processing (IN-PACKAGE :SHALAEV/MACROS)
+; processing (DEFMACRO WHEN-LET ...)
+; processing (DEFMACRO IF-LET ...)
+; processing (DEFMACRO IFN-LET ...)
+; processing (DEFMACRO NEEDS ...)
+; processing (DEFMACRO IFF ...)
+; processing (DEFMACRO IFN ...)
+; processing (DEFMACRO CONCAT ...)
+; processing (DEFMACRO ASET ...)
+; processing (DEFMACRO HSET ...)
+; processing (DEFMACRO DIRECTORY-LOCK ...)
+; processing (DEFMACRO COND-LET ...)
+
+; wrote /home/shalaev/.cache/common-lisp/sbcl-2.0.10-linux-x64/home/shalaev/quicklisp/local-projects/shalaev/macros-tmpGHU3ALSV.fasl
+; compilation finished in 0:00:00.040
+; compiling file "/home/shalaev/quicklisp/local-projects/shalaev/files.lisp" (written 15 DEC 2020 06:41:11 PM):
+; processing (DEFPACKAGE :SHALAEV/FILES ...)
+; processing (IN-PACKAGE :SHALAEV/FILES)
+; processing (DEFUN SAFE-MKDIR ...)
+; processing (DEFUN RMDIR ...)
+; processing (DEFUN ECHO-TO-FILE ...)
+; processing (DEFUN MERGE-PATHS ...)
+
+; wrote /home/shalaev/.cache/common-lisp/sbcl-2.0.10-linux-x64/home/shalaev/quicklisp/local-projects/shalaev/files-tmpAAURSO1.fasl
+; compilation finished in 0:00:00.012
+; compiling file "/home/shalaev/quicklisp/local-projects/shalaev/shalaev.lisp" (written 15 DEC 2020 06:41:11 PM):
+; processing (DEFPACKAGE :SHALAEV ...)
+; processing (IN-PACKAGE :SHALAEV)
+; processing (DECLAIM (OPTIMIZE # ...))
+
+; wrote /home/shalaev/.cache/common-lisp/sbcl-2.0.10-linux-x64/home/shalaev/quicklisp/local-projects/shalaev/shalaev-tmp5GEXGEG7.fasl
+; compilation finished in 0:00:00.000
+; compiling file "/home/shalaev/quicklisp/local-projects/shalaev/tests.lisp" (written 15 DEC 2020 06:41:11 PM):
+; processing (DEFPACKAGE :SHALAEV/TESTS ...)
+; processing (IN-PACKAGE :SHALAEV/TESTS)
+; processing (DEFVAR N-FAILED ...)
+; processing (DEFUN RUN-TESTS ...)
+; processing (DECLAIM (NOTINLINE ID))
+; processing (DEFUN ID ...)
+; processing (DEFTEST WHEN-LET ...)
+; processing (DEFTEST IF-LET ...)
+; processing (DEFTEST CONCAT ...)
+; processing (DEFTEST ASET ...)
+; processing (DEFTEST HSET ...)
+
+; wrote /home/shalaev/.cache/common-lisp/sbcl-2.0.10-linux-x64/home/shalaev/quicklisp/local-projects/shalaev/tests-tmpAR3FSGEY.fasl
+; compilation finished in 0:00:00.004
+Doing 5 pending tests of 5 tests total.
+ SHALAEV/MACROS:WHEN-LET SHALAEV/MACROS:IF-LET SHALAEV/MACROS:CONCAT
+ SHALAEV/MACROS:ASET SHALAEV/MACROS:HSET
+No tests failed.
+Doing 5 pending tests of 5 tests total.
+ SHALAEV/MACROS:WHEN-LET SHALAEV/MACROS:IF-LET SHALAEV/MACROS:CONCAT
+ SHALAEV/MACROS:ASET SHALAEV/MACROS:HSET
+No tests failed.
+; file: /home/shalaev/quicklisp/local-projects/shalaev/macros.lisp
+; in: DEFMACRO SHALAEV/MACROS::DIRECTORY-LOCK
+;     (SHALAEV/MACROS::S-GENSYM "ld")
+; 
+; caught STYLE-WARNING:
+;   undefined function: SHALAEV/MACROS::S-GENSYM
+; 
+; compilation unit finished
+;   Undefined function:
+;     SHALAEV/MACROS::S-GENSYM
+;   caught 1 STYLE-WARNING condition
+
+
+12/15 18:41 CL TESTS PASSED :)
+
+tar jcfv packaged/cl-shalaev.tbz --directory=$HOME/quicklisp/local-projects/shalaev/..  shalaev
+shalaev/
+shalaev/tests.lisp
+shalaev/version.org
+shalaev/shalaev.lisp
+shalaev/files.lisp
+shalaev/macros.lisp
+shalaev/shalaev.asd
+rm generated/from/headers.org

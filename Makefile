@@ -16,12 +16,12 @@ quicklisp: $(quicklispDir)/ $(addprefix $(quicklispDir)/, $(package)) $(addprefi
 
 packaged/el-shalaev.tbz: generated/from/shalaev.org packaged/
 	@echo "\nTesting before we package it:"
-	emacs --no-site-file --batch -l ert  --eval "(require 'cl)" -l generated/macros.el -l generated/functions.el -l generated/file-functions.el -l generated/load.el -l generated/cl.el -l generated/tests.el -f ert-run-tests-batch-and-exit
+	emacs -q --no-site-file --batch -l ert -l generated/macros.el -l generated/functions.el -l generated/file-functions.el -l generated/load.el -l generated/cl.el -l generated/tests.el -f ert-run-tests-batch-and-exit
 	@echo "`date '+%m/%d %H:%M'` EL TESTS PASSED :)\n"
 	tar jcfv $@ --transform s/^generated/shalaev/ generated/*.el
 	-@chgrp tmp $@
 
-packaged/shalaev.el: version.org header.el packaged/
+packaged/shalaev.el: version.org generated/from/shalaev.org header.el packaged/
 	sed "s/the-version/`head -n1 $<`/" header.el > $@
 	cat generated/cl.el  generated/file-functions.el generated/functions.el generated/logging.el generated/macros.el >> $@
 	echo "(provide 'shalaev)" >> $@
@@ -32,7 +32,7 @@ packaged/shalaev.el: version.org header.el packaged/
 	cat generated/local-packages.el generated/make.el generated/load.el >> packaged/start.el
 	-@chgrp tmp $@
 
-packaged/start.el: generated/local-packages.el generated/make.el generated/load.el packaged/
+packaged/start.el: packaged/shalaev.el packaged/
 	echo ";; -*- lexical-binding: t; -*-" > $@
 	echo "\n;; This file is a part of https://github.com/chalaev/lisp-goodies"  >> $@
 	echo "\n;; I load this file at startup\n"  >> $@
