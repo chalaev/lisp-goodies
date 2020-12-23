@@ -8,7 +8,8 @@
 
 (defun ensure-dir-exists (dirname)
 (let ((SMD (safe-mkdir dirname)))
-  (or (car SMD) (eql (cdr SMD) :exists))))
+  (if (or (car SMD) (eql (cdr SMD) :exists)) dirname
+(error "could not create %s" dirname))))
 
 (require 'cl); hopefully one day I will remove this line
 (defun perms-from-str (str)
@@ -48,3 +49,7 @@
 (defun safe-delete-dir (FN &optional recursive)
   (condition-case err (progn (delete-directory FN recursive) (list t))
     (file-error (cons nil (error-message-string err)))))
+(defun delete-dirs (&rest dirs)
+(let ((res (mapcar #'(lambda(DN) (safe-delete-dir DN t)) dirs)))
+    (cons(land(mapcar #'car res))
+(mapcar #'(lambda(r) (when(consp r) (cadr r))) res))))

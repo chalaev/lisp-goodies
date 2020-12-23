@@ -16,7 +16,7 @@
       (append-to-file (point-min) (point-max) (concat emacs-d "elisp.log")))
     (setf *log-buffer* nil))))
 
-(defun clog (level fstr &rest args)
+(defun clog(level fstr &rest args)
   "simple logging function" ; level is one of → :debug :info :warning :error
 (let ((log-push (lambda(msg)
   (push msg *log-buffer*)
@@ -30,7 +30,8 @@
 		    fstr)
 	    (cons (symbol-name level) args))))
       (funcall log-push (apply #'format log-msg))
-      (apply #'message log-msg)) nil)))
+      (apply #'message log-msg)))
+ nil))
 
 (defun on-emacs-exit()
   (clog :debug "flushing comments before quiting emacs")

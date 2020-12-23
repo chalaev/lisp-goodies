@@ -58,7 +58,8 @@
 
 (defun ensure-dir-exists (dirname)
 (let ((SMD (safe-mkdir dirname)))
-  (or (car SMD) (eql (cdr SMD) :exists))))
+  (if (or (car SMD) (eql (cdr SMD) :exists)) dirname
+(error "could not create %s" dirname))))
 
 (require 'cl); hopefully one day I will remove this line
 (defun perms-from-str (str)
@@ -98,6 +99,10 @@
 (defun safe-delete-dir (FN &optional recursive)
   (condition-case err (progn (delete-directory FN recursive) (list t))
     (file-error (cons nil (error-message-string err)))))
+(defun delete-dirs (&rest dirs)
+(let ((res (mapcar #'(lambda(DN) (safe-delete-dir DN t)) dirs)))
+    (cons(land(mapcar #'car res))
+(mapcar #'(lambda(r) (when(consp r) (cadr r))) res))))
 ;; -*-  lexical-binding: t; -*-
 (defun select (from-where match-test)
   "select items matching the test"
@@ -183,7 +188,7 @@
       (append-to-file (point-min) (point-max) (concat emacs-d "elisp.log")))
     (setf *log-buffer* nil))))
 
-(defun clog (level fstr &rest args)
+(defun clog(level fstr &rest args)
   "simple logging function" ; level is one of → :debug :info :warning :error
 (let ((log-push (lambda(msg)
   (push msg *log-buffer*)
@@ -197,7 +202,8 @@
 		    fstr)
 	    (cons (symbol-name level) args))))
       (funcall log-push (apply #'format log-msg))
-      (apply #'message log-msg)) nil)))
+      (apply #'message log-msg)))
+ nil))
 
 (defun on-emacs-exit()
   (clog :debug "flushing comments before quiting emacs")
@@ -205,12 +211,42 @@
 
 (add-hook 'kill-emacs-hook 'on-emacs-exit)
 ;; -*-  lexical-binding: t; -*-
-(defun id(x) x)
-
 (defmacro string-from-macro(m)
 `(format "%s" (print (macroexpand-1 ,m) #'(lambda(x) (format "%s" x)))))
 
 (require 'subr-x)
+
+(unless (< 25 (car (emacs-ver)))
+(defmacro when-let-key (key vars &rest body)
+  "when with let using standard let-notation, but every item in vars must be a list"
+  (if (car vars)
+  `(let ((,(caar vars) ,(cadar vars)))
+     ,(if (cdr vars)
+	  `(when (funcall ,key ,(caar vars))
+	     ,(macroexpand-1 `(when-let-key ,key ,(cdr vars) ,@body)))
+	(append `(when (funcall ,key ,(caar vars))) body)))
+  (if (cdr vars)
+      `(when ,(cadar vars)
+	     ,(macroexpand-1 `(when-let-key ,key ,(cdr vars) ,@body)))
+    (append `(when (funcall ,key ,(cadar vars))) body)))))
+
+(unless (< 25 (car (emacs-ver)))
+(defmacro when-let*(vars &rest body)
+  "when with let using standard let-notation"
+`(when-let-key #'identity
+   ,(mapcar #'(lambda(v) (if(listp v) v (list v nil))) vars)
+    ,@body)))
+
+(defmacro sif-let (vars ifyes &rest body)
+  "if with let using standard let-notation"
+  (let ((if-true (s-gensym "it")) (result (s-gensym "r")))
+    `(let (,if-true ,result)
+       (when-let* ,vars
+		 (setf ,if-true t
+		  ,result ,ifyes))
+       (if ,if-true
+	   ,result
+	 ,@body))))
 
 (defmacro ifn-let (vars ifno &rest body)
   `(if-let ,vars

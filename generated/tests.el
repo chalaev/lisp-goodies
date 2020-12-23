@@ -1,3 +1,18 @@
+(unless (< 25 (car (emacs-ver)))
+(ert-deftest when-let-key()
+(should (string= "aba" (when-let-key  #'identity ((a "a") (b (concat a "b")))
+  (concat b "a"))))
+(should (not (when-let-key  #'identity ((a "a") (b nil)) (concat "z" "a"))))
+(should (not (when-let-key  #'identity ((c nil) (a "a") (b nil)) (concat "z" "a"))))))
+
+(unless (< 25 (car (emacs-ver)))
+(ert-deftest when-let*()
+(should (string= "aba" 
+   (when-let* ((a "a") (b (concat a "b")))
+      (concat b "a"))))
+(should (not (when-let* ((a "a") (b)) (concat "z" "a"))))
+(should (not (when-let* (c (a "a") b) (concat "z" "a"))))))
+
 (ert-deftest when-let()
   "Testing here when-let and when-let* defined in subr-x.el"
 (should (string= "ba" (when-let (a "a") (concat "b" a))))
@@ -8,6 +23,7 @@
 
 (ert-deftest if-let*()
   "Testing here if-let* defined in subr-x.el"
+:expected-result (if (< 25 (car (emacs-ver))) :passed :failed)
 (should (= 1 (if-let* ((a 3)) 1 2)))
 (should (= 12 (if-let* ((a 3) (b (* 3 a))) (+ a b) (- a b)))))
 
@@ -71,8 +87,8 @@
 (let ((mv-result (mv fileA fileB)))
    (should (and (consp mv-result) (car mv-result) (not (file-exists-p fileA)) (file-exists-p fileB)
    (with-temp-buffer (insert-file-contents fileB)
-   (string= "1234" (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))))
-(safe-delete-dir tmp-dir t))))
+   (string= "1234" (buffer-substring-no-properties (line-beginning-position) (line-end-position))))))))
+(safe-delete-dir tmp-dir t)))
 
 (ert-deftest cp()
 (let ((cp-result (cp "/tmp" "/ptm"))
@@ -84,5 +100,5 @@
 (let ((cp-result (cp fileA fileB)))
    (should (and (consp cp-result) (car cp-result) (file-exists-p fileA) (file-exists-p fileB)
    (with-temp-buffer (insert-file-contents fileB)
-   (string= "1234" (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))))
-(safe-delete-dir tmp-dir t))))
+   (string= "1234" (buffer-substring-no-properties (line-beginning-position) (line-end-position))))))))
+(safe-delete-dir tmp-dir t)))

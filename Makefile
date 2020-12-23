@@ -14,9 +14,9 @@ ORGs = $(addsuffix .org, $(OFNs))
 all: packaged/start.el quicklisp README.md packaged/el-shalaev.tbz packaged/shalaev.el packaged/cl-shalaev.tbz $(addprefix generated/from/, $(ORGs))
 quicklisp: $(quicklispDir)/ $(addprefix $(quicklispDir)/, $(package)) $(addprefix generated/from/, $(ORGs))
 
-packaged/el-shalaev.tbz: generated/from/shalaev.org packaged/
+packaged/el-shalaev.tbz: generated/from/shalaev.org packaged/start.el packaged/
 	@echo "\nTesting before we package it:"
-	emacs -q --no-site-file --batch -l ert -l generated/macros.el -l generated/functions.el -l generated/file-functions.el -l generated/load.el -l generated/cl.el -l generated/tests.el -f ert-run-tests-batch-and-exit
+	emacs -q --no-site-file --batch -l ert -l packaged/start.el -l generated/macros.el -l generated/functions.el -l generated/file-functions.el -l generated/load.el -l generated/cl.el -l generated/tests.el -f ert-run-tests-batch-and-exit
 	@echo "`date '+%m/%d %H:%M'` EL TESTS PASSED :)\n"
 	tar jcfv $@ --transform s/^generated/shalaev/ generated/*.el
 	-@chgrp tmp $@

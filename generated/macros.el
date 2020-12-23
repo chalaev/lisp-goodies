@@ -1,10 +1,40 @@
 ;; -*-  lexical-binding: t; -*-
-(defun id(x) x)
-
 (defmacro string-from-macro(m)
 `(format "%s" (print (macroexpand-1 ,m) #'(lambda(x) (format "%s" x)))))
 
 (require 'subr-x)
+
+(unless (< 25 (car (emacs-ver)))
+(defmacro when-let-key (key vars &rest body)
+  "when with let using standard let-notation, but every item in vars must be a list"
+  (if (car vars)
+  `(let ((,(caar vars) ,(cadar vars)))
+     ,(if (cdr vars)
+	  `(when (funcall ,key ,(caar vars))
+	     ,(macroexpand-1 `(when-let-key ,key ,(cdr vars) ,@body)))
+	(append `(when (funcall ,key ,(caar vars))) body)))
+  (if (cdr vars)
+      `(when ,(cadar vars)
+	     ,(macroexpand-1 `(when-let-key ,key ,(cdr vars) ,@body)))
+    (append `(when (funcall ,key ,(cadar vars))) body)))))
+
+(unless (< 25 (car (emacs-ver)))
+(defmacro when-let*(vars &rest body)
+  "when with let using standard let-notation"
+`(when-let-key #'identity
+   ,(mapcar #'(lambda(v) (if(listp v) v (list v nil))) vars)
+    ,@body)))
+
+(defmacro sif-let (vars ifyes &rest body)
+  "if with let using standard let-notation"
+  (let ((if-true (s-gensym "it")) (result (s-gensym "r")))
+    `(let (,if-true ,result)
+       (when-let* ,vars
+		 (setf ,if-true t
+		  ,result ,ifyes))
+       (if ,if-true
+	   ,result
+	 ,@body))))
 
 (defmacro ifn-let (vars ifno &rest body)
   `(if-let ,vars

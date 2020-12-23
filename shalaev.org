@@ -6,11 +6,7 @@
 #+LATEX_HEADER: \usepackage[letterpaper,hmargin={1.5cm,1.5cm},vmargin={1.3cm,2cm},nohead,nofoot]{geometry}
 #+KEYWORDS: emacs, elisp, common lisp, macros, functions
 
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el :shebang ";; -*-  lexical-binding: t; -*-"
-(defun id(x) x)
-#+END_SRC
-
-#+BEGIN_SRC lisp :tangle generated/tests.lisp :shebang ";; -*-  lexical-binding: t; -*-"
+#+BEGIN_SRC lisp :tangle generated/tests.lisp
 (declaim (notinline id))
 (defun id(x) x)
 #+END_SRC
@@ -39,7 +35,7 @@ Notes:
 #+END_SRC
 
 For testing puprposes it is useful to convert macro expansions to string:
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el :shebang ";; -*-  lexical-binding: t; -*-"
 (defmacro string-from-macro(m)
 `(format "%s" (print (macroexpand-1 ,m) #'(lambda(x) (format "%s" x)))))
 #+END_SRC
@@ -50,9 +46,54 @@ For testing puprposes it is useful to convert macro expansions to string:
 
 * when-let
 ** Emacs Lisp
-=when-let= and =when-let*= are defined in ~subr-x.el~:
+(in latest emacs) =when-let= and =when-let*= are defined in ~subr-x.el~:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (require 'subr-x)
+#+END_SRC
+
+=when-let= is one of my most-used macros; it is defined on top of (more general) =when-let-key=:
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+(unless (< 25 (car (emacs-ver)))
+(defmacro when-let-key (key vars &rest body)
+  "when with let using standard let-notation, but every item in vars must be a list"
+  (if (car vars)
+  `(let ((,(caar vars) ,(cadar vars)))
+     ,(if (cdr vars)
+	  `(when (funcall ,key ,(caar vars))
+	     ,(macroexpand-1 `(when-let-key ,key ,(cdr vars) ,@body)))
+	(append `(when (funcall ,key ,(caar vars))) body)))
+  (if (cdr vars)
+      `(when ,(cadar vars)
+	     ,(macroexpand-1 `(when-let-key ,key ,(cdr vars) ,@body)))
+    (append `(when (funcall ,key ,(cadar vars))) body)))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(unless (< 25 (car (emacs-ver)))
+(ert-deftest when-let-key()
+(should (string= "aba" (when-let-key  #'identity ((a "a") (b (concat a "b")))
+  (concat b "a"))))
+(should (not (when-let-key  #'identity ((a "a") (b nil)) (concat "z" "a"))))
+(should (not (when-let-key  #'identity ((c nil) (a "a") (b nil)) (concat "z" "a"))))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+(unless (< 25 (car (emacs-ver)))
+(defmacro when-let*(vars &rest body)
+  "when with let using standard let-notation"
+`(when-let-key #'identity
+   ,(mapcar #'(lambda(v) (if(listp v) v (list v nil))) vars)
+    ,@body)))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(unless (< 25 (car (emacs-ver)))
+(ert-deftest when-let*()
+(should (string= "aba" 
+   (when-let* ((a "a") (b (concat a "b")))
+      (concat b "a"))))
+(should (not (when-let* ((a "a") (b)) (concat "z" "a"))))
+(should (not (when-let* (c (a "a") b) (concat "z" "a"))))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/tests.el
@@ -69,6 +110,7 @@ For testing puprposes it is useful to convert macro expansions to string:
 #+BEGIN_SRC emacs-lisp :tangle generated/tests.el
 (ert-deftest if-let*()
   "Testing here if-let* defined in subr-x.el"
+:expected-result (if (< 25 (car (emacs-ver))) :passed :failed)
 (should (= 1 (if-let* ((a 3)) 1 2)))
 (should (= 12 (if-let* ((a 3) (b (* 3 a))) (+ a b) (- a b)))))
 #+END_SRC
@@ -102,7 +144,35 @@ CL code is the same:
 
 * if-let
 ** Emacs Lisp
-Similarly to [[when-let]], =if-let= is defined in ~subr-x.el~.
+Similarly to [[when-let]], (in latest emacs) =if-let= is defined in ~subr-x.el~.
+
+Like =when-let=, macro =sif-let= is heavily used in my projects.
+It is somewhat similar to =when-let=, but offers "else" clause:
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+(defmacro sif-let (vars ifyes &rest body)
+  "if with let using standard let-notation"
+  (let ((if-true (s-gensym "it")) (result (s-gensym "r")))
+    `(let (,if-true ,result)
+       (when-let* ,vars
+		 (setf ,if-true t
+		  ,result ,ifyes))
+       (if ,if-true
+	   ,result
+	 ,@body))))
+#+END_SRC
+
+Usage example:
+#+BEGIN_SRC emacs-lisp :results drawer
+(print (macroexpand-1 
+  '(sif-let ((x 1) (y (1+ x)))
+     (+ x y) (- x y) (* x y))))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(let (it17 r18) (when-let ((x 1) (y (1+ x))) (setf it17 t r18 (+ x y))) (if it17 r18 (- x y) (* x y)))
+:END:
+
 
 ** Common Lisp
 My =if-let= has almost the same functionality, as [[https://common-lisp.net/project/alexandria/draft/alexandria.html][alexandria:if-let]]
@@ -376,9 +446,9 @@ result)
 #+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
 (defun ensure-dir-exists (dirname)
 (let ((SMD (safe-mkdir dirname)))
-  (or (car SMD) (eql (cdr SMD) :exists))))
+  (if (or (car SMD) (eql (cdr SMD) :exists)) dirname
+(error "could not create %s" dirname))))
 #+END_SRC
-
 
 In SBCL I must know if the directory =dirname= existed before I attempted to create it,
 so I have to use (low-level) [[https://github.com/sbcl/sbcl/blob/master/contrib/sb-posix/posix-tests.lisp][sb-posix:mkdir]] function:
@@ -557,7 +627,9 @@ The following 3 blocks allow me to require simple (consisting of one file) local
 
 Defining important directories:
 #+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el :shebang ";; -*-  lexical-binding: t; -*-"
-(defvar ~ (file-name-as-directory (getenv "HOME")))
+(defvar HOME (getenv "HOME"))
+(defvar ~ (file-name-as-directory HOME))
+(defun ~() (file-name-as-directory HOME))
 (defun   tilde(x) (replace-regexp-in-string (concat "^" ~) "~/" x))
 (defun untilde(x) (replace-regexp-in-string "^~/" ~ x))
 (defvar emacs-d (concat "~/" (file-name-as-directory ".emacs.d")))
@@ -1237,8 +1309,8 @@ See also =dired-do-chown=.
 (let ((mv-result (mv fileA fileB)))
    (should (and (consp mv-result) (car mv-result) (not (file-exists-p fileA)) (file-exists-p fileB)
    (with-temp-buffer (insert-file-contents fileB)
-   (string= "1234" (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))))
-(safe-delete-dir tmp-dir t))))
+   (string= "1234" (buffer-substring-no-properties (line-beginning-position) (line-end-position))))))))
+(safe-delete-dir tmp-dir t)))
 #+END_SRC
 
 *** cp (for files)
@@ -1260,8 +1332,8 @@ See also =dired-do-chown=.
 (let ((cp-result (cp fileA fileB)))
    (should (and (consp cp-result) (car cp-result) (file-exists-p fileA) (file-exists-p fileB)
    (with-temp-buffer (insert-file-contents fileB)
-   (string= "1234" (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))))
-(safe-delete-dir tmp-dir t))))
+   (string= "1234" (buffer-substring-no-properties (line-beginning-position) (line-end-position))))))))
+(safe-delete-dir tmp-dir t)))
 #+END_SRC
 
 *** rm (for files)
@@ -1314,6 +1386,10 @@ Its return result is similar to that of =rm= and =safe-mkdir=:
 (defun safe-delete-dir (FN &optional recursive)
   (condition-case err (progn (delete-directory FN recursive) (list t))
     (file-error (cons nil (error-message-string err)))))
+(defun delete-dirs (&rest dirs)
+(let ((res (mapcar #'(lambda(DN) (safe-delete-dir DN t)) dirs)))
+    (cons(land(mapcar #'car res))
+(mapcar #'(lambda(r) (when(consp r) (cadr r))) res))))
 #+END_SRC
 
 ** logging system
@@ -1350,7 +1426,7 @@ and once in a while (when the number of queued messages >30 or before quitting ~
 #+END_SRC
 The main logging function:
 #+BEGIN_SRC emacs-lisp :tangle generated/logging.el
-(defun clog (level fstr &rest args)
+(defun clog(level fstr &rest args)
   "simple logging function" ; level is one of → :debug :info :warning :error
 (let ((log-push (lambda(msg)
   (push msg *log-buffer*)
@@ -1366,7 +1442,8 @@ Since we have [[https://www.emacswiki.org/emacs/EmacsLispLimitations][no multi-t
 		    fstr)
 	    (cons (symbol-name level) args))))
       (funcall log-push (apply #'format log-msg))
-      (apply #'message log-msg)) nil)))
+      (apply #'message log-msg)))
+ nil))
 #+END_SRC
 where I inserted =nil= at the end just for convenience, since I often use
 =clog= for error messages:
