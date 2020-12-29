@@ -1,17 +1,3 @@
-(defmacro directory-lock(locked-dir by &rest body)
-(let ((LD (s-gensym "ld")) (lock-file (s-gensym "LF")) (mkdir (s-gensym "md")) 
-      (result (s-gensym "r")))
-`(let* ((,LD (uiop:ensure-directory-pathname  ,locked-dir))
-        (,mkdir (safe-mkdir ,LD)))
-  (ifn (car ,mkdir) (cons nil (cons :lock (cdr ,mkdir)))
-(let ((,lock-file (merge-pathnames #p"by" ,LD)))
-  (echo-to-file ,lock-file ,by)
-  (let ((,result (progn ,@body)))
-
-(ifn (car (rm ,lock-file)) (cons nil (cons :file ,result))
-(ifn (car (rmdir ,LD)) (cons nil (cons :dir ,result))
-(cons t ,result)))))))))
-
 (defmacro cond-let(&rest conds)
   "cond with let"
   (let ((c (car conds)) (r (cdr conds)))

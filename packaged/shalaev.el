@@ -3,7 +3,7 @@
 ;; Copyright (C) 2020 Oleg Shalaev <oleg@chalaev.com>
 
 ;; Author:     Oleg Shalaev <oleg@chalaev.com>
-;; Version:    1.2.3
+;; Version:    1.3.1
 
 ;; URL:        https://github.com/chalaev/lisp-goodies
 
@@ -48,19 +48,6 @@
 (macrolet ,(mapcar #'(lambda(FD)
 (list (car FD) (cadr FD) `(funcall ,(cdr (assoc (car FD) GSs)) ,@(cadr FD)))) fun-defs)
  ,@body))))
-;; -*-  lexical-binding: t; -*-
-(defun safe-mkdir(dirname)
-"creates a directory returning the report"
-(condition-case err
-  (progn (make-directory dirname t)  (list t))
- (file-already-exists (cons nil :exists))
- (file-error (cons nil :permission))))
-
-(defun ensure-dir-exists (dirname)
-(let ((SMD (safe-mkdir dirname)))
-  (if (or (car SMD) (eql (cdr SMD) :exists)) dirname
-(error "could not create %s" dirname))))
-
 (require 'cl); hopefully one day I will remove this line
 (defun perms-from-str (str)
 "parses file mode string into integer"
@@ -81,28 +68,18 @@
 (defun chgrp(group file-name)
   (= 0 (call-process "chgrp" nil nil nil group file-name)))
 
-(defun mv(FN-1 FN-2)
-"renaming/moving files (not dirs)"
-  (condition-case err (cons t (rename-file FN-1 FN-2 t))
-    (file-error (cons nil (error-message-string err)))))
+(defun get-file-properties(FN)
+  (when-let ((FA (and (file-exists-p FN) (file-attributes FN 'string))))
+      (destructuring-bind
+	  (uid gid acess-time mod-time status-time fsize ms void inode fsNum)
+	  (cddr FA)
+(vector FN uid gid mod-time fsize (perms-from-str ms)))))
 
-(defun cp(FN-1 FN-2)
-"copying ONE file (not dirs)"
-  (condition-case err (cons t (copy-file FN-1 FN-2 t))
-    (file-error (cons nil (error-message-string err)))))
-
-(defun rm(FN)
-"erases files only, not directories"
-  (condition-case err (cons t (delete-file FN))
-    (file-error (cons nil (error-message-string err)))))
-
-(defun safe-delete-dir (FN &optional recursive)
-  (condition-case err (progn (delete-directory FN recursive) (list t))
-    (file-error (cons nil (error-message-string err)))))
-(defun delete-dirs (&rest dirs)
-(let ((res (mapcar #'(lambda(DN) (safe-delete-dir DN t)) dirs)))
-    (cons(land(mapcar #'car res))
-(mapcar #'(lambda(r) (when(consp r) (cadr r))) res))))
+(defun ensure-dir-exists (DN)
+(condition-case err
+(make-directory DN t)
+(file-already-exists (clog :debug "%s already exists" DN)))
+DN)
 ;; -*-  lexical-binding: t; -*-
 (defun select (from-where match-test)
   "select items matching the test"
@@ -150,6 +127,17 @@
       (append (parse-only-time (cadr SS))
 	      (parse-date (car SS))))))
 
+(defun read-conf-file(FN)
+  "reads configuration file"
+(with-temp-buffer(insert-file-contents FN)
+(let (res)
+(while-let(str) (< 0 (length (setf str (read-line))))
+     (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
+	 (push (cons (match-string 1 str) (match-string 2 str)) res)
+(unless(= ?# (string-to-char str)); ignoring comments
+       (clog :error "garbage string in configuration file: %s" str))))
+    (reverse res))))
+
 (defun firstN(lista N)
   "returning first N elments of the list"
   (when (and (< 0 N) (car lista))
@@ -170,6 +158,17 @@
 (defun land(args)
 "'and' for a list"
   (reduce #'(lambda(x y) (and x y)) args :initial-value t))
+
+(defun sforward-line()
+"safe forward-line"
+  (if (< (line-end-position) (point-max))
+     (forward-line)
+     (move-end-of-line 1)))
+(defun read-line()
+"returns current string of a buffer"
+(prog1 
+  (buffer-substring-no-properties (line-beginning-position) (line-end-position))
+  (sforward-line)))
 (defvar *log-level* 0)
 
 (defvar *log-buffer* nil)
@@ -253,7 +252,7 @@
       (progn ,@body)
       ,ifno))
 
-(defmacro needs (vardefs &rest body)
+(defmacro needs(vardefs &rest body)
   "unifying when-let and if-let"
   (let ((vardef (car vardefs)))
     (if (and (listp vardef) (not (or (special-form-p (car vardef)) (functionp (car vardef)) (macrop (car vardef)))))
@@ -289,16 +288,14 @@
 	      `(progn ,@body))))))
 
 (defmacro directory-lock(locked-dir by &rest body)
-(let ((LD (s-gensym "LD")) (lock-file (s-gensym "LF")) (mkdir (s-gensym "MD")) (result (s-gensym "r")) (unlock (s-gensym "u")))
+(let ((LD (s-gensym "LD")) (lock-file (s-gensym "LF")))
 `(let* ((,LD (file-name-as-directory ,locked-dir))
-        (,lock-file (concat ,LD "by"))
-        (,mkdir (safe-mkdir ,LD)))
-  (ifn (car ,mkdir) (cons nil (cons :lock ,mkdir))
-  (write-region ,by nil ,lock-file)
-  (let ((,result (progn ,@body)))
-    (if-let ((,unlock (and (rm ,lock-file) (safe-delete-dir ,LD))))
-      (cons t ,result)
-      (cons nil (cons :unlock (cons ,unlock ,result)))))))))
+        (,lock-file (concat ,LD "by")))
+ (make-directory ,LD t)
+ (write-region ,by nil ,lock-file)
+(prog1 (progn ,@body)
+(delete-file ,lock-file)
+(delete-directory ,LD)))))
 
 (defmacro drop (from-where &rest what)
 `(setf ,from-where (without ,from-where ,@what)))
@@ -365,6 +362,12 @@ varDefs)))
     (if r
 	`(if-let ,(car c) (progn ,@(cdr c)) ,(macroexpand-1 `(cond-let ,@r)))
 	`(when-let ,(car c) ,@(cdr c))))))
+
+(defmacro error-in(where &rest body)
+"handles unrecognized errors"
+`(condition-case err (progn ,@body)
+   (error(clog :error (concat "error in " ,where " because
+%s") (error-message-string err)))))
 
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))

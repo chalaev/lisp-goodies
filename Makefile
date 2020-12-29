@@ -61,8 +61,8 @@ $(quicklispDir)/%.org: %.org
 
 version.org: change-log.org helpers/derive-version.el
 	emacsclient -e '(progn (load "$(CURDIR)/helpers/derive-version.el") (format-version "$<"))' | xargs > $@
-	echo "← generated `date '+%m/%d %H:%M'` from [[file:$<][$<]]" >> $@
-	echo "by [[file:helpers/derive-version.el][derive-version.el]]" >> $@
+	@echo "← generated `date '+%m/%d %H:%M'` from [[file:$<][$<]]" >> $@
+	@echo "by [[file:helpers/derive-version.el][derive-version.el]]" >> $@
 	-@chgrp tmp $@
 
 generated/from/%.org: %.org generated/from/ generated/headers/

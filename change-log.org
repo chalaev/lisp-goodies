@@ -1,6 +1,12 @@
 Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 
 * Packaging eLisp code
+** Fat removal
+(For some macros/functions) switching to conditions (exceptions) instead of returning =(nil . :error-reason)= in case of problems.
+*** 12/28
+1. Moved several code pieces from [[https://github.com/chalaev/cloud][cloud project]] to [[https://github.com/chalaev/lisp-goodies][lisp-goodies]] because I will use them in my new [[https://github.com/chalaev/el-backup][el-backup project]].
+2. Decided that some functions/macros are not really useful and erased them: =mv=, =cp=, =safe-insert-file=, =safe-mkdir=, =cons-to-list=.
+
 ** 2020-12-07
 Moved some code out of [[file:packaged/shalaev.el][shalaev.el]] adding bew files:
 1. [[file:generated/load.el][load.el]] provides =load*= function for loading non-packaged code,

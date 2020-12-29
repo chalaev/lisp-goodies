@@ -41,7 +41,7 @@
       (progn ,@body)
       ,ifno))
 
-(defmacro needs (vardefs &rest body)
+(defmacro needs(vardefs &rest body)
   "unifying when-let and if-let"
   (let ((vardef (car vardefs)))
     (if (and (listp vardef) (not (or (special-form-p (car vardef)) (functionp (car vardef)) (macrop (car vardef)))))
@@ -77,16 +77,14 @@
 	      `(progn ,@body))))))
 
 (defmacro directory-lock(locked-dir by &rest body)
-(let ((LD (s-gensym "LD")) (lock-file (s-gensym "LF")) (mkdir (s-gensym "MD")) (result (s-gensym "r")) (unlock (s-gensym "u")))
+(let ((LD (s-gensym "LD")) (lock-file (s-gensym "LF")))
 `(let* ((,LD (file-name-as-directory ,locked-dir))
-        (,lock-file (concat ,LD "by"))
-        (,mkdir (safe-mkdir ,LD)))
-  (ifn (car ,mkdir) (cons nil (cons :lock ,mkdir))
-  (write-region ,by nil ,lock-file)
-  (let ((,result (progn ,@body)))
-    (if-let ((,unlock (and (rm ,lock-file) (safe-delete-dir ,LD))))
-      (cons t ,result)
-      (cons nil (cons :unlock (cons ,unlock ,result)))))))))
+        (,lock-file (concat ,LD "by")))
+ (make-directory ,LD t)
+ (write-region ,by nil ,lock-file)
+(prog1 (progn ,@body)
+(delete-file ,lock-file)
+(delete-directory ,LD)))))
 
 (defmacro drop (from-where &rest what)
 `(setf ,from-where (without ,from-where ,@what)))
@@ -153,6 +151,12 @@ varDefs)))
     (if r
 	`(if-let ,(car c) (progn ,@(cdr c)) ,(macroexpand-1 `(cond-let ,@r)))
 	`(when-let ,(car c) ,@(cdr c))))))
+
+(defmacro error-in(where &rest body)
+"handles unrecognized errors"
+`(condition-case err (progn ,@body)
+   (error(clog :error (concat "error in " ,where " because
+%s") (error-message-string err)))))
 
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))

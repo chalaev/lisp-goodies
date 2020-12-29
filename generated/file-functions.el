@@ -1,16 +1,3 @@
-;; -*-  lexical-binding: t; -*-
-(defun safe-mkdir(dirname)
-"creates a directory returning the report"
-(condition-case err
-  (progn (make-directory dirname t)  (list t))
- (file-already-exists (cons nil :exists))
- (file-error (cons nil :permission))))
-
-(defun ensure-dir-exists (dirname)
-(let ((SMD (safe-mkdir dirname)))
-  (if (or (car SMD) (eql (cdr SMD) :exists)) dirname
-(error "could not create %s" dirname))))
-
 (require 'cl); hopefully one day I will remove this line
 (defun perms-from-str (str)
 "parses file mode string into integer"
@@ -31,25 +18,15 @@
 (defun chgrp(group file-name)
   (= 0 (call-process "chgrp" nil nil nil group file-name)))
 
-(defun mv(FN-1 FN-2)
-"renaming/moving files (not dirs)"
-  (condition-case err (cons t (rename-file FN-1 FN-2 t))
-    (file-error (cons nil (error-message-string err)))))
+(defun get-file-properties(FN)
+  (when-let ((FA (and (file-exists-p FN) (file-attributes FN 'string))))
+      (destructuring-bind
+	  (uid gid acess-time mod-time status-time fsize ms void inode fsNum)
+	  (cddr FA)
+(vector FN uid gid mod-time fsize (perms-from-str ms)))))
 
-(defun cp(FN-1 FN-2)
-"copying ONE file (not dirs)"
-  (condition-case err (cons t (copy-file FN-1 FN-2 t))
-    (file-error (cons nil (error-message-string err)))))
-
-(defun rm(FN)
-"erases files only, not directories"
-  (condition-case err (cons t (delete-file FN))
-    (file-error (cons nil (error-message-string err)))))
-
-(defun safe-delete-dir (FN &optional recursive)
-  (condition-case err (progn (delete-directory FN recursive) (list t))
-    (file-error (cons nil (error-message-string err)))))
-(defun delete-dirs (&rest dirs)
-(let ((res (mapcar #'(lambda(DN) (safe-delete-dir DN t)) dirs)))
-    (cons(land(mapcar #'car res))
-(mapcar #'(lambda(r) (when(consp r) (cadr r))) res))))
+(defun ensure-dir-exists (DN)
+(condition-case err
+(make-directory DN t)
+(file-already-exists (clog :debug "%s already exists" DN)))
+DN)

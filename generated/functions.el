@@ -45,6 +45,17 @@
       (append (parse-only-time (cadr SS))
 	      (parse-date (car SS))))))
 
+(defun read-conf-file(FN)
+  "reads configuration file"
+(with-temp-buffer(insert-file-contents FN)
+(let (res)
+(while-let(str) (< 0 (length (setf str (read-line))))
+     (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
+	 (push (cons (match-string 1 str) (match-string 2 str)) res)
+(unless(= ?# (string-to-char str)); ignoring comments
+       (clog :error "garbage string in configuration file: %s" str))))
+    (reverse res))))
+
 (defun firstN(lista N)
   "returning first N elments of the list"
   (when (and (< 0 N) (car lista))
@@ -65,3 +76,14 @@
 (defun land(args)
 "'and' for a list"
   (reduce #'(lambda(x y) (and x y)) args :initial-value t))
+
+(defun sforward-line()
+"safe forward-line"
+  (if (< (line-end-position) (point-max))
+     (forward-line)
+     (move-end-of-line 1)))
+(defun read-line()
+"returns current string of a buffer"
+(prog1 
+  (buffer-substring-no-properties (line-beginning-position) (line-end-position))
+  (sforward-line)))
