@@ -1,7 +1,11 @@
 Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 
+* Lazy Improvements
+** 12/31 Common Lisp
+exported symbols in =(defpackage :shalaev ...)=
+
 * Packaging eLisp code
-** Fat removal
+** fat removal
 (For some macros/functions) switching to conditions (exceptions) instead of returning =(nil . :error-reason)= in case of problems.
 *** 12/28
 1. Moved several code pieces from [[https://github.com/chalaev/cloud][cloud project]] to [[https://github.com/chalaev/lisp-goodies][lisp-goodies]] because I will use them in my new [[https://github.com/chalaev/el-backup][el-backup project]].
@@ -20,7 +24,7 @@ These files are merged into [[file:packaged/start.el][packaged/start.el]] which 
 *** 2020-12-14
 1. upgraded =make-temp-file= on emacs versions ≤25
 2. (ELisp) removed =when-let= and =if-let=
-3. added [[file:make.log][make.log]]
+3. added [[file:generated/make.log][make.log]]
 
 *** 2020-12-11
 1. added (ELisp) =emacs-ver=

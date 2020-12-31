@@ -25,6 +25,11 @@
 	(setf r i)
       (s-incf i)))))
 
+(defun time< (t1 t2)
+  (and
+    (time-less-p (time-add t1 3) t2)
+    (not (time-less-p (time-add t2 3) t1))))
+
 (defun parse-date (str)
   (mapcar 'string-to-number
 	  (cond
@@ -45,6 +50,10 @@
       (append (parse-only-time (cadr SS))
 	      (parse-date (car SS))))))
 
+(defmacro while-let(var-defs while-cond &rest body)
+  `(let* (,@var-defs)
+     (while ,while-cond
+       ,@body)))
 (defun read-conf-file(FN)
   "reads configuration file"
 (with-temp-buffer(insert-file-contents FN)

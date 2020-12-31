@@ -3,7 +3,7 @@
 ;; Copyright (C) 2020 Oleg Shalaev <oleg@chalaev.com>
 
 ;; Author:     Oleg Shalaev <oleg@chalaev.com>
-;; Version:    1.3.1
+;; Version:    2.1.8
 
 ;; URL:        https://github.com/chalaev/lisp-goodies
 
@@ -80,6 +80,14 @@
 (make-directory DN t)
 (file-already-exists (clog :debug "%s already exists" DN)))
 DN)
+
+(defun to-dir(root &rest dirs)
+(if (car dirs)
+    (apply #'to-dir
+(cons 
+  (file-name-as-directory (concat (file-name-as-directory root) (car dirs)))
+  (cdr dirs)))
+  (file-name-as-directory root)))
 ;; -*-  lexical-binding: t; -*-
 (defun select (from-where match-test)
   "select items matching the test"
@@ -107,6 +115,11 @@ DN)
 	(setf r i)
       (s-incf i)))))
 
+(defun time< (t1 t2)
+  (and
+    (time-less-p (time-add t1 3) t2)
+    (not (time-less-p (time-add t2 3) t1))))
+
 (defun parse-date (str)
   (mapcar 'string-to-number
 	  (cond
@@ -127,6 +140,10 @@ DN)
       (append (parse-only-time (cadr SS))
 	      (parse-date (car SS))))))
 
+(defmacro while-let(var-defs while-cond &rest body)
+  `(let* (,@var-defs)
+     (while ,while-cond
+       ,@body)))
 (defun read-conf-file(FN)
   "reads configuration file"
 (with-temp-buffer(insert-file-contents FN)
@@ -246,11 +263,6 @@ DN)
        (if ,if-true
 	   ,result
 	 ,@body))))
-
-(defmacro ifn-let (vars ifno &rest body)
-  `(if-let ,vars
-      (progn ,@body)
-      ,ifno))
 
 (defmacro needs(vardefs &rest body)
   "unifying when-let and if-let"

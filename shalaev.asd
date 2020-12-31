@@ -11,7 +11,7 @@
 
 (defsystem "shalaev/macros"
   :class :package-inferred-system
-  :description "my lisp goodies"
+  :description "my lisp macros"
   :author "Oleg Shalaev"
   :mailto "oleg@chalaev.com"
   :licence "MIT"
@@ -20,7 +20,7 @@
 
 (defsystem "shalaev/files"
   :class :package-inferred-system
-  :description "my lisp goodies"
+  :description "my lisp file functions"
   :author "Oleg Shalaev"
   :mailto "oleg@chalaev.com"
   :licence "MIT"
@@ -30,7 +30,7 @@
 
 (defsystem "shalaev/tests"
   :class :package-inferred-system
-  :description "testing"
+  :description "testing my lisp goodies"
   :author "Oleg Shalaev"
   :mailto "oleg@chalaev.com"
   :licence "MIT"

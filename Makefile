@@ -2,6 +2,7 @@ SBCL = ~/local/bin/sbcl
 # where my local packages are stored:
 quicklispDir = $$HOME/quicklisp/local-projects/shalaev
 headersDir = generated/headers
+EMACS = emacs -q --no-site-file --batch
 
 LFNs = macros files tests shalaev
 LISPs = $(addsuffix .lisp, $(LFNs))
@@ -16,7 +17,7 @@ quicklisp: $(quicklispDir)/ $(addprefix $(quicklispDir)/, $(package)) $(addprefi
 
 packaged/el-shalaev.tbz: generated/from/shalaev.org packaged/start.el packaged/
 	@echo "\nTesting before we package it:"
-	emacs -q --no-site-file --batch -l ert -l packaged/start.el -l generated/macros.el -l generated/functions.el -l generated/file-functions.el -l generated/load.el -l generated/cl.el -l generated/tests.el -f ert-run-tests-batch-and-exit
+	$(EMACS) -l ert -l packaged/start.el -l generated/macros.el -l generated/functions.el -l generated/file-functions.el -l generated/load.el -l generated/cl.el -l generated/tests.el -f ert-run-tests-batch-and-exit 2> generated/el-tests.log
 	@echo "`date '+%m/%d %H:%M'` EL TESTS PASSED :)\n"
 	tar jcfv $@ --transform s/^generated/shalaev/ generated/*.el
 	-@chgrp tmp $@
@@ -39,6 +40,7 @@ packaged/start.el: packaged/shalaev.el packaged/
 	cat generated/local-packages.el generated/make.el generated/load.el >> $@
 	-@chgrp tmp $@
 	-for d in ../*/goodies/ ; do rsync -avu $@ $$d ; done
+	-cp $@ ~/.emacs.d/batch-start.el
 
 packaged/cl-shalaev.tbz: quicklisp packaged/
 	@echo "\nTesting before we package it:"

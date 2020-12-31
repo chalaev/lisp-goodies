@@ -12,6 +12,11 @@
             x
             :bad)
   :ok)
+(deftest ifn-let
+    (ifn-let ((x (id :ok)))
+            :bad
+x )
+  :ok)
 
 (deftest concat
   (concat "/etc/" "dqoE.tmp")

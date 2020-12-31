@@ -36,11 +36,6 @@
 	   ,result
 	 ,@body))))
 
-(defmacro ifn-let (vars ifno &rest body)
-  `(if-let ,vars
-      (progn ,@body)
-      ,ifno))
-
 (defmacro needs(vardefs &rest body)
   "unifying when-let and if-let"
   (let ((vardef (car vardefs)))

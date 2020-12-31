@@ -163,7 +163,6 @@ Usage example:
 (let (it17 r18) (when-let ((x 1) (y (1+ x))) (setf it17 t r18 (+ x y))) (if it17 r18 (- x y) (* x y)))
 :END:
 
-
 ** Common Lisp
 My =if-let= has almost the same functionality, as [[https://common-lisp.net/project/alexandria/draft/alexandria.html][alexandria:if-let]]
 except that instead of single =else-form= there can be multiple forms.
@@ -196,7 +195,7 @@ Usage example:
 :END:
 
 Sometimes I need slightly changed versions of =if-let=:
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.lisp
 (defmacro ifn-let (vars ifno &rest body)
   `(if-let ,vars
       (progn ,@body)
@@ -230,6 +229,11 @@ Sometimes I need slightly changed versions of =if-let=:
     (if-let ((x (id :ok)))
             x
             :bad)
+  :ok)
+(deftest ifn-let
+    (ifn-let ((x (id :ok)))
+            :bad
+x )
   :ok)
 #+END_SRC
 
@@ -1050,6 +1054,18 @@ The following function produces a number from such a string:
   (should (string= "rw-rw-rwx" (perms-to-str #o667))))
 #+END_SRC
 
+*** time<
+In =time<= I have to add 3 seconds of time to avoid chatter effects:
+if at some moment the files are synchronized between the host and the cloud,
+this situation might change due to time-desynchronization.
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(defun time< (t1 t2)
+  (and
+    (time-less-p (time-add t1 3) t2)
+    (not (time-less-p (time-add t2 3) t1))))
+#+END_SRC
+This problem demonstrates the importance of the time synchronization (via =ntpdate= or an =ntp= server).
+
 *** parsing time and date
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun parse-date (str)
@@ -1090,6 +1106,10 @@ Example:
 *** read-conf-file
 12/28 moved here from [[https://github.com/chalaev/cloud][cloud project]].
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(defmacro while-let(var-defs while-cond &rest body)
+  `(let* (,@var-defs)
+     (while ,while-cond
+       ,@body)))
 (defun read-conf-file(FN)
   "reads configuration file"
 (with-temp-buffer(insert-file-contents FN)
@@ -1204,6 +1224,17 @@ BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (
 (make-directory DN t)
 (file-already-exists (clog :debug "%s already exists" DN)))
 DN)
+#+END_SRC
+
+*** to-dir
+#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
+(defun to-dir(root &rest dirs)
+(if (car dirs)
+    (apply #'to-dir
+(cons 
+  (file-name-as-directory (concat (file-name-as-directory root) (car dirs)))
+  (cdr dirs)))
+  (file-name-as-directory root)))
 #+END_SRC
 
 ** logging system

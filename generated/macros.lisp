@@ -1,3 +1,8 @@
+(defmacro ifn-let (vars ifno &rest body)
+  `(if-let ,vars
+      (progn ,@body)
+      ,ifno))
+
 (defmacro cond-let(&rest conds)
   "cond with let"
   (let ((c (car conds)) (r (cdr conds)))

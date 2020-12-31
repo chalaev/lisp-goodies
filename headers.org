@@ -40,18 +40,23 @@ The variable =N-failed= will be SBCL's exit code used in [[file:Makefile][Makefi
 ← then, e.g., =(run-tests :compiled nil)= would set =*compile-tests*= to =nil=.
 
 Since every lisper probably has his/her own "goodies", let me make this package unique by naming it "shalaev":
-#+BEGIN_SRC emacs-lisp :tangle generated/headers/shalaev.lisp
+#+BEGIN_SRC lisp :tangle generated/headers/shalaev.lisp
 ;;(in-package :cl-user)
 (defpackage :shalaev
-(:use :cl :shalaev/macros :shalaev/files))
+(:nicknames "SH")
+(:use :cl :shalaev/macros :shalaev/files)
+ (:export
+:end-push :iff :ifn :concat :aset :hset :when-let :if-let :ifn-let :cond-let :needs
+:merge-paths :safe-mkdir :rmdir :echo-to-file :directory-lock
+))
 (in-package :shalaev)
 (declaim (optimize (speed 0) (safety 3) (debug 3)))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/headers/macros.lisp
+#+BEGIN_SRC lisp :tangle generated/headers/macros.lisp
 (defpackage :shalaev/macros
   (:use :cl)
-  (:export :id
+  (:export
 :end-push :iff :ifn :concat :aset :hset
 :when-let
 :if-let :ifn-let :cond-let
@@ -60,7 +65,7 @@ Since every lisper probably has his/her own "goodies", let me make this package 
 (in-package :shalaev/macros)
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/headers/files.lisp
+#+BEGIN_SRC lisp :tangle generated/headers/files.lisp
 (defpackage :shalaev/files
   (:use :cl :shalaev/macros)
   (:export :merge-paths :safe-mkdir :rmdir :echo-to-file :directory-lock))
