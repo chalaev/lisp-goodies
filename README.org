@@ -43,7 +43,3 @@ The files in the ~generated/~ folder are only included for convenience and can b
 
 * License
 This code is released under [[https://mit-license.org/][MIT license]].
-* Support
-You can support this project by sending
-1. comments/questions to [[mailto:oleg@chalaev.com][oleg@chalaev.com]] and
-2. donations via [[https://liberapay.com/shalaev/donate][liberapay]] or [[https://www.paypal.com/paypalme/chalaev][paypal]].

@@ -42,19 +42,16 @@ The variable =N-failed= will be SBCL's exit code used in [[file:Makefile][Makefi
 Since every lisper probably has his/her own "goodies", let me make this package unique by naming it "shalaev":
 #+BEGIN_SRC lisp :tangle generated/headers/shalaev.lisp
 ;;(in-package :cl-user)
-(defpackage :shalaev
-(:nicknames "SH")
-(:use :cl :shalaev/macros :shalaev/files)
- (:export
-:end-push :iff :ifn :concat :aset :hset :when-let :if-let :ifn-let :cond-let :needs
-:merge-paths :safe-mkdir :rmdir :echo-to-file :directory-lock
-))
+(uiop:define-package :shalaev
+(:nicknames "SH") (:use :cl)
+(:use-reexport :shalaev/macros :shalaev/files))
 (in-package :shalaev)
 (declaim (optimize (speed 0) (safety 3) (debug 3)))
 #+END_SRC
 
 #+BEGIN_SRC lisp :tangle generated/headers/macros.lisp
 (defpackage :shalaev/macros
+(:nicknames "SHM")
   (:use :cl)
   (:export
 :end-push :iff :ifn :concat :aset :hset

@@ -1,17 +1,18 @@
-Running 12 tests (2020-12-31 15:17:18-0500)
-   passed   1/12  define-vars
-   passed   2/12  drop
-   passed   3/12  end-push
-   passed   4/12  if-let*
-   passed   5/12  land
-   passed   6/12  needs
-   passed   7/12  perms-from-str
-   passed   8/12  perms-to-str
-   passed   9/12  s-find
-   passed  10/12  select
-   passed  11/12  when-let
-   passed  12/12  without
+Running 13 tests (2021-01-04 14:19:58-0500)
+   passed   1/13  define-vars
+   passed   2/13  drop
+   passed   3/13  end-push
+   passed   4/13  if-let*
+   passed   5/13  land
+   passed   6/13  needs
+   passed   7/13  perms-from-str
+   passed   8/13  perms-to-str
+   passed   9/13  s-find\.1
+   passed  10/13  s-find\.2
+   passed  11/13  select
+   passed  12/13  when-let
+   passed  13/13  without
 
-Ran 12 tests, 12 results as expected (2020-12-31 15:17:18-0500)
+Ran 13 tests, 13 results as expected (2021-01-04 14:19:58-0500)
 
-:debug 15:17:18 flushing comments before quiting emacs
+:debug 14:19:58 flushing comments before quiting emacs

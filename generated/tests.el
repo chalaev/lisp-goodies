@@ -33,7 +33,7 @@
 (should(= 2 (needs((a (identity 1) 100)) 2)))
 (should(= 200 (needs((a (identity 1) 100) (b (identity nil) 200) (c (+ a 1) 300)) 55))))
 
-(ert-deftest s-find()
+(ert-deftest s-find.1()
   (should (equal '(3 4) (s-find 4 '((1 2) (3 4) (5 6)) #'cadr)))
   (should (= 3 (s-find 3 '(1 2 3 4 5))))
 (let ((cumbersome-list '(141 142 143 144)))
@@ -42,6 +42,14 @@
   (should (= (s-find 12 cumbersome-list nil #'(lambda(x y) (= (* x x) y))) 144)))
 (let ((cumbersome-list '((141 142) (143 144))))
   (should (equal (s-find 12 cumbersome-list #'cadr #'(lambda(x y) (= y (* x x)))) '(143 144)))))
+(ert-deftest s-find.2()
+"this code comes from cloud project"
+(let((plain(lambda(FR)(aref FR 0))) (cipher(lambda(FR)(aref FR 6)))
+    (file-DB(list
+  ["/home/user/proj/chat/chat.org" "shalaev" "shalaev" (24559 50916 0 0) 48756 420 "U3j"]
+  ["~/proj/lisp-goodies/shalaev.org" "shalaev" "shalaev" (24552 57834 0 0) 432 61533 "Q8T"])))
+(should(string= "/home/user/proj/chat/chat.org"   (funcall plain (s-find "U3j" file-DB cipher #'string=))))
+(should(string= "~/proj/lisp-goodies/shalaev.org" (funcall plain (s-find "Q8T" file-DB cipher #'string=))))))
 
 (ert-deftest select()
 (let ((test-list  '(4 22 11 33 12 24 77)))

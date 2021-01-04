@@ -195,7 +195,7 @@ Usage example:
 :END:
 
 Sometimes I need slightly changed versions of =if-let=:
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.lisp
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro ifn-let (vars ifno &rest body)
   `(if-let ,vars
       (progn ,@body)
@@ -238,6 +238,7 @@ x )
 #+END_SRC
 
 * needs
+(This resembles standard =cl-assert= macro.)
 New =needs= macro is gradually replacing =when-let=:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro needs(vardefs &rest body)
@@ -581,14 +582,21 @@ apparently it is widely used; for example, =M-x org-babel-tangle= uses =cl.el= (
 ~s-find~ stands for "shalaev-find"; note that it is *not* compatible with ~find~ from ~cl.el~:
 #+BEGIN_SRC emacs-lisp :tangle generated/cl.el
 (defun s-find(item seq &optional key test)
-  (let ((test (or test #'=)))
-    (dolist (CS seq)
-      (when (funcall test item (if key (funcall key CS) CS))
-	(return CS)))))
+  (let ((CS(car seq)) found (test (or test 
+(cond
+  ((stringp item) #'string=)
+  ((numberp item) #'=)
+  (t #'eq)))))
+  (while
+     (and
+       (not (setf found (funcall test item (if key (funcall key CS) CS))))
+       (setf seq (cdr seq)))
+     (setf CS(car seq)))
+     (when found CS)))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/tests.el
-(ert-deftest s-find()
+(ert-deftest s-find.1()
   (should (equal '(3 4) (s-find 4 '((1 2) (3 4) (5 6)) #'cadr)))
   (should (= 3 (s-find 3 '(1 2 3 4 5))))
 (let ((cumbersome-list '(141 142 143 144)))
@@ -597,6 +605,14 @@ apparently it is widely used; for example, =M-x org-babel-tangle= uses =cl.el= (
   (should (= (s-find 12 cumbersome-list nil #'(lambda(x y) (= (* x x) y))) 144)))
 (let ((cumbersome-list '((141 142) (143 144))))
   (should (equal (s-find 12 cumbersome-list #'cadr #'(lambda(x y) (= y (* x x)))) '(143 144)))))
+(ert-deftest s-find.2()
+"this code comes from cloud project"
+(let((plain(lambda(FR)(aref FR 0))) (cipher(lambda(FR)(aref FR 6)))
+    (file-DB(list
+  ["/home/user/proj/chat/chat.org" "shalaev" "shalaev" (24559 50916 0 0) 48756 420 "U3j"]
+  ["~/proj/lisp-goodies/shalaev.org" "shalaev" "shalaev" (24552 57834 0 0) 432 61533 "Q8T"])))
+(should(string= "/home/user/proj/chat/chat.org"   (funcall plain (s-find "U3j" file-DB cipher #'string=))))
+(should(string= "~/proj/lisp-goodies/shalaev.org" (funcall plain (s-find "Q8T" file-DB cipher #'string=))))))
 #+END_SRC
 
 Note the difference from ~find~ defined in ~cl.el~: instead of

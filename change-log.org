@@ -1,7 +1,11 @@
 Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 
 * Lazy Improvements
-** 12/31 Common Lisp
+*** 01/04 Emacs Lisp
+1. re-wrote =s-find= and
+2. added another test for it
+
+*** 12/31 Common Lisp
 exported symbols in =(defpackage :shalaev ...)=
 
 * Packaging eLisp code

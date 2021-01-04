@@ -12,10 +12,17 @@
       sym)))
 
 (defun s-find(item seq &optional key test)
-  (let ((test (or test #'=)))
-    (dolist (CS seq)
-      (when (funcall test item (if key (funcall key CS) CS))
-	(return CS)))))
+  (let ((CS(car seq)) found (test (or test 
+(cond
+  ((stringp item) #'string=)
+  ((numberp item) #'=)
+  (t #'eq)))))
+  (while
+     (and
+       (not (setf found (funcall test item (if key (funcall key CS) CS))))
+       (setf seq (cdr seq)))
+     (setf CS(car seq)))
+     (when found CS)))
 
 (defmacro s-decf (var &optional amount)
   (unless amount (setf amount 1))
