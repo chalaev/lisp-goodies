@@ -51,6 +51,22 @@
 (should(string= "/home/user/proj/chat/chat.org"   (funcall plain (s-find "U3j" file-DB cipher #'string=))))
 (should(string= "~/proj/lisp-goodies/shalaev.org" (funcall plain (s-find "Q8T" file-DB cipher #'string=))))))
 
+(ert-deftest letf()
+(should(eval(let((fName(s-gensym)))
+`(letf(z (a 2) (defun ,fName(x)(1+ x)) w)
+ (functionp ,fName)))))
+
+(should(not(let((fName(s-gensym)))
+(functionp fName))))
+
+(let((fName(s-gensym)))
+(should(not(or (special-form-p fName) (functionp fName) (macrop fName) (boundp fName)))))
+
+(should (= 6 (letf(z (a 2) (defun sw(x)(1+ x)) w)
+  (unless (or z w)
+    (setf z (funcall sw a))
+    (* z a))))))
+
 (ert-deftest select()
 (let ((test-list  '(4 22 11 33 12 24 77)))
   (should (not (car (select test-list #'zerop))))

@@ -158,6 +158,11 @@ varDefs)))
    (error(clog :error (concat "error in " ,where " because
 %s") (error-message-string err)))))
 
+(defmacro while-let(var-defs while-cond &rest body)
+  `(let* (,@var-defs)
+     (while ,while-cond
+       ,@body)))
+
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))
 

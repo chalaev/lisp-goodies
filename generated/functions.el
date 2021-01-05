@@ -50,20 +50,21 @@
       (append (parse-only-time (cadr SS))
 	      (parse-date (car SS))))))
 
-(defmacro while-let(var-defs while-cond &rest body)
-  `(let* (,@var-defs)
-     (while ,while-cond
-       ,@body)))
 (defun read-conf-file(FN)
   "reads configuration file"
 (with-temp-buffer(insert-file-contents FN)
 (let (res)
-(while-let(str) (< 0 (length (setf str (read-line))))
-     (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
-	 (push (cons (match-string 1 str) (match-string 2 str)) res)
-(unless(= ?# (string-to-char str)); ignoring comments
-       (clog :error "garbage string in configuration file: %s" str))))
-    (reverse res))))
+(while-let(str) (< (line-end-position) (point-max))
+(setf str (read-line))
+  (unless(= ?# (string-to-char str)); ignoring comments
+(clog :debug "RCF 2 %s" str)
+    (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
+      (push (cons (match-string 1 str) (match-string 2 str)) res))))
+      (reverse res))))
+
+(defun update-conf(conf &rest conf-params)
+  (dolist (CP conf-params)
+    (when-let ((CPV (cdr (assoc CP conf)))) (set (intern CP) CPV))))
 
 (defun firstN(lista N)
   "returning first N elments of the list"

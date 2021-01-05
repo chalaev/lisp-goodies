@@ -1,7 +1,7 @@
 ;; -*-  lexical-binding: t; -*-
 ;;
-;; see https://github.com/chalaev/lisp-goodies/blob/master/packaged/start.el
-(load-file "/path-to/start.el")
+;; see https://github.com/chalaev/lisp-goodies/blob/master/packaged/batch-start.el
+(load-file "/path-to/batch-start.el")
 
 ;; creating PID file for emacs; useful when it gets started from ~/.login
 ;; see https://github.com/chalaev/lisp-goodies/blob/master/.login

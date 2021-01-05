@@ -1,9 +1,14 @@
 Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 
 * Lazy Improvements
+*** 01/05 Emacs Lisp
+1. replaced (probably useless) =flet= with (new macro) =letf=
+2. renamed =packaged/start.el= → [[file:packaged/batch-start.el][packaged/batch-start.el]]
+
 *** 01/04 Emacs Lisp
-1. re-wrote =s-find= and
-2. added another test for it
+1. re-wrote =s-find=,
+2. added another test for it, and
+3. moved =update-conf= from [[https://github.com/chalaev/cloud][cloud project]]
 
 *** 12/31 Common Lisp
 exported symbols in =(defpackage :shalaev ...)=

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2020 Oleg Shalaev <oleg@chalaev.com>
 
 ;; Author:     Oleg Shalaev <oleg@chalaev.com>
-;; Version:    2.2.0
+;; Version:    2.0.8
 
 ;; URL:        https://github.com/chalaev/lisp-goodies
 
@@ -47,14 +47,15 @@
   (unless amount (setf amount 1))
   `(setf ,var (+ ,var ,amount)))
 
-(defmacro s-flet(fun-defs &rest body)
-(let ((GSs (mapcar #'(lambda(FD) (cons (car FD) (s-gensym))) fun-defs)))
-`(let ,(mapcar #'(lambda(FD)
-(list (cdr (assoc (car FD) GSs))
-`(lambda ,(cadr FD) ,@(cddr FD)))) fun-defs)
-(macrolet ,(mapcar #'(lambda(FD)
-(list (car FD) (cadr FD) `(funcall ,(cdr (assoc (car FD) GSs)) ,@(cadr FD)))) fun-defs)
- ,@body))))
+(defmacro letf(var-defs &rest body)
+  (if(car var-defs)
+      (let((ME (macroexpand-1 `(letf ,(cdr var-defs) ,@body))))
+      (if(and(listp (car var-defs))(eql 'defun (caar var-defs)))
+	  (let((func-data (cdar var-defs)))
+	    `(let((,(car func-data) (lambda ,(cadr func-data) ,@(cddr func-data))))
+	        ,ME))
+	`(let(,(car var-defs)) ,ME)))
+    `(progn ,@body)))
 (require 'cl); hopefully one day I will remove this line
 (defun perms-from-str (str)
 "parses file mode string into integer"
@@ -147,20 +148,21 @@ DN)
       (append (parse-only-time (cadr SS))
 	      (parse-date (car SS))))))
 
-(defmacro while-let(var-defs while-cond &rest body)
-  `(let* (,@var-defs)
-     (while ,while-cond
-       ,@body)))
 (defun read-conf-file(FN)
   "reads configuration file"
 (with-temp-buffer(insert-file-contents FN)
 (let (res)
-(while-let(str) (< 0 (length (setf str (read-line))))
-     (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
-	 (push (cons (match-string 1 str) (match-string 2 str)) res)
-(unless(= ?# (string-to-char str)); ignoring comments
-       (clog :error "garbage string in configuration file: %s" str))))
-    (reverse res))))
+(while-let(str) (< (line-end-position) (point-max))
+(setf str (read-line))
+  (unless(= ?# (string-to-char str)); ignoring comments
+(clog :debug "RCF 2 %s" str)
+    (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
+      (push (cons (match-string 1 str) (match-string 2 str)) res))))
+      (reverse res))))
+
+(defun update-conf(conf &rest conf-params)
+  (dolist (CP conf-params)
+    (when-let ((CPV (cdr (assoc CP conf)))) (set (intern CP) CPV))))
 
 (defun firstN(lista N)
   "returning first N elments of the list"
@@ -392,6 +394,11 @@ varDefs)))
 `(condition-case err (progn ,@body)
    (error(clog :error (concat "error in " ,where " because
 %s") (error-message-string err)))))
+
+(defmacro while-let(var-defs while-cond &rest body)
+  `(let* (,@var-defs)
+     (while ,while-cond
+       ,@body)))
 
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))
