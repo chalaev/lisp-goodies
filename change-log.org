@@ -1,6 +1,10 @@
 Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 
 * Lazy Improvements
+*** 01/06 Emacs Lisp
+Used =letf= to name my new macro, but this name is already taken.
+So renamed =letf= → =lett=
+
 *** 01/05 Emacs Lisp
 1. replaced (probably useless) =flet= with (new macro) =letf=
 2. renamed =packaged/start.el= → [[file:packaged/batch-start.el][packaged/batch-start.el]]

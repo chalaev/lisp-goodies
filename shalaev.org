@@ -638,11 +638,12 @@ we write
   `(setf ,var (+ ,var ,amount)))
 #+END_SRC
 
-*** letf (replacing flet)
+*** lett (replacing flet + let)
 #+BEGIN_SRC emacs-lisp :tangle generated/cl.el
-(defmacro letf(var-defs &rest body)
+(defmacro lett(var-defs &rest body)
+"let where one can define (usual) local variables as well as local functions"
   (if(car var-defs)
-      (let((ME (macroexpand-1 `(letf ,(cdr var-defs) ,@body))))
+      (let((ME (macroexpand-1 `(lett ,(cdr var-defs) ,@body))))
       (if(and(listp (car var-defs))(eql 'defun (caar var-defs)))
 	  (let((func-data (cdar var-defs)))
 	    `(let((,(car func-data) (lambda ,(cadr func-data) ,@(cddr func-data))))
@@ -652,9 +653,9 @@ we write
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/tests.el
-(ert-deftest letf()
+(ert-deftest lett()
 (should(eval(let((fName(s-gensym)))
-`(letf(z (a 2) (defun ,fName(x)(1+ x)) w)
+`(lett(z (a 2) (defun ,fName(x)(1+ x)) w)
  (functionp ,fName)))))
 
 (should(not(let((fName(s-gensym)))
@@ -663,7 +664,7 @@ we write
 (let((fName(s-gensym)))
 (should(not(or (special-form-p fName) (functionp fName) (macrop fName) (boundp fName)))))
 
-(should (= 6 (letf(z (a 2) (defun sw(x)(1+ x)) w)
+(should (= 6 (lett(z (a 2) (defun sw(x)(1+ x)) w)
   (unless (or z w)
     (setf z (funcall sw a))
     (* z a))))))
@@ -1136,7 +1137,6 @@ Reading configuration file
 (while-let(str) (< (line-end-position) (point-max))
 (setf str (read-line))
   (unless(= ?# (string-to-char str)); ignoring comments
-(clog :debug "RCF 2 %s" str)
     (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
       (push (cons (match-string 1 str) (match-string 2 str)) res))))
       (reverse res))))

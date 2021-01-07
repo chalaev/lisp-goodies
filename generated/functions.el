@@ -57,7 +57,6 @@
 (while-let(str) (< (line-end-position) (point-max))
 (setf str (read-line))
   (unless(= ?# (string-to-char str)); ignoring comments
-(clog :debug "RCF 2 %s" str)
     (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
       (push (cons (match-string 1 str) (match-string 2 str)) res))))
       (reverse res))))

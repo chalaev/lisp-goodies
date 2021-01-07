@@ -47,9 +47,10 @@
   (unless amount (setf amount 1))
   `(setf ,var (+ ,var ,amount)))
 
-(defmacro letf(var-defs &rest body)
+(defmacro lett(var-defs &rest body)
+"let where one can define (usual) local variables as well as local functions"
   (if(car var-defs)
-      (let((ME (macroexpand-1 `(letf ,(cdr var-defs) ,@body))))
+      (let((ME (macroexpand-1 `(lett ,(cdr var-defs) ,@body))))
       (if(and(listp (car var-defs))(eql 'defun (caar var-defs)))
 	  (let((func-data (cdar var-defs)))
 	    `(let((,(car func-data) (lambda ,(cadr func-data) ,@(cddr func-data))))
@@ -155,7 +156,6 @@ DN)
 (while-let(str) (< (line-end-position) (point-max))
 (setf str (read-line))
   (unless(= ?# (string-to-char str)); ignoring comments
-(clog :debug "RCF 2 %s" str)
     (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
       (push (cons (match-string 1 str) (match-string 2 str)) res))))
       (reverse res))))

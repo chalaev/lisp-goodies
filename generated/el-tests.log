@@ -1,10 +1,10 @@
-Running 14 tests (2021-01-05 16:15:23-0500)
+Running 14 tests (2021-01-06 20:08:25-0500)
    passed   1/14  define-vars
    passed   2/14  drop
    passed   3/14  end-push
    passed   4/14  if-let*
    passed   5/14  land
-   passed   6/14  letf
+   passed   6/14  lett
    passed   7/14  needs
    passed   8/14  perms-from-str
    passed   9/14  perms-to-str
@@ -14,6 +14,6 @@ Running 14 tests (2021-01-05 16:15:23-0500)
    passed  13/14  when-let
    passed  14/14  without
 
-Ran 14 tests, 14 results as expected (2021-01-05 16:15:23-0500)
+Ran 14 tests, 14 results as expected (2021-01-06 20:08:25-0500)
 
-:debug 16:15:23 flushing comments before quiting emacs
+:debug 20:08:25 flushing comments before quiting emacs
