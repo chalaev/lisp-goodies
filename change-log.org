@@ -1,6 +1,9 @@
 Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 
 * Lazy Improvements
+*** 01/11 Emacs Lisp
+updated =update-conf=
+
 *** 01/06 Emacs Lisp
 Used =letf= to name my new macro, but this name is already taken.
 So renamed =letf= → =lett=

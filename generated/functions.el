@@ -61,9 +61,9 @@
       (push (cons (match-string 1 str) (match-string 2 str)) res))))
       (reverse res))))
 
-(defun update-conf(conf &rest conf-params)
+(defun update-conf(conf conf-params)
   (dolist (CP conf-params)
-    (when-let ((CPV (cdr (assoc CP conf)))) (set (intern CP) CPV))))
+    (when-let((CPV (cdr (assoc CP conf)))) (set (intern CP) CPV))))
 
 (defun firstN(lista N)
   "returning first N elments of the list"

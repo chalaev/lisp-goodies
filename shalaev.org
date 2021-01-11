@@ -1144,9 +1144,9 @@ Reading configuration file
 produces list of conses.
 
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun update-conf(conf &rest conf-params)
+(defun update-conf(conf conf-params)
   (dolist (CP conf-params)
-    (when-let ((CPV (cdr (assoc CP conf)))) (set (intern CP) CPV))))
+    (when-let((CPV (cdr (assoc CP conf)))) (set (intern CP) CPV))))
 #+END_SRC
 
 
