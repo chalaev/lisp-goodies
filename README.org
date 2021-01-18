@@ -12,34 +12,22 @@ for both elisp and Common Lisp macros and functions.
 
 * Quick start
 ** Emacs Lisp code
-Either copy-paste or load [[file:generated][generated/]]*.el into your projects, or
-1. paste [[file:generated/local-packages.el][local-packages.el]] into your =~/.emacs=, and
-2. copy [[file:packaged/shalaev.el][shalaev.el]] into your =~/.emacs.d/local-packages/=, [[file:generated/dot.emacs][configure emacs]], and =(require 'shalaev)= in your el-code.
+Either
+- copy-paste or load [[file:generated][generated/]]*.el into your projects, or
+
+- load the code as a package:
+  1. copy [[file:packaged/shalaev.el][shalaev.el]] into =~/.emacs.d/local-packages/=,
+  2. load [[file:packaged/batch-start.el][batch-start.el]] from [[file:generated/dot.emacs][~/.emacs]], and
+  3. =(require 'shalaev)= in your el-code.
 
 For usage example, see the [[https://github.com/chalaev/cloud][cloud (sync)]] project.
 ** Common Lisp code
 Unpack [[file:packaged/cl-shalaev.tbz][cl-shalaev.tbz]] into your [[https://www.quicklisp.org/beta/][Quicklisp]] directory:\\
 =tar xjfv cl-shalaev.tbz --directory=$HOME/quicklisp/local-projects/=
 
-and =(require :shalaev)= in your code.
+and =(require 'shalaev)= in your code.
 
 For usage example, see the [[https://github.com/chalaev/cl-simple-logger][simple-logger]] project.
-
-* Files
-1. [[file:generated/functions.el][functions.el]], [[file:generated/file-functions.el][file-functions.el]], and [[file:generated/files.lisp][files.lisp]] contain functions,
-2. [[file:generated/macros.el][macros.el]] and [[file:generated/macros.lisp][macros.lisp]] simplify my lisp code,
-3. [[file:generated/logging.el][logging.el]] is a simple emacs logging system,
-4. [[file:generated/dot.emacs][dot.emacs]] is (almost) a copy of my =~/.emacs=,
-5. [[file:generated/cl.el][cl.el]] will probably be used some day as a replacement for the standard [[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/cl-lib.el][cl.el]],
-6. [[file:Makefile][Makefile]] is used by =make= to compile, test, and package;
-   typical output of successful =make= is saved in [[file:generated/el-tests.log][el-tests.log]] and [[file:generated/make.log][make.log]];
-   the resulting package files are available in [[file:packaged/][packaged/]] directory,
-7. [[file:shalaev.asd][shalaev.asd]] and [[file:headers.org][headers.org]] describe Common Lisp packages created by =make= according to [[file:Makefile][Makefile]],
-8. [[file:helpers/][helpers/*]] assist compilation in [[file:Makefile][Makefile]], and
-9. [[file:bash/][bash/*]] file(s) assist using ~emacsclient~ from ~bash~.
-
-The files in the ~generated/~ folder are only included for convenience and can be easilly (re)generated using =make=.
-(If =make= freezes, that's probably because =emacs= is waiting for your permission to evaluate the code at the beginning of [[file:shalaev.org][shalaev.org]].)
 
 * License
 This code is released under [[https://mit-license.org/][MIT license]].

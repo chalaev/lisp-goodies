@@ -57,11 +57,13 @@
 (while-let(str) (< (line-end-position) (point-max))
 (setf str (read-line))
   (unless(= ?# (string-to-char str)); ignoring comments
-    (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
-      (push (cons (match-string 1 str) (match-string 2 str)) res))))
-      (reverse res))))
+    (if(string-match "^\\(\\ca+\\)=\\([[:print:]]+\\)$" str)
+      (push (cons (match-string 1 str) (match-string 2 str)) res)
+      (clog :warning "invalid string in %s: %s" FN str))))
+(reverse res))))
 
 (defun update-conf(conf conf-params)
+"assings a value (if available to each variable whose name is enumerated in (list of strings) conf-params"
   (dolist (CP conf-params)
     (when-let((CPV (cdr (assoc CP conf)))) (set (intern CP) CPV))))
 

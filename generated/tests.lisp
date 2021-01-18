@@ -18,6 +18,16 @@
 x )
   :ok)
 
+(deftest ifn
+(let(a)
+(multiple-value-bind (x y) (floor 44 11)
+  (ifn(= y 0)
+      (list 1 x y)
+(push 1 a)
+(push 2 a)
+a)))
+(2 1))
+
 (deftest concat
   (concat "/etc/" "dqoE.tmp")
 "/etc/dqoE.tmp")

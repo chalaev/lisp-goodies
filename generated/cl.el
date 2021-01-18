@@ -1,7 +1,7 @@
 ;; -*-  lexical-binding: t; -*-
 (let ((counter 0))
   (defun s-gensym(&optional starts-with)
-    "for those who miss s-gensym from Common Lisp"
+    "similar to gensym in Common Lisp"
     (unless starts-with (setf starts-with "gs"))
     (let (sym)
       (while (progn

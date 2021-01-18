@@ -131,6 +131,18 @@ CL code is the same:
   (:ok . :ok))
 #+END_SRC
 
+BTW [[https://stackoverflow.com/questions/5902847/how-do-i-apply-or-to-a-list-in-elisp/34946813#34946813][some people use]] ~eval~ instead of ~macroexpand-1~:
+#+BEGIN_SRC lisp
+(defun apply-macro (macro arg-list)
+  (eval
+   `(,macro ,@(loop for arg in arg-list collect `(quote ,arg)))))
+#+END_SRC
+Usage examples:
+#+BEGIN_SRC lisp
+(apply-macro 'and '(1 2 3))
+(apply-macro 'and '(1 nil 3))
+#+END_SRC
+
 * if-let
 ** Emacs Lisp
 Similarly to [[when-let]], (in latest emacs) =if-let= is defined in ~subr-x.el~.
@@ -555,7 +567,7 @@ apparently it is widely used; for example, =M-x org-babel-tangle= uses =cl.el= (
 #+BEGIN_SRC emacs-lisp :tangle generated/cl.el :shebang ";; -*-  lexical-binding: t; -*-"
 (let ((counter 0))
   (defun s-gensym(&optional starts-with)
-    "for those who miss s-gensym from Common Lisp"
+    "similar to gensym in Common Lisp"
     (unless starts-with (setf starts-with "gs"))
     (let (sym)
       (while (progn
@@ -1129,6 +1141,7 @@ Reading configuration file
        ,@body)))
 #+END_SRC
 
+Note: only lattin charactersare allowed in config files
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun read-conf-file(FN)
   "reads configuration file"
@@ -1137,18 +1150,19 @@ Reading configuration file
 (while-let(str) (< (line-end-position) (point-max))
 (setf str (read-line))
   (unless(= ?# (string-to-char str)); ignoring comments
-    (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
-      (push (cons (match-string 1 str) (match-string 2 str)) res))))
-      (reverse res))))
+    (if(string-match "^\\(\\ca+\\)=\\([[:print:]]+\\)$" str)
+      (push (cons (match-string 1 str) (match-string 2 str)) res)
+      (clog :warning "invalid string in %s: %s" FN str))))
+(reverse res))))
 #+END_SRC
 produces list of conses.
 
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun update-conf(conf conf-params)
+"assings a value (if available to each variable whose name is enumerated in (list of strings) conf-params"
   (dolist (CP conf-params)
     (when-let((CPV (cdr (assoc CP conf)))) (set (intern CP) CPV))))
 #+END_SRC
-
 
 *** simple stuff
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
@@ -1413,6 +1427,28 @@ T
 (defmacro ifn (test ifnot &rest ifyes)
 `(iff (not ,test) ,ifnot ,@ifyes))
 #+END_SRC
+
+01/18 tried to avoid strange effects in =hunchentoot= with its global variables
+by using ~macroexpand-1~:
+#+BEGIN_SRC lisp
+(defmacro ifn (test ifnot &rest ifyes)
+(macroexpand-1 `(iff (not ,test) ,ifnot ,@ifyes)))
+#+END_SRC
+but that did not help ☹.
+
+So let us check if ~ifn~ works o.k. inside ~multiple-value-bind~:
+#+BEGIN_SRC lisp :tangle generated/tests.lisp
+(deftest ifn
+(let(a)
+(multiple-value-bind (x y) (floor 44 11)
+  (ifn(= y 0)
+      (list 1 x y)
+(push 1 a)
+(push 2 a)
+a)))
+(2 1))
+#+END_SRC
+
 
 #+BEGIN_SRC lisp :tangle generated/macros.lisp
 (defmacro concat (&rest strs)

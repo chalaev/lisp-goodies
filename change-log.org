@@ -1,6 +1,15 @@
 Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 
 * Lazy Improvements
+*** 01/18 Emacs Lisp
+**** Emacs Lisp
+updated
+1. README.org
+2. =read-conf-file= to allow non-latin (e.g., Cyrillic) characters in parameter values
+
+**** Common Lisp
+added test for ~ifn~
+
 *** 01/11 Emacs Lisp
 updated =update-conf=
 
