@@ -1,11 +1,3 @@
-(defmacro cond-let(&rest conds)
-  "cond with let"
-  (let ((c (car conds)) (r (cdr conds)))
-    (if (equal (car c) 'otherwise) `(progn ,@(cdr c))
-    (if r
-	`(if-let ,(car c) (progn ,@(cdr c)) ,(macroexpand-1 `(cond-let ,@r)))
-	`(when-let ,(car c) ,@(cdr c))))))
-
 (defmacro when-let (vars &rest body)
   "when with let using standard let-notation"
   (if (caar vars)
@@ -72,3 +64,11 @@
 
 (defmacro hset(arr pos val)
   `(setf (gethash ,pos ,arr) ,val))
+
+(defmacro cond-let(&rest conds)
+  "cond with let"
+  (let ((c (car conds)) (r (cdr conds)))
+    (if (equal (car c) 'otherwise) `(progn ,@(cdr c))
+    (if r
+	`(if-let ,(car c) (progn ,@(cdr c)) ,(macroexpand-1 `(cond-let ,@r)))
+	`(when-let ,(car c) ,@(cdr c))))))

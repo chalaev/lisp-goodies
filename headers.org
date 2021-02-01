@@ -24,14 +24,6 @@ Using =*compile-tests*= here: ← [[https://github.com/pbing/sb-rt/blob/master/r
 (defvar N-failed 0 "how many tests failed")
 #+END_SRC
 
-=id= is needed to demonstrate that our macro (e.g., when-let) is not
-evaluating expression many times, inserting it inline wherever it occurs:
-#+BEGIN_SRC lisp
-(declaim (notinline id))
-(defun id(x) x)
-#+END_SRC
-← moved to [[file:goodies.org][goodies.org]] (namely, to ~shalaev/macros~ package).
-
 The variable =N-failed= will be SBCL's exit code used in [[file:Makefile][Makefile]]:
 #+BEGIN_SRC lisp :tangle generated/headers/tests.lisp
 (defun run-tests (&key ((:compiled *compile-tests*)))
@@ -43,7 +35,7 @@ Since every lisper probably has his/her own "goodies", let me make this package 
 #+BEGIN_SRC lisp :tangle generated/headers/shalaev.lisp
 ;;(in-package :cl-user)
 (uiop:define-package :shalaev
-(:nicknames "SH") (:use :cl)
+(:nicknames "sh") (:use :cl)
 (:use-reexport :shalaev/macros :shalaev/files))
 (in-package :shalaev)
 (declaim (optimize (speed 0) (safety 3) (debug 3)))
@@ -57,14 +49,15 @@ Since every lisper probably has his/her own "goodies", let me make this package 
 :end-push :iff :ifn :concat :aset :hset
 :when-let
 :if-let :ifn-let :cond-let
-:needs
-))
+:needs))
 (in-package :shalaev/macros)
 #+END_SRC
 
 #+BEGIN_SRC lisp :tangle generated/headers/files.lisp
 (defpackage :shalaev/files
   (:use :cl :shalaev/macros)
-  (:export :merge-paths :safe-mkdir :rmdir :echo-to-file :directory-lock))
+  (:export :without :drop ; ← this function(s)/macro(s) are not about files; should I rename this whole packafe or create another one?
+:without-key :drop-key
+:merge-paths :safe-mkdir :rmdir :echo-to-file :directory-lock))
 (in-package :shalaev/files)
 #+END_SRC

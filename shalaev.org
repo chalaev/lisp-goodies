@@ -5,11 +5,6 @@
 #+LATEX_HEADER: \usepackage[letterpaper,hmargin={1.5cm,1.5cm},vmargin={1.3cm,2cm},nohead,nofoot]{geometry}
 #+KEYWORDS: emacs, elisp, common lisp, macros, functions
 
-#+BEGIN_SRC lisp :tangle generated/tests.lisp
-(declaim (notinline id))
-(defun id(x) x)
-#+END_SRC
-
 * Introduction
 Notes:
 1. Evaluation results are important part of this file, but =github= org-parser does not show them.
@@ -125,7 +120,7 @@ CL code is the same:
 
 #+BEGIN_SRC lisp :tangle generated/tests.lisp
 (deftest when-let
-    (when-let ((x (id :ok)))
+    (when-let ((x (identity :ok)))
       (setf x (cons x x))
       x)
   (:ok . :ok))
@@ -237,12 +232,12 @@ Sometimes I need slightly changed versions of =if-let=:
 
 #+BEGIN_SRC lisp :tangle generated/tests.lisp
 (deftest if-let
-    (if-let ((x (id :ok)))
+    (if-let ((x (identity :ok)))
             x
             :bad)
   :ok)
 (deftest ifn-let
-    (ifn-let ((x (id :ok)))
+    (ifn-let ((x (identity :ok)))
             :bad
 x )
   :ok)
@@ -701,6 +696,60 @@ we write
   (should (equal '(11 33 77) (car (select test-list #'oddp))))
   (should (equal '(4 22 12 24) (car (select test-list #'evenp))))))
 #+END_SRC
+
+
+#+BEGIN_SRC lisp :tangle generated/files.lisp
+(defun without-key(source wrong-items &key (key #'identity))
+  "returns (copy of) source without wrong-items"
+  (let((WI(if(listp wrong-items) wrong-items (list wrong-items))))
+    (remove-if #'(lambda(x) (find (funcall key x) WI)) source)))
+(defun without(source &rest WI)
+  "returns (copy of) source without wrong-items"
+    (remove-if #'(lambda(x) (find x WI)) source))
+(define-modify-macro drop    (place &rest what) without)
+(define-modify-macro drop-key(place &rest what) without-key)
+#+END_SRC
+
+#+RESULTS:
+: DROP
+
+#+BEGIN_SRC lisp :results drawer
+(macroexpand-1 `(drop ll 2 4))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(SETQ LL (WITHOUT LL 2 4))
+T
+:END:
+
+
+#+BEGIN_SRC lisp
+(define-modify-macro filter-list (ll fun)
+  (lambda(ll fun) (remove-if-not fun ll)))
+#+END_SRC
+
+#+BEGIN_SRC lisp :tangle generated/tests.lisp
+(deftest without
+(let((ll '(1 2 3 4)))
+  (without ll 2))
+(1 3 4))
+(deftest drop
+(let((ll '(1 2 3 4)))
+  (drop ll 2 4)
+  ll)
+(1 3))
+(deftest without-key
+(let((ll '((1 2) (3 4 5) (6 7 8 9))))
+  (without-key ll '(2 3 7) :key #'cadr))
+((3 4 5)))
+(deftest drop-key
+(let((ll '((1 2) (3 4 5) (6 7 8 9))))
+  (drop-key ll '(2 3 7) :key #'cadr)
+ll)
+((3 4 5)))
+#+END_SRC
+
 
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun without(source &rest wrong-items)

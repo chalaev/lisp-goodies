@@ -1,22 +1,38 @@
-(declaim (notinline id))
-(defun id(x) x)
-
 (deftest when-let
-    (when-let ((x (id :ok)))
+    (when-let ((x (identity :ok)))
       (setf x (cons x x))
       x)
   (:ok . :ok))
 
 (deftest if-let
-    (if-let ((x (id :ok)))
+    (if-let ((x (identity :ok)))
             x
             :bad)
   :ok)
 (deftest ifn-let
-    (ifn-let ((x (id :ok)))
+    (ifn-let ((x (identity :ok)))
             :bad
 x )
   :ok)
+
+(deftest without
+(let((ll '(1 2 3 4)))
+  (without ll 2))
+(1 3 4))
+(deftest drop
+(let((ll '(1 2 3 4)))
+  (drop ll 2 4)
+  ll)
+(1 3))
+(deftest without-key
+(let((ll '((1 2) (3 4 5) (6 7 8 9))))
+  (without-key ll '(2 3 7) :key #'cadr))
+((3 4 5)))
+(deftest drop-key
+(let((ll '((1 2) (3 4 5) (6 7 8 9))))
+  (drop-key ll '(2 3 7) :key #'cadr)
+ll)
+((3 4 5)))
 
 (deftest ifn
 (let(a)

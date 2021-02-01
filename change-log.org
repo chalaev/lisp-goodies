@@ -1,7 +1,12 @@
 Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 
 * Lazy Improvements
-*** 01/18 Emacs Lisp
+*** 02/01 Common Lisp
+1. (CL) replaced =id= → =identity=
+2. added =without=, =drop=, =without-key=, and =drop-key=
+3. in [[file:Makefile][Makefile]]: removed missing (and useless) file =packaging.org=
+
+*** 01/18
 **** Emacs Lisp
 updated
 1. README.org

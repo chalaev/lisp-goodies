@@ -1,6 +1,7 @@
 SBCL = ~/local/bin/sbcl
 # where my local packages are stored:
 quicklispDir = $$HOME/quicklisp/local-projects/shalaev
+
 headersDir = generated/headers
 EMACS = emacs -q --no-site-file --batch
 
@@ -8,11 +9,12 @@ LFNs = macros files tests shalaev
 LISPs = $(addsuffix .lisp, $(LFNs))
 package = $(LISPs) shalaev.asd version.org
 
-OFNs = shalaev packaging
+OFNs = shalaev
 ORGs = $(addsuffix .org, $(OFNs))
 
 # unless I mention generated/from/*.org files here, they will be considered temporary and auto-erased so emacsclient will always be called on every make:
 all: packaged/start.el quicklisp README.md packaged/el-shalaev.tbz packaged/shalaev.el packaged/cl-shalaev.tbz $(addprefix generated/from/, $(ORGs))
+
 quicklisp: $(quicklispDir)/ $(addprefix $(quicklispDir)/, $(package)) $(addprefix generated/from/, $(ORGs))
 
 packaged/el-shalaev.tbz: generated/from/shalaev.org packaged/start.el packaged/
@@ -44,7 +46,7 @@ packaged/start.el: packaged/shalaev.el packaged/
 
 packaged/cl-shalaev.tbz: quicklisp packaged/
 	@echo "\nTesting before we package it:"
-	@$(SBCL) --eval "(asdf:operate 'asdf:test-op :shalaev)" --eval "(uiop:quit shalaev/tests:N-failed)"
+	$(SBCL) --eval "(asdf:operate 'asdf:test-op :shalaev)" --eval "(uiop:quit shalaev/tests:N-failed)"
 	@echo "\n\n`date '+%m/%d %H:%M'` CL TESTS PASSED :)\n"
 	tar jcfv $@ --directory=$(quicklispDir)/..  shalaev
 	-@chgrp tmp $@
