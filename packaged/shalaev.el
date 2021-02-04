@@ -97,6 +97,8 @@ DN)
   (file-name-as-directory (concat (file-name-as-directory root) (car dirs)))
   (cdr dirs)))
   (file-name-as-directory root)))
+(defun need-dir(&rest DNs)
+  (ensure-dir-exists (apply #'to-dir DNs)))
 ;; -*-  lexical-binding: t; -*-
 (defun select (from-where match-test)
   "select items matching the test"

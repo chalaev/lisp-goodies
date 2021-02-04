@@ -1,6 +1,9 @@
 Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 
 * Lazy Improvements
+*** 02/04 Emacs Lisp
+Moved =need-dir= here from [[https://github.com/chalaev/cloud/blob/master/1.el][cloud project]].
+
 *** 02/01 Common Lisp
 1. (CL) replaced =id= → =identity=
 2. added =without=, =drop=, =without-key=, and =drop-key=

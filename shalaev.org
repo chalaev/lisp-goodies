@@ -1317,7 +1317,7 @@ BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (
 DN)
 #+END_SRC
 
-*** to-dir
+*** to-dir & need-dir
 #+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
 (defun to-dir(root &rest dirs)
 (if (car dirs)
@@ -1326,6 +1326,8 @@ DN)
   (file-name-as-directory (concat (file-name-as-directory root) (car dirs)))
   (cdr dirs)))
   (file-name-as-directory root)))
+(defun need-dir(&rest DNs)
+  (ensure-dir-exists (apply #'to-dir DNs)))
 #+END_SRC
 
 ** logging system
