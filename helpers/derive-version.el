@@ -32,8 +32,9 @@
 (progn
   (goto-char (point-min))
   (when (moveto-header 1) (org-show-subtree) (end-of-line))
-  (let ((SC (section-counter 2 MC)))
-    (setf MC (cadr SC)) (length SC)))
+  (let* ((SC (section-counter 2 MC)) (lSC (length SC)))
+    (setf MC (car SC))
+    (if(= 0 lSC) lSC (1- lSC))))
 (progn
   (goto-char (point-min))
   (when (moveto-header 1)(org-show-subtree) (end-of-line))

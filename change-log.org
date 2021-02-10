@@ -1,6 +1,11 @@
 Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 
 * Lazy Improvements
+*** 02/10
+1. corrected error in [[file:helpers/derive-version.el][derive-version.el]] which sometimes generated wrong version from [[file:change-log.org][change-log.org]]
+2. (CL) removed =without-key= and =drop-key=
+3. (CL) added =without= and =drop= to the list of exported symbols
+
 *** 02/04 Emacs Lisp
 Moved =need-dir= here from [[https://github.com/chalaev/cloud/blob/master/1.el][cloud project]].
 

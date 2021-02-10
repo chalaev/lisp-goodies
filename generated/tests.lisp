@@ -15,22 +15,22 @@
 x )
   :ok)
 
-(deftest without
+(deftest without.1
 (let((ll '(1 2 3 4)))
   (without ll 2))
 (1 3 4))
-(deftest drop
+(deftest drop.1
 (let((ll '(1 2 3 4)))
-  (drop ll 2 4)
+  (drop ll '(2 4))
   ll)
 (1 3))
-(deftest without-key
+(deftest without.2
 (let((ll '((1 2) (3 4 5) (6 7 8 9))))
-  (without-key ll '(2 3 7) :key #'cadr))
+  (without ll '(2 3 7) :key #'cadr))
 ((3 4 5)))
-(deftest drop-key
+(deftest drop.2
 (let((ll '((1 2) (3 4 5) (6 7 8 9))))
-  (drop-key ll '(2 3 7) :key #'cadr)
+  (drop ll '(2 3 7) :key #'cadr)
 ll)
 ((3 4 5)))
 
