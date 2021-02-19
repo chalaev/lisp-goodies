@@ -13,7 +13,7 @@ OFNs = shalaev
 ORGs = $(addsuffix .org, $(OFNs))
 
 # unless I mention generated/from/*.org files here, they will be considered temporary and auto-erased so emacsclient will always be called on every make:
-all: packaged/start.el quicklisp README.md packaged/el-shalaev.tbz packaged/shalaev.el packaged/cl-shalaev.tbz $(addprefix generated/from/, $(ORGs))
+all: packaged/start.el quicklisp README.md packaged/el-shalaev.tbz packaged/shalaev.el packaged/version.el packaged/cl-shalaev.tbz $(addprefix generated/from/, $(ORGs))
 
 quicklisp: $(quicklispDir)/ $(addprefix $(quicklispDir)/, $(package)) $(addprefix generated/from/, $(ORGs))
 
@@ -24,8 +24,8 @@ packaged/el-shalaev.tbz: generated/from/shalaev.org packaged/start.el packaged/
 	tar jcfv $@ --transform s/^generated/shalaev/ generated/*.el
 	-@chgrp tmp $@
 
-packaged/shalaev.el: version.org generated/from/shalaev.org header.el packaged/
-	sed "s/the-version/`head -n1 $<`/" header.el > $@
+packaged/shalaev.el: version.org generated/from/shalaev.org headers/shalaev.el packaged/
+	sed "s/the-version/`head -n1 $<`/" headers/shalaev.el > $@
 	cat generated/cl.el  generated/file-functions.el generated/functions.el generated/logging.el generated/macros.el >> $@
 	echo "(provide 'shalaev)" >> $@
 	echo ";;; shalaev.el ends here" >> $@
@@ -33,6 +33,13 @@ packaged/shalaev.el: version.org generated/from/shalaev.org header.el packaged/
 	echo ";; -*- lexical-binding: t; -*-" > packaged/start.el
 	echo "\n;; I load this file at startup\n"  >> packaged/start.el
 	cat generated/local-packages.el generated/make.el generated/load.el >> packaged/start.el
+	-@chgrp tmp $@
+
+packaged/version.el: version.el headers/version.el packaged/
+	cat headers/version.el version.el > $@
+	echo "(provide 'version)" >> $@
+	echo ";;; version.el ends here" >> $@
+	emacsclient -e '(untilde (cdr (assoc "local-packages" package-archives)))' | xargs cp $@
 	-@chgrp tmp $@
 
 packaged/start.el: packaged/shalaev.el packaged/
@@ -63,15 +70,15 @@ $(quicklispDir)/%.org: %.org
 	cat $< > $@
 	-@chgrp tmp $@
 
-version.org: change-log.org helpers/derive-version.el
-	emacsclient -e '(progn (load "$(CURDIR)/helpers/derive-version.el") (format-version "$<"))' | xargs > $@
+version.org: change-log.org version.el
+	emacsclient -e '(progn (load "$(CURDIR)/version.el") (format-version "$<"))' | xargs > $@
 	@echo "← generated `date '+%m/%d %H:%M'` from [[file:$<][$<]]" >> $@
-	@echo "by [[file:helpers/derive-version.el][derive-version.el]]" >> $@
+	@echo "by [[file:packaged/version.el][version.el]]" >> $@
 	-@chgrp tmp $@
 
 generated/from/%.org: %.org generated/from/ generated/headers/
 	@echo "\nNow emacs is probably waiting for your responce..."
-	emacsclient -e '(progn (load "$(CURDIR)/helpers/derive-version.el") (printangle "$<"))' | xargs > $@
+	emacsclient -e '(progn (load "$(CURDIR)/version.el") (printangle "$<"))' | xargs > $@
 	-@chgrp tmp $@ `cat $@`
 	-@chmod a-x `cat $@`
 

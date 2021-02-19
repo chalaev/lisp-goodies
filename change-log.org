@@ -1,6 +1,9 @@
 Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 
 * Lazy Improvements
+*** 02/19
+renamed =helpers/derive-version.el= → [[file:version.el][version.el]] and [[file:packaged/version.el][packaged it]].
+
 *** 02/10
 1. corrected error in [[file:helpers/derive-version.el][derive-version.el]] which sometimes generated wrong version from [[file:change-log.org][change-log.org]]
 2. (CL) removed =without-key= and =drop-key=

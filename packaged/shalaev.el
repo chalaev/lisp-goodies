@@ -3,7 +3,7 @@
 ;; Copyright (C) 2020 Oleg Shalaev <oleg@chalaev.com>
 
 ;; Author:     Oleg Shalaev <oleg@chalaev.com>
-;; Version:    2.0.8
+;; Version:    2.0.9
 
 ;; URL:        https://github.com/chalaev/lisp-goodies
 

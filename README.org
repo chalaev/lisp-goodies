@@ -17,7 +17,7 @@ Either
 
 - load the code as a package:
   1. copy [[file:packaged/shalaev.el][shalaev.el]] into =~/.emacs.d/local-packages/=,
-  2. load [[file:packaged/batch-start.el][batch-start.el]] from [[file:generated/dot.emacs][~/.emacs]], and
+  2. load [[file:packaged/start.el][start.el]] from [[file:generated/dot.emacs][~/.emacs]], and
   3. =(require 'shalaev)= in your el-code.
 
 For usage example, see the [[https://github.com/chalaev/cloud][cloud (sync)]] project.
