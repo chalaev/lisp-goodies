@@ -14,13 +14,13 @@
         (39 :occupied)
         (otherwise (cons :unknown (sb-posix:syscall-errno c))))))))
 
-(defun echo-to-file (FN str)
+(defun echo-to-file(FN str)
   (with-open-file (stream FN
-    ;; :if-exists :overwrite
-    :if-exists :append
+    :if-exists :append;  :overwrite
     :direction :output
     :if-does-not-exist :create)
-(format stream "~a~%" str)))
+(format stream "~a~%" str))
+FN)
 
 (defun merge-paths(root-dir &rest sub-dirs)
   (reduce

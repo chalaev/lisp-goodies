@@ -1,6 +1,21 @@
-Change log for my [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
+Change log for [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
+
+* Numerous changes after long pause in updates.
+Significant change in the (emacs-lisp) sections mostly responsible for configuration files treatment.
+
+*** 04/28 (eLisp)
+1. Replaced =update-conf= with =let-conf= and =letc=.
+2. Updated =read-conf-file=; now it is more robust towards bad config files.
+3. Added global =*config-directory*= variable.
+4. Added optional =max-size= argument into =read-line= and =read-conf-file=.
+5. Removed =define-vars=.
+6. Added optional =home-dir= argument to =untilde=.
+7. Added =transpose= block with the example of how code is generated from an org-mode table.
+8. Now requiring =cl-lib= instead of [[https://nullprogram.com/blog/2017/10/27/][deprecated]] =cl=.
+9. Other (probably minor) updates.
 
 * Lazy Improvements
+** slow updates
 *** 02/19
 renamed =helpers/derive-version.el= → [[file:version.el][version.el]] and [[file:packaged/version.el][packaged it]].
 
@@ -35,7 +50,7 @@ So renamed =letf= → =lett=
 
 *** 01/05 Emacs Lisp
 1. replaced (probably useless) =flet= with (new macro) =letf=
-2. renamed =packaged/start.el= → [[file:packaged/batch-start.el][packaged/batch-start.el]]
+2. renamed =packaged/start.el= → [[file:packaged/start.el][packaged/start.el]]
 
 *** 01/04 Emacs Lisp
 1. re-wrote =s-find=,

@@ -1,3 +1,4 @@
+;; -*-  lexical-binding: t; -*-
 (defun barename (FN)
   (let ((SS (split-string (file-name-nondirectory FN)  "\\." t)))
     (mapconcat #'(lambda(x)x) (butlast SS) ".")))

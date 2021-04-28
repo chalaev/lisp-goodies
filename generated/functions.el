@@ -1,13 +1,4 @@
 ;; -*-  lexical-binding: t; -*-
-(defun select (from-where match-test)
-  "select items matching the test"
-    (let (collected wasted)
-       (dolist (list-item from-where)
-	 (if (funcall match-test list-item)
-	   (push list-item collected)
-	   (push list-item wasted)))
-(cons (reverse collected) (reverse wasted))))
-
 (defun without(source &rest wrong-items)
   "returns (copy of) source without wrong-items"
   (car (select source #'(lambda(x) (not (member x wrong-items))))))
@@ -50,51 +41,49 @@
       (append (parse-only-time (cadr SS))
 	      (parse-date (car SS))))))
 
-(defun read-conf-file(FN)
-  "reads configuration file"
-(with-temp-buffer(insert-file-contents FN)
-(let (res)
-(while-let(str) (< (line-end-position) (point-max))
-(setf str (read-line))
-  (unless(= ?# (string-to-char str)); ignoring comments
-    (if(string-match "^\\(\\ca+\\)=\\([[:print:]]+\\)$" str)
-      (push (cons (match-string 1 str) (match-string 2 str)) res)
-      (clog :warning "invalid string in %s: %s" FN str))))
-(reverse res))))
-
-(defun update-conf(conf conf-params)
-"assings a value (if available to each variable whose name is enumerated in (list of strings) conf-params"
-  (dolist (CP conf-params)
-    (when-let((CPV (cdr (assoc CP conf)))) (set (intern CP) CPV))))
+(defun echo-to-file(FN &optional str)
+ (write-region (or str "") nil (untilde FN))
+ (tilde FN))
 
 (defun firstN(lista N)
   "returning first N elments of the list"
   (when (and (< 0 N) (car lista))
     (cons (car lista) (firstN (cdr lista) (1- N)))))
 
-(require 'cl)
+(require 'cl-lib)
 (defvar *good-chars*
 (let ((forbidden-symbols '(?! ?@ ?# ?$ ?% ?& ?* ?\( ?\) ?+ ?= ?/ ?{ ?} ?\[ ?\] ?: ?\; ?< ?> ?_ ?- ?| ?, ?. ?` ?' ?~ ?^ ?\")))
     (append
-     (loop for i from ?A to ?Z unless (member i forbidden-symbols) collect i)
-     (loop for i from ?a to ?z unless (member i forbidden-symbols) collect i)
-     (loop for i from ?0 to ?9 unless (member i forbidden-symbols) collect i)))
+     (cl-loop for i from ?A to ?Z unless (member i forbidden-symbols) collect i)
+     (cl-loop for i from ?a to ?z unless (member i forbidden-symbols) collect i)
+     (cl-loop for i from ?0 to ?9 unless (member i forbidden-symbols) collect i)))
 "safe characters for file names: everuthing allowed except for what is forbidden")
 (defun rand-str(N)
   (apply #'concat
-     (loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))
+     (cl-loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))
 
 (defun land(args)
 "'and' for a list"
-  (reduce #'(lambda(x y) (and x y)) args :initial-value t))
+  (cl-reduce #'(lambda(x y) (and x y)) args :initial-value t))
 
 (defun sforward-line()
 "safe forward-line"
   (if (< (line-end-position) (point-max))
      (forward-line)
      (move-end-of-line 1)))
-(defun read-line()
+(defun read-line(&optional max-size)
 "returns current string of a buffer"
+(let((max-size(or max-size 4086)))
+
 (prog1 
-  (buffer-substring-no-properties (line-beginning-position) (line-end-position))
-  (sforward-line)))
+  (buffer-substring-no-properties (line-beginning-position) (min max-size(line-end-position)))
+  (sforward-line))))
+
+(defun nth-column(n matrix)
+  "returns n-th column of a matrix (n starts from zero)"
+  (mapcar #'(lambda(line) (nth n line)) matrix))
+(defun transpose(table)
+(let((M(length(car table))) result)
+(while(<= 0 (decf M))
+(push(nth-column M table) result))
+result))

@@ -1,0 +1,8 @@
+((plain 0)
+ (uname 1)
+ (gname 2)
+ (mtime 3)
+ (size 4)
+ (modes 5)
+ (cipher 6))
+(- (* modes cipher) uname gname mtime size))

@@ -1,3 +1,4 @@
+;; -*-  lexical-binding: t; -*-
 (unless (< 25 (car (emacs-ver)))
 (ert-deftest when-let-key()
 (should (string= "aba" (when-let-key  #'identity ((a "a") (b (concat a "b")))
@@ -70,8 +71,8 @@
 (ert-deftest select()
 (let ((test-list  '(4 22 11 33 12 24 77)))
   (should (not (car (select test-list #'zerop))))
-  (should (equal '(11 33 77) (car (select test-list #'oddp))))
-  (should (equal '(4 22 12 24) (car (select test-list #'evenp))))))
+  (should (equal '(11 33 77) (car (select test-list #'cl-oddp))))
+  (should (equal '(4 22 12 24) (car (select test-list #'cl-evenp))))))
 
 (ert-deftest without()
 (let ((test-list  '(4 22 11 33 12 24 77)))
@@ -82,15 +83,18 @@
   (drop test-list 12 24)
   (should (equal '(4 22 11 33 77) test-list))))
 
-(ert-deftest define-vars()
-(should(string= "(progn (defvar a nil) (defvar b nil))" (string-from-macro '(define-vars (a b)))))
-(should(string= "(progn (defvar a 1) (defvar b nil) (defvar c 2))" (string-from-macro '(define-vars ((a 1) b (c 2)))))))
-
 (ert-deftest perms-from-str()
   (should (= 432 (perms-from-str "-rw-rw----"))))
 
 (ert-deftest perms-to-str()
   (should (string= "rw-rw-rwx" (perms-to-str #o667))))
+
+(ert-deftest typeof-expr()
+(should(eql 'integer (typeof-expr 1)))
+(should(equal '(integer) (typeof-expr '(1 2))))
+(should(eql 'string (typeof-expr "abc")))
+(should(equal '(string) (typeof-expr '("abc" "def"))))
+(should(not(typeof-expr '(incf z)))))
 
 (ert-deftest end-push()
 (should (equal '(1)

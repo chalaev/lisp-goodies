@@ -1,19 +1,19 @@
-Running 14 tests (2021-02-19 11:33:51-0500)
-   passed   1/14  define-vars
-   passed   2/14  drop
-   passed   3/14  end-push
-   passed   4/14  if-let*
-   passed   5/14  land
-   passed   6/14  lett
-   passed   7/14  needs
-   passed   8/14  perms-from-str
-   passed   9/14  perms-to-str
-   passed  10/14  s-find\.1
-   passed  11/14  s-find\.2
-   passed  12/14  select
+Running 14 tests (2021-04-28 17:01:44-0400)
+   passed   1/14  drop
+   passed   2/14  end-push
+   passed   3/14  if-let*
+   passed   4/14  land
+   passed   5/14  lett
+   passed   6/14  needs
+   passed   7/14  perms-from-str
+   passed   8/14  perms-to-str
+   passed   9/14  s-find\.1
+   passed  10/14  s-find\.2
+   passed  11/14  select
+   passed  12/14  typeof-expr
    passed  13/14  when-let
    passed  14/14  without
 
-Ran 14 tests, 14 results as expected (2021-02-19 11:33:51-0500)
+Ran 14 tests, 14 results as expected (2021-04-28 17:01:44-0400)
 
-:debug 11:33:51 flushing comments before quiting emacs
+:debug 17:01:44 flushing comments before quiting emacs

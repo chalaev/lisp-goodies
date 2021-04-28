@@ -1,11 +1,8 @@
 ;; -*-  lexical-binding: t; -*-
-(defmacro string-from-macro(m)
-`(format "%s" (print (macroexpand-1 ,m) #'(lambda(x) (format "%s" x)))))
-
 (require 'subr-x)
 
 (unless (< 25 (car (emacs-ver)))
-(defmacro when-let-key (key vars &rest body)
+(defmacro when-let-key(key vars &rest body)
   "when with let using standard let-notation, but every item in vars must be a list"
   (if (car vars)
   `(let ((,(caar vars) ,(cadar vars)))
@@ -43,8 +40,10 @@
 
 (defmacro needs(vardefs &rest body)
   "unifying when-let and if-let"
-  (let ((vardef (car vardefs)))
-    (if (and (listp vardef) (not (or (special-form-p (car vardef)) (functionp (car vardef)) (macrop (car vardef)))))
+  (let((vardef (car vardefs)))
+;; was →    (if(and (listp vardef) (not (or (special-form-p (car vardef)) (functionp (car vardef)) (macrop (car vardef)))))
+;; ← 03/22 replaced by
+    (if(listp vardef)
     `(let ((,(car vardef) ,(cadr vardef)))
        ,(if (cddr vardef)
 	    `(if ,(car vardef)
@@ -89,15 +88,6 @@
 (defmacro drop (from-where &rest what)
 `(setf ,from-where (without ,from-where ,@what)))
 
-(defmacro define-vars (varDefs)
-  "to make switching between local/global variables easier"
-(cons 'progn
-(mapcar #'(lambda(VD)
-  (if (consp VD)
-      `(defvar ,@VD)
-      `(defvar ,VD nil)))
-varDefs)))
-
 (defmacro case* (expr test &rest cases)
   "case with arbitrary test function"
   (let ((v (s-gensym "v")))
@@ -131,8 +121,8 @@ varDefs)))
 	(append `(if ,GV (setf ,(caar vars) ,GV)) body)))))
 
 (defmacro if-set (vars &rest body)
-  (let ((if-true (s-gensym "it")) (result (s-gensym "r")))
-    `(let (,if-true ,result)
+  (let((if-true (s-gensym "it")) (result (s-gensym "r")))
+    `(let(,if-true ,result)
        (setf ,result (when-set ,vars
 		  (setf ,if-true t)
 		  ,(car body)))
@@ -157,11 +147,6 @@ varDefs)))
 `(condition-case err (progn ,@body)
    (error(clog :error (concat "error in " ,where " because
 %s") (error-message-string err)))))
-
-(defmacro while-let(var-defs while-cond &rest body)
-  `(let* (,@var-defs)
-     (while ,while-cond
-       ,@body)))
 
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))

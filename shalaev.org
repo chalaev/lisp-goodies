@@ -5,24 +5,12 @@
 #+LATEX_HEADER: \usepackage[letterpaper,hmargin={1.5cm,1.5cm},vmargin={1.3cm,2cm},nohead,nofoot]{geometry}
 #+KEYWORDS: emacs, elisp, common lisp, macros, functions
 
-* Introduction
+* introduction
 Notes:
 1. Evaluation results are important part of this file, but =github= org-parser does not show them.
    (BTW [[https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org][notabug does show them]] although unformatted.)  Consider opening this file in ~emacs~ instead of watching it online.
 2. Sometimes a demonstration of a function might use the definition of another function defined below in this file or another
-   file from the ~generated/~ directory, so you might need to =load= those first. And here comes the first example :)
-   using =randstr= function defined in [[file:generated/functions.el][generated/functions.el]]:
-
-#+NAME: randstr
-#+BEGIN_SRC emacs-lisp
-(concat (rand-str 4) ".tmp")
-#+END_SRC
-
-For testing puprposes it is useful to convert macro expansions to string:
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el :shebang ";; -*-  lexical-binding: t; -*-"
-(defmacro string-from-macro(m)
-`(format "%s" (print (macroexpand-1 ,m) #'(lambda(x) (format "%s" x)))))
-#+END_SRC
+   file from the ~generated/~ directory, so you might need to =load= those first.
 
 #+BEGIN_SRC lisp :tangle generated/shalaev.lisp
 ;; empty file needed for Makefile
@@ -31,14 +19,14 @@ For testing puprposes it is useful to convert macro expansions to string:
 * when-let
 ** Emacs Lisp
 (in latest emacs) =when-let= and =when-let*= are defined in ~subr-x.el~:
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el :shebang ";; -*-  lexical-binding: t; -*-"
 (require 'subr-x)
 #+END_SRC
 
 =when-let= is one of my most-used macros; it is defined on top of (more general) =when-let-key=:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (unless (< 25 (car (emacs-ver)))
-(defmacro when-let-key (key vars &rest body)
+(defmacro when-let-key(key vars &rest body)
   "when with let using standard let-notation, but every item in vars must be a list"
   (if (car vars)
   `(let ((,(caar vars) ,(cadar vars)))
@@ -52,7 +40,7 @@ For testing puprposes it is useful to convert macro expansions to string:
     (append `(when (funcall ,key ,(cadar vars))) body)))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el :shebang ";; -*-  lexical-binding: t; -*-"
 (unless (< 25 (car (emacs-ver)))
 (ert-deftest when-let-key()
 (should (string= "aba" (when-let-key  #'identity ((a "a") (b (concat a "b")))
@@ -249,8 +237,10 @@ New =needs= macro is gradually replacing =when-let=:
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro needs(vardefs &rest body)
   "unifying when-let and if-let"
-  (let ((vardef (car vardefs)))
-    (if (and (listp vardef) (not (or (special-form-p (car vardef)) (functionp (car vardef)) (macrop (car vardef)))))
+  (let((vardef (car vardefs)))
+;; was →    (if(and (listp vardef) (not (or (special-form-p (car vardef)) (functionp (car vardef)) (macrop (car vardef)))))
+;; ← 03/22 replaced by
+    (if(listp vardef)
     `(let ((,(car vardef) ,(cadr vardef)))
        ,(if (cddr vardef)
 	    `(if ,(car vardef)
@@ -445,8 +435,8 @@ Example – locking remote directory:
 
 * (mostly) emacs lisp
 ** emacs configuration in ~/.emacs
-*** "System" emacs functions
-#+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el
+*** "system" emacs functions
+#+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el :shebang ";; -*-  lexical-binding: t; -*-"
 (unless (functionp 'caddr) (defun caddr(x) (car(cddr x)))); for emacs versions <26
 (unless (functionp 'cadar) (defun cadar(x) (car (cdar x))))
 
@@ -471,8 +461,8 @@ Let us upgrade =upgrade-make-temp-file= on older emacs versions, allowing this n
 Before launching emacs server in my [[file:.login][~/.login]] file, I check PID file created by
 #+BEGIN_SRC emacs-lisp :tangle generated/dot.emacs :shebang ";; -*-  lexical-binding: t; -*-"
 ;;
-;; see https://github.com/chalaev/lisp-goodies/blob/master/packaged/batch-start.el
-(load-file "/path-to/batch-start.el")
+;; see https://github.com/chalaev/lisp-goodies/blob/master/packaged/start.el
+(load-file "/path-to/start.el")
 
 ;; creating PID file for emacs; useful when it gets started from ~/.login
 ;; see https://github.com/chalaev/lisp-goodies/blob/master/.login
@@ -480,17 +470,23 @@ Before launching emacs server in my [[file:.login][~/.login]] file, I check PID 
 " (emacs-pid))); requires version(emacs) > 26
 #+END_SRC
 
-*** Placing/Finding local packages
+*** placing/finding local packages
 The following 3 blocks allow me to require simple (consisting of one file) locally created packages, for example, this one – =(require 'shalaev)=;
 
 Defining important directories:
-#+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el :shebang ";; -*-  lexical-binding: t; -*-"
-(defvar HOME (getenv "HOME"))
-(defvar ~ (file-name-as-directory HOME))
-(defun ~() (file-name-as-directory HOME))
-(defun   tilde(x) (replace-regexp-in-string (concat "^" ~) "~/" x))
-(defun untilde(x) (replace-regexp-in-string "^~/" ~ x))
-(defvar emacs-d (concat "~/" (file-name-as-directory ".emacs.d")))
+#+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el
+(defvar ~ (file-name-as-directory (getenv "HOME")))
+(defun tilde(x &optional HOME)
+(let((H(or HOME ~)))
+#+END_SRC
+← in emacs-lisp we can not =(let((HOME(or HOME ~)))...)=; local variable name has to be different
+#+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el
+ (replace-regexp-in-string (concat "^" H) "~/" x)))
+(defun untilde(x &optional home-dir)
+ (replace-regexp-in-string "^~/" 
+   (or home-dir ~); do not use =file-name-as-directory= here as =home-dir= might be an *arbitrary* string (expression)
+ x))
+(defvar *emacs-d* (concat "~/" (file-name-as-directory ".emacs.d")))
 #+END_SRC
 
 Inform ~emacs~ about new directory =~/.emacs.d/local-packages/= containing package files
@@ -498,22 +494,21 @@ Inform ~emacs~ about new directory =~/.emacs.d/local-packages/= containing packa
 #+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el
 (require 'package)
 (unless (assoc "local-packages" package-archives)
-  (push (cons  "local-packages" (concat emacs-d (file-name-as-directory "local-packages")))
+  (push (cons  "local-packages" (concat *emacs-d* (file-name-as-directory "local-packages")))
 	package-archives))
 (make-directory (cdr (assoc "local-packages" package-archives)) t)
 #+END_SRC
 
 Adjusting [[https://www.emacswiki.org/emacs/LoadPath][load-path]]:
 #+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el
-(unless (member (cdr (assoc "local-packages" package-archives)) load-path)
-  (add-to-list 'load-path (cdr (assoc "local-packages" package-archives))))
+(unless(member(cdr(assoc "local-packages" package-archives)) load-path)
+  (add-to-list 'load-path (cdr(assoc "local-packages" package-archives))))
 #+END_SRC
-
 
 *** for using in Makefiles
 My [[https://github.com/chalaev/backup2l.conf][backup]] system does not save files having the group ~tmp~.
 I use this group to mark all generated (tangled) files:
-#+BEGIN_SRC emacs-lisp :tangle generated/make.el
+#+BEGIN_SRC emacs-lisp :tangle generated/make.el :shebang ";; -*-  lexical-binding: t; -*-"
 (require 'shalaev) ; ← needed for perms-from-str unless you have loaded it in another way
 (defun after-tangle()
   "mark tangled files as non-backupable (chgrp tmp files) and non-excecutable"
@@ -526,16 +521,34 @@ The following line is equivalent to =chmod a-x FN=:
 (add-hook 'org-babel-post-tangle-hook #'after-tangle)
 #+END_SRC
 so they are not backuped.
+(Another way to set tangled files' permission is by [[https://orgmode.org/manual/Extracting-Source-Code.html#Header-arguments][updating]] the corresponding =BEGIN_SRC= line.)
 
-My literate programming relies on rmacs or mode and its =M-x org-babel-tangle= command, which I want to output the names of the generated files.
+My literate programming relies on emacs org mode and its =M-x org-babel-tangle= command, which I want to output the names of the generated files.
 So in [[file:Makefile][Makefiles]] I often use ~printangle~ [it returns the list of exported (tangled) files]:
 #+BEGIN_SRC emacs-lisp :tangle generated/make.el
+;;(require 'org-babel)
 (defun printangle(FN)
   "to be used in Makefile instead of org-babel-tangle-file"
   (let ((l (length default-directory)))
     (apply #'concat (mapcar #'(lambda(x) (substring (format "%s " x) l)) (org-babel-tangle-file FN)))))
 #+END_SRC
 ← my [[https://github.com/chalaev/cl-simple-logger/blob/master/Makefile][Makefile]]s load its definition from [[file:helpers/derive-version.el][derive-version.el]].
+
+*** Auto-updating certain blocks on save
+Sometimes part of the code is automatically generated by emacs (e.g., from a table).
+The following block regenerates such pieces of code before every save:
+#+BEGIN_SRC emacs-lisp :tangle generated/make.el
+(defvar eval-on-save nil "list of block names to be updated")
+(defmacro push-new(where &rest what)
+  "allows many arguments"
+`(progn ,@(mapcar #'(lambda(w) `(cl-pushnew ,w ,where :test #'string=)) what)))
+(add-hook 'before-save-hook
+(lambda()(save-excursion
+ (dolist(BN eval-on-save)
+  (unless(org-babel-goto-named-src-block BN)
+    (org-babel-execute-src-block))))))
+#+END_SRC
+← provided that corresponding block names are contained in the =eval-on-save= variable, see [[https://github.com/chalaev/cloud/blob/master/cloud.org][cloud.org]] for an example.
 
 *** Other stuff
 (found online) =run-init-block=  runs ~init~ code block when loading an org-file:
@@ -688,7 +701,7 @@ Warning: one has to use =funcall= with the functions defined in the =lett= heade
 : 3
 
 *** select, without, and drop
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el :shebang ";; -*-  lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/local-packages.el
 (defun select (from-where match-test)
   "select items matching the test"
     (let (collected wasted)
@@ -697,14 +710,18 @@ Warning: one has to use =funcall= with the functions defined in the =lett= heade
 	   (push list-item collected)
 	   (push list-item wasted)))
 (cons (reverse collected) (reverse wasted))))
+(defun CPU-cores()
+  "return number of CPU cores in linux"
+  (length(car(select(process-lines "cat" "/proc/cpuinfo")
+      (lambda(str) (string-match "processor[[:blank:]]+:[[:blank:]]+[[:digit:]]+$" str))))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/tests.el
 (ert-deftest select()
 (let ((test-list  '(4 22 11 33 12 24 77)))
   (should (not (car (select test-list #'zerop))))
-  (should (equal '(11 33 77) (car (select test-list #'oddp))))
-  (should (equal '(4 22 12 24) (car (select test-list #'evenp))))))
+  (should (equal '(11 33 77) (car (select test-list #'cl-oddp))))
+  (should (equal '(4 22 12 24) (car (select test-list #'cl-evenp))))))
 #+END_SRC
 
 #+BEGIN_SRC lisp :tangle generated/files.lisp
@@ -758,7 +775,7 @@ ll)
 #+END_SRC
 
 
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el :shebang ";; -*-  lexical-binding: t; -*-"
 (defun without(source &rest wrong-items)
   "returns (copy of) source without wrong-items"
   (car (select source #'(lambda(x) (not (member x wrong-items))))))
@@ -780,26 +797,6 @@ ll)
 (let ((test-list  '(4 22 11 33 12 24 77)))
   (drop test-list 12 24)
   (should (equal '(4 22 11 33 77) test-list))))
-#+END_SRC
-
-*** define-vars
-The whole point of =define-vars= is to make it easy to switch between ~(let ...)~
-and ~(defvar ...)~ so may be later I should redefine it as =(defmacro define-vars (varDefs &rest body)=:
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
-(defmacro define-vars (varDefs)
-  "to make switching between local/global variables easier"
-(cons 'progn
-(mapcar #'(lambda(VD)
-  (if (consp VD)
-      `(defvar ,@VD)
-      `(defvar ,VD nil)))
-varDefs)))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
-(ert-deftest define-vars()
-(should(string= "(progn (defvar a nil) (defvar b nil))" (string-from-macro '(define-vars (a b)))))
-(should(string= "(progn (defvar a 1) (defvar b nil) (defvar c 2))" (string-from-macro '(define-vars ((a 1) b (c 2)))))))
 #+END_SRC
 
 *** to do
@@ -907,18 +904,21 @@ Global variable values will *not* be set to ~nil~.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :results drawer
-(print (macroexpand-1
+(macroexpand-1
  `(when-set ((CN (clouded (aref newDBrec cipher))) (NFE (not (file-exists-p CN))))
     (+ 1 2)
-    (- 1 2))))
+    (- 1 2)))
 #+END_SRC
 
 #+RESULTS:
 :RESULTS:
-(let ((it15 (clouded (aref newDBrec cipher))))
- (when it15 (setf CN it15) 
-   (let ((it16 (not (file-exists-p CN))))
-      (when it16 (setf NFE it16) (+ 1 2) (- 1 2)))))
+(let((gs4 (clouded (aref newDBrec cipher))))
+  (when gs4
+    (setf CN gs4)
+    (let((gs5 (not (file-exists-p CN))))
+      (when gs5
+	(setf NFE gs5)
+	(+ 1 2) (- 1 2)))))
 :END:
 
 =unless-set= is similar to =when-set=:
@@ -955,8 +955,8 @@ Global variable values will *not* be set to ~nil~.
 *** if-set
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
 (defmacro if-set (vars &rest body)
-  (let ((if-true (s-gensym "it")) (result (s-gensym "r")))
-    `(let (,if-true ,result)
+  (let((if-true (s-gensym "it")) (result (s-gensym "r")))
+    `(let(,if-true ,result)
        (setf ,result (when-set ,vars
 		  (setf ,if-true t)
 		  ,(car body)))
@@ -965,16 +965,16 @@ Global variable values will *not* be set to ~nil~.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :results drawer
-(print (macroexpand-1
+(macroexpand-1
   '(if-set ((x 1) (y (1+ x)))
-     (+ x y) (- x y) (* x y))))
+     (+ x y) (- x y) (* x y)))
 #+END_SRC
 
 #+RESULTS:
 :RESULTS:
-(let (it28 r29) 
-(setf r29 (when-set ((x 1) (y (1+ x))) (setf it28 t) (+ x y)))
- (if it28 r29 (- x y) (* x y)))
+(let(it2 r3)
+  (setf r3 (when-set((x 1) (y (1+ x))) (setf it2 t) (+ x y)))
+  (if it2 r3 (- x y) (* x y)))
 :END:
 
 #+BEGIN_SRC emacs-lisp :tangle generated/macros.el
@@ -1103,12 +1103,12 @@ Position of an element in a list:
 *** perms-from-str
 When I ask ~emacs~ to show me file's permissions, it provides a text string (e.g., "-rw-rw----") instead of a number.
 The following function produces a number from such a string:
-#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
-(require 'cl); hopefully one day I will remove this line
+#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el :shebang ";; -*-  lexical-binding: t; -*-"
+(require 'cl-lib); hopefully one day I will remove this line
 (defun perms-from-str (str)
 "parses file mode string into integer"
   (let ((text-mode (reverse (cdr (append str nil)))) (mode 0) (fac 1))
-    (loop for c in text-mode for i from 0
+    (cl-loop for c in text-mode for i from 0
           unless (= c ?-) do (s-incf mode fac)
           do (setf fac (* 2 fac)))
     mode))
@@ -1186,115 +1186,237 @@ Example:
 ((37 9 16) 2020-10-21 14:54:00 EDT 2020-10-10 14:54:40 EDT)
 :END:
 
-*** read-conf-file
-(12/28 moved here from [[https://github.com/chalaev/cloud][cloud project]], see usage example there.)
+* configuration files
+Instead of storing configuration in =.el= files (e.g., =~/.emacs=), I prefer to store it in a separate file.
+This is because
+1. sometimes the code will update its configuration, and
+2. in this way configuration data is more separated from other ~elisp~ programs.
 
-Reading configuration file
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+** read-conf-file
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el :shebang ";; -*-  lexical-binding: t; -*-"
 (defmacro while-let(var-defs while-cond &rest body)
   `(let* (,@var-defs)
      (while ,while-cond
        ,@body)))
 #+END_SRC
 
-Note: only lattin charactersare allowed in config files
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun read-conf-file(FN)
+Note: only Latin characters are allowed in config files
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+(defun read-conf-file(FN &optional max-size)
   "reads configuration file"
-(with-temp-buffer(insert-file-contents FN)
-(let (res)
-(while-let(str) (< (line-end-position) (point-max))
-(setf str (read-line))
-  (unless(= ?# (string-to-char str)); ignoring comments
-    (if(string-match "^\\(\\ca+\\)=\\([[:print:]]+\\)$" str)
-      (push (cons (match-string 1 str) (match-string 2 str)) res)
-      (clog :warning "invalid string in %s: %s" FN str))))
-(reverse res))))
-#+END_SRC
-produces list of conses.
-
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun update-conf(conf conf-params)
-"assings a value (if available to each variable whose name is enumerated in (list of strings) conf-params"
-  (dolist (CP conf-params)
-    (when-let((CPV (cdr (assoc CP conf)))) (set (intern CP) CPV))))
+(error-in "read-conf-file" (with-temp-buffer(insert-file-contents (untilde FN))
+(let(res(max-size(or max-size 40860)))
+  (while-let(str) (< (line-end-position) (min max-size(point-max)))
+	    (setf str (read-line))
+	    (unless(or
+(string= "
+" str)
+(= ?# (string-to-char str))); ignoring comments or empty lines
+	      (if(string-match "^\\(\\ca+\\)=\\([[:print:]]+\\)$" str)
+		  (let((key(intern(match-string 1 str))) (val(match-string 2 str)))
+		    (if(assoc key res)
+			(setcdr (assoc key res) val)
+		      (push (cons key val) res)))
+		(clog :warning "invalid string in %s: %s" FN str))))
+  (reverse res)))))
 #+END_SRC
 
-*** simple stuff
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
-(defmacro ifn (test ifnot &rest ifyes)
-`(if (not ,test) ,ifnot ,@ifyes))
+** parse-conf
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+(defun parse-parameter(str &optional par-type)
+"for =parse-conf=: optionally parses first (string) argument into the specified type"
+  (when str
+    (cond
+     ((eql par-type 'integer) (string-to-number str))
 #+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun firstN(lista N)
-  "returning first N elments of the list"
-  (when (and (< 0 N) (car lista))
-    (cons (car lista) (firstN (cdr lista) (1- N)))))
+← =integer= is the only recognized type as of 02/23; we might need more special type treatment here.
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+     ((consp par-type) (mapcar #'(lambda(s)(parse-parameter s (car par-type))) (split-string str)))
+     (t str))))
 #+END_SRC
+← e.g., =(parse-parameter "a b f qwfe weq" '(string))= ⇒ =("a" "b" "f" "qwfe" "weq")=.
 
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(require 'cl)
-(defvar *good-chars*
-(let ((forbidden-symbols '(?! ?@ ?# ?$ ?% ?& ?* ?\( ?\) ?+ ?= ?/ ?{ ?} ?\[ ?\] ?: ?\; ?< ?> ?_ ?- ?| ?, ?. ?` ?' ?~ ?^ ?\")))
-    (append
-     (loop for i from ?A to ?Z unless (member i forbidden-symbols) collect i)
-     (loop for i from ?a to ?z unless (member i forbidden-symbols) collect i)
-     (loop for i from ?0 to ?9 unless (member i forbidden-symbols) collect i)))
-"safe characters for file names: everuthing allowed except for what is forbidden")
-(defun rand-str(N)
-  (apply #'concat
-     (loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+(defun typeof(v)
+"when v is a keyword, returns corresp. symbol; otherwise returns v's type"
+  (if(consp v) (if(eql(car v) 'quote) (typeof(cadr v))  (list(typeof(car v))))
+    (cond
+     ((keywordp v) (intern(substring(symbol-name v)1)))
+     (t(type-of v)))))
 #+END_SRC
+← e.g., =(typeof '("1" "2"))= ⇒ =(string)=, and =(typeof :integer)= ⇒ =integer=.
 
-There is probably some standard function or macro doing this:
-#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
-(defmacro end-push (what where)
-"adds an item to the end of the list, resembles 'add-to-list'"
-  `(if ,where (push ,what (cdr (last ,where)))
-      (push ,what ,where)))
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+(defun KP(x)(if(listp x)(KP(car x))(keywordp x)))
+(defun typeof-expr(expr)
+  (cond
+   ((listp expr) (when-let((TO(typeof-expr(car expr)))) (list TO)))
+   ((consp expr) nil)
+   (t (let((TO(typeof expr)))
+	(unless(eql TO 'symbol) TO)))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/tests.el
-(ert-deftest end-push()
-(should (equal '(1)
-(let (container)
-  (end-push 1 container)
-  container)))
-(should (equal '(1 2)
-(let (container)
-  (end-push 1 container)
-  (end-push 2 container)
-  container))))
+(ert-deftest typeof-expr()
+(should(eql 'integer (typeof-expr 1)))
+(should(equal '(integer) (typeof-expr '(1 2))))
+(should(eql 'string (typeof-expr "abc")))
+(should(equal '(string) (typeof-expr '("abc" "def"))))
+(should(not(typeof-expr '(incf z)))))
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+(defmacro parse-conf(conf-expr vars)
+"for =let-conf=: produces configuration (list of conses) updates variables =vars= conf-expr"
+  (let((conf(s-gensym "conf")))
+    `(let((,conf ,conf-expr))
+(list ,@(mapcar
+    #'(lambda(CV)
+	(if(listp CV)
+	    (if(cddr CV)
+#+END_SRC
+if =(length CV)= ⇒ 3:
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+(let((TO(typeof(car CV))))
+  `(cons (quote ,(cadr CV))
+	 ,(if-let((cCV(caddr CV)))
+	      `(or(parse-parameter(cdr(assoc (quote ,(cadr CV)) ,conf)) (quote ,TO)) ,cCV)
+	    `(parse-parameter(cdr(assoc (quote ,(cadr CV)) ,conf)) (quote ,TO)))))
+#+END_SRC
+if =(length CV)= ⇒ 2, type =TO= is either specified explicitly (when =(KP(car CV))= ⇒ t), or is determined from the default value:
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+(let((TO(typeof-expr(car(if(KP(car CV)) CV (cdr CV)))))
+     (varName(if(KP(car CV)) (cadr CV) (car CV)))
+     (default(unless(KP(car CV))(cadr CV))))
+  `(cons (quote ,varName)
+	 ,(if default
+	      `(or(parse-parameter(cdr(assoc (quote ,varName) ,conf)) (quote ,TO)) ,default)
+	    `(parse-parameter(cdr(assoc (quote ,varName) ,conf)) (quote ,TO))))))
+#+END_SRC
+if =(listp CV)= ⇒ nil:
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+`(cons (quote ,CV) (parse-parameter(cdr(assoc (quote ,CV) ,conf))))))
+	 vars)))))
+#+END_SRC
+Usage examples:
+1. simplest case: =(parse-conf cc (a b))= ⇒ (expands to)
+   =(let((conf14 cc))=
+     =(list (cons (quote a) (parse-parameter (cdr (assoc (quote a) conf14))))=
+           =(cons (quote b) (parse-parameter (cdr (assoc (quote b) conf14))))))=
+2. specifying value type =(parse-conf cc ((:integer a) ((:integer) b)))= is useful when no default value supplied ⇒
+   =(let((conf17 cc))=
+     =(list=
+      =(cons (quote a) (parse-parameter (cdr (assoc (quote a) conf17)) (quote integer)))=
+      =(cons (quote b) (parse-parameter (cdr (assoc (quote b) conf17)) (quote (integer))))))=
+3. specifying default values (used unless contained in =cc=): =(parse-conf cc ((a 1) (c 3)))=  ⇒
+   allows to supply type to =parse-parameter=:
+   =(let((conf20 cc))=
+     =(list=
+      =(cons (quote a) (or (parse-parameter (cdr (assoc (quote a) conf20)) (quote integer)) 1))=
+      =(cons (quote c) (or (parse-parameter (cdr (assoc (quote c) conf20)) (quote integer)) 3))))=
+4. sometimes, when default value is a variable, both type and default value must be specified:
+   =(parse-conf cc ((:integer abc xy)))= ⇒
+   =(let((conf21 cc))=
+      =(list=
+       =(cons (quote abc) (or (parse-parameter (cdr (assoc (quote abc) conf21)) (quote integer)) xy))))=
+
+** let-conf
+=let-conf= declares local variables in the usual =let= manner with optional default values (see [[parse-conf]] examples above).
+The values are updated from configuration (list of conses) produced by ~conf-expr~ form.
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+(defmacro let-conf(configuration vars &rest body)
+  `(let((,(car configuration) (parse-conf ,(cdr configuration) ,vars)))
+,@body))
+#+END_SRC
+where only the configuration parameters mentioned in =vars= argument will be considered.
+
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+(defmacro let-conf-c(CName variable-name)
+"for let-conf"
+ `(cdr(assoc(quote ,variable-name) ,CName)))
+#+END_SRC
+←  I would probably use =macrolet= inside =letc= for =let-conf-c= but prefer to avoid using =cl.el=.
+
+Usage example (see, e.g., [[https://github.com/chalaev/el-backup/blob/master/backup.org][el-backup project]]):
+#+BEGIN_SRC emacs-lisp :results drawer
+(let-conf(conf . (read-conf-file (concat *config-directory* "el-backup.conf")))
+  ((black-groups ("tmp")))
+  (let-conf-c black-groups))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(tmp)
+:END:
+
+In case we want to define variables locally:
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+(defmacro letc(conf-data vars &rest body)
+(let((conf-var(s-gensym)))
+  `(let((,conf-var (parse-conf ,conf-data ,vars)))
+(let(,@(mapcar (lambda(v)
+(let((VN(ifn(listp v)v(if(KP(car v))(cadr v)(car v)))))
+`(,VN (let-conf-c ,conf-var ,VN))))
+vars))
+,@body))))
+#+END_SRC
+
+Sometimes for testing we need to change local variables in the least possible intrusive way.
+We do it as follows: main code contains a specially marked comment like this one:
+#+BEGIN_SRC emacs-lisp
+;;test>;; (some-code)
+#+END_SRC
+← [[file:Makefile][Makefile]] will remove these lines from the [[file:packaged/cloud.el][packaged code]], and uncomment them in the [[file:tests/cloud.el][testing version]].
+
+
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+(defmacro setc(FN vars &rest body)
+`(letc(read-conf-file ,FN) ,vars ,@body))
+#+END_SRC
+
+** write-conf
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun land(args)
-"'and' for a list"
-  (reduce #'(lambda(x y) (and x y)) args :initial-value t))
+(defun together(strings)
+"concatenates list of strings"
+(if strings
+  (mapconcat 'identity strings " ")
+  ""))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
-(ert-deftest land()
-  (should (land '(t t t t 1 2)))
-  (should (not (land '(t t t nil 1 2)))))
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+(defun print-variable(var)
+(cond
+((stringp var) var)
+((integerp var) (format "%d" var))
+((listp var) (together(mapcar #'print-variable var)))
+(t
+(clog :error "type of %s is undefined" var)
+ "N/A")))
+(defun write-conf(FN conf)
+  (with-temp-file FN
+(dolist(conf-item conf)
+(insert(format "%s=%s
+" (car conf-item)
+(if(cdr conf-item) (print-variable (cdr conf-item)) "")))))
+ t)
+#+END_SRC
+We can prepare list if conses for =write-conf= using the following =make-conf= macro:
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.el
+(defmacro make-conf(&rest variable-names)
+  `(list
+    ,@(mapcar (lambda(VN) `(cons (quote ,VN) ,VN)) variable-names)))
 #+END_SRC
 
-12/28 moved here from [[https://github.com/chalaev/cloud][cloud project]]:
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun sforward-line()
-"safe forward-line"
-  (if (< (line-end-position) (point-max))
-     (forward-line)
-     (move-end-of-line 1)))
-(defun read-line()
-"returns current string of a buffer"
-(prog1 
-  (buffer-substring-no-properties (line-beginning-position) (line-end-position))
-  (sforward-line)))
+#+BEGIN_SRC emacs-lisp :results drawer
+(macroexpand-1 (make-conf ~ *emacs-d*))
 #+END_SRC
 
-** file/directory fuctions
+#+RESULTS:
+:RESULTS:
+((~ . /home/shalaev/) (emacs-d . ~/.emacs.d/))
+:END:
+
+* file/directory fuctions
 *** chgrp
 #+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
 (defun chgrp(group file-name)
@@ -1308,8 +1430,8 @@ This code moved here 12/28 from the [[https://github.com/chalaev/cloud][cloud pr
 BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (rx) permissions →
 #+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
 (defun get-file-properties(FN)
-  (when-let ((FA (and (file-exists-p FN) (file-attributes FN 'string))))
-      (destructuring-bind
+  (when-let((FA (and (file-exists-p FN) (file-attributes FN 'string))))
+      (cl-destructuring-bind
 	  (uid gid acess-time mod-time status-time fsize ms void inode fsNum)
 	  (cddr FA)
 (vector FN uid gid mod-time fsize (perms-from-str ms)))))
@@ -1324,8 +1446,16 @@ BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (
 DN)
 #+END_SRC
 
-*** to-dir & need-dir
+*** FN, to-dir, and need-dir
 #+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
+(defun FN(FN0 &rest other-FN-parts)
+"concatenates arguments into file name inside (sub)directory"
+(if (car other-FN-parts)
+    (apply #'FN
+(cons 
+  (concat (file-name-as-directory FN0) (car other-FN-parts))
+  (cdr other-FN-parts)))
+  FN0))
 (defun to-dir(root &rest dirs)
 (if (car dirs)
     (apply #'to-dir
@@ -1334,19 +1464,30 @@ DN)
   (cdr dirs)))
   (file-name-as-directory root)))
 (defun need-dir(&rest DNs)
-  (ensure-dir-exists (apply #'to-dir DNs)))
+  (ensure-dir-exists (untilde(apply #'to-dir DNs))))
+(defvar *config-directory* (need-dir *emacs-d* "conf") "where config files for el-packages are stored")
 #+END_SRC
 
-** logging system
+*** cat-file
+(See also =echo-to-file=.)
+#+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
+(defun cat-file(FN)
+"converts file to string"
+(with-temp-buffer
+    (insert-file-contents FN)
+    (buffer-string)))
+#+END_SRC
+
+* logging system
 It is probably too small to be packaged.
-*** Short description
+** Short description
 This code prints log messages to ~*Messages*~ buffer and saves them to log file =~/.emacs.d/elisp.log=.
 Every message is formatted similarly to how it is done by =format= function.
-*** Code
+** Code
 Global variable =*log-level*= controls how much information should be logged: the (default) zero value means
 that all types of log-messages (:debug :warning :info :error) should be logged (saved);
 the value 3 means that only error messages (marked with :error) will be logged:
-#+BEGIN_SRC emacs-lisp :tangle generated/logging.el
+#+BEGIN_SRC emacs-lisp :tangle generated/logging.el :shebang ";; -*-  lexical-binding: t; -*-"
 (defvar *log-level* 0)
 #+END_SRC
 Log messages are accumulated in =*log-buffer*=
@@ -1366,7 +1507,7 @@ and once in a while (when the number of queued messages >30 or before quitting ~
 	  (insert today-str) (newline))
 	(dolist (msg (reverse *log-buffer*))
 	  (insert msg) (newline)))
-      (append-to-file (point-min) (point-max) (concat emacs-d "elisp.log")))
+      (append-to-file (point-min) (point-max) (concat *emacs-d* "elisp.log")))
     (setf *log-buffer* nil))))
 #+END_SRC
 The main logging function:
@@ -1410,9 +1551,28 @@ before quitting emacs:
 (add-hook 'kill-emacs-hook 'on-emacs-exit)
 #+END_SRC
 
+For debugging purposes (to be used in modified =defun= instead of =clog= see my =defun= re-definition):
+to be used in modified =defun= instead of =clog=:
+#+BEGIN_SRC emacs-lisp :tangle generated/logging.el
+(defun space-log(N-of-spaces fstr)
+  "prints spaces before log messages"
+(let ((log-push (lambda(msg)
+  (push msg *log-buffer*)
+  (when (< 30 (length *log-buffer*)) (log-flush))))
+(spaces ""))
+(while(< 0 N-of-spaces)
+ (cl-decf N-of-spaces)
+ (setf spaces (concat " " spaces)))
+(let((msg(concat spaces fstr)))
+(funcall log-push msg)
+(message msg)))
+nil)
+#+END_SRC
+
+
 ** load*
 Preventing multiple load of the seame file:
-#+BEGIN_SRC emacs-lisp :tangle generated/load.el
+#+BEGIN_SRC emacs-lisp :tangle generated/load.el :shebang ";; -*-  lexical-binding: t; -*-"
 (defun barename (FN)
   (let ((SS (split-string (file-name-nondirectory FN)  "\\." t)))
     (mapconcat #'(lambda(x)x) (butlast SS) ".")))
@@ -1565,13 +1725,19 @@ a)))
 
 *** echo-to-file
 #+BEGIN_SRC lisp :tangle generated/files.lisp
-(defun echo-to-file (FN str)
+(defun echo-to-file(FN str)
   (with-open-file (stream FN
-    ;; :if-exists :overwrite
-    :if-exists :append
+    :if-exists :append;  :overwrite
     :direction :output
     :if-does-not-exist :create)
-(format stream "~a~%" str)))
+(format stream "~a~%" str))
+FN)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(defun echo-to-file(FN &optional str)
+ (write-region (or str "") nil (untilde FN))
+ (tilde FN))
 #+END_SRC
 
 *** merge-paths = generalized merge-pathnames
@@ -1582,3 +1748,124 @@ a)))
    sub-dirs
    :initial-value root-dir))
 #+END_SRC
+* simple stuff
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+(defmacro ifn (test ifnot &rest ifyes)
+`(if (not ,test) ,ifnot ,@ifyes))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(defun firstN(lista N)
+  "returning first N elments of the list"
+  (when (and (< 0 N) (car lista))
+    (cons (car lista) (firstN (cdr lista) (1- N)))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(require 'cl-lib)
+(defvar *good-chars*
+(let ((forbidden-symbols '(?! ?@ ?# ?$ ?% ?& ?* ?\( ?\) ?+ ?= ?/ ?{ ?} ?\[ ?\] ?: ?\; ?< ?> ?_ ?- ?| ?, ?. ?` ?' ?~ ?^ ?\")))
+    (append
+     (cl-loop for i from ?A to ?Z unless (member i forbidden-symbols) collect i)
+     (cl-loop for i from ?a to ?z unless (member i forbidden-symbols) collect i)
+     (cl-loop for i from ?0 to ?9 unless (member i forbidden-symbols) collect i)))
+"safe characters for file names: everuthing allowed except for what is forbidden")
+(defun rand-str(N)
+  (apply #'concat
+     (cl-loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))
+#+END_SRC
+
+There is probably some standard function or macro doing this:
+#+BEGIN_SRC emacs-lisp :tangle generated/macros.el
+(defmacro end-push (what where)
+"adds an item to the end of the list, resembles 'add-to-list'"
+  `(if ,where (push ,what (cdr (last ,where)))
+      (push ,what ,where)))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(ert-deftest end-push()
+(should (equal '(1)
+(let (container)
+  (end-push 1 container)
+  container)))
+(should (equal '(1 2)
+(let (container)
+  (end-push 1 container)
+  (end-push 2 container)
+  container))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(defun land(args)
+"'and' for a list"
+  (cl-reduce #'(lambda(x y) (and x y)) args :initial-value t))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(ert-deftest land()
+  (should (land '(t t t t 1 2)))
+  (should (not (land '(t t t nil 1 2)))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(defun sforward-line()
+"safe forward-line"
+  (if (< (line-end-position) (point-max))
+     (forward-line)
+     (move-end-of-line 1)))
+(defun read-line(&optional max-size)
+"returns current string of a buffer"
+(let((max-size(or max-size 4086)))
+#+END_SRC
+← protection against too long strings.
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(prog1 
+  (buffer-substring-no-properties (line-beginning-position) (min max-size(line-end-position)))
+  (sforward-line))))
+#+END_SRC
+* transpose
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(defun nth-column(n matrix)
+  "returns n-th column of a matrix (n starts from zero)"
+  (mapcar #'(lambda(line) (nth n line)) matrix))
+(defun transpose(table)
+(let((M(length(car table))) result)
+(while(<= 0 (decf M))
+(push(nth-column M table) result))
+result))
+#+END_SRC
+
+** Usage example (see also [[https://github.com/chalaev/cloud/blob/master/cloud.org][cloud sync project]])
+We define several integer constants for fields in a record characterizing a file:
+#+NAME: fileFields
+|-------+-------+-------+-------+------+-------+--------|
+| plain | uname | gname | mtime | size | modes | cipher |
+|     0 |     1 |     2 |     3 |    4 |     5 |      6 |
+#+TBLFM: @>=$#-1
+← the numbers are assigned automatically when =C-c C-c= with cursor on TBLFM-line.
+
+#+BEGIN_SRC emacs-lisp :tangle generated/example.el
+(let
+#+END_SRC
+←  the list of arguments (variables) is generated automatically from the table:
+#+BEGIN_SRC emacs-lisp :var ffs=fileFields :results value code  :results_switches ":tangle example.el :padline no"
+(mapcar #'(lambda(l)(list(intern(car l))(cadr l))) (transpose ffs))
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC emacs-lisp :tangle example.el :padline no
+((plain 0)
+ (uname 1)
+ (gname 2)
+ (mtime 3)
+ (size 4)
+ (modes 5)
+ (cipher 6))
+#+END_SRC
+Now let as add some meaningless code as an illustration:
+#+BEGIN_SRC emacs-lisp :tangle example.el :padline no
+(- (* modes cipher) uname gname mtime size))
+#+END_SRC
+Now =M-x org-babel-tangle= and then in [[file:example.el][example.el]] we find the resulting code.
+This is an example of how source code can be generated in literate programming.

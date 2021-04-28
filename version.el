@@ -1,3 +1,37 @@
+(require 'org)
+
+;; ========
+;; I had to copy some definitions from shalaev.org here because
+;; these are used during testing and installation.
+;; ========
+;; copied definitions begin
+(defmacro ifn (test ifnot &rest ifyes)
+`(if (not ,test) ,ifnot ,@ifyes))
+
+(unless (functionp 'caddr) (defun caddr(x) (car(cddr x)))); for emacs versions <26
+
+(defvar ~ (file-name-as-directory (getenv "HOME")))
+
+(defun tilde(x &optional HOME)
+(let((H(or HOME ~)))
+ (replace-regexp-in-string (concat "^" H) "~/" x)))
+
+(defun untilde(x &optional home-dir)
+ (replace-regexp-in-string "^~/" 
+   (or home-dir ~); do not use =file-name-as-directory= here as =home-dir= might be an *arbitrary* string (expression)
+   x))
+
+(require 'package)
+
+(defvar *emacs-d* (concat "~/" (file-name-as-directory ".emacs.d")))
+
+(unless (assoc "local-packages" package-archives)
+  (push (cons  "local-packages" (concat *emacs-d* (file-name-as-directory "local-packages")))
+	package-archives))
+(make-directory (cdr (assoc "local-packages" package-archives)) t)
+;; end of copied definitions
+;; ===========
+
 (defun detect-header (level)
   (save-excursion
   (let ((stars (concat (apply #'concat (cl-loop repeat level collect "\\*")) " ")))
@@ -51,7 +85,7 @@
 
 (defun format-version(change-log.org)
   (let ((r (derive-version change-log.org)))
-    (format "%d.%d.%d" (first r) (second r) (third r))))
+    (format "%d.%d.%d" (car r) (cadr r) (caddr r))))
 
 (defun printangle(FN)
   "to be used in Makefile instead of org-babel-tangle-file"

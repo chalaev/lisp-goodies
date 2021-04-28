@@ -19,14 +19,14 @@ quicklisp: $(quicklispDir)/ $(addprefix $(quicklispDir)/, $(package)) $(addprefi
 
 packaged/el-shalaev.tbz: generated/from/shalaev.org packaged/start.el packaged/
 	@echo "\nTesting before we package it:"
-	$(EMACS) -l ert -l packaged/start.el -l generated/macros.el -l generated/functions.el -l generated/file-functions.el -l generated/load.el -l generated/cl.el -l generated/tests.el -f ert-run-tests-batch-and-exit 2> generated/el-tests.log
+	$(EMACS) -l ert -l packaged/start.el -l generated/macros.el -l generated/functions.el -l generated/file-functions.el -l generated/conf.el -l generated/load.el -l generated/cl.el -l generated/tests.el -f ert-run-tests-batch-and-exit 2> generated/el-tests.log
 	@echo "`date '+%m/%d %H:%M'` EL TESTS PASSED :)\n"
 	tar jcfv $@ --transform s/^generated/shalaev/ generated/*.el
 	-@chgrp tmp $@
 
 packaged/shalaev.el: version.org generated/from/shalaev.org headers/shalaev.el packaged/
 	sed "s/the-version/`head -n1 $<`/" headers/shalaev.el > $@
-	cat generated/cl.el  generated/file-functions.el generated/functions.el generated/logging.el generated/macros.el >> $@
+	cat generated/cl.el  generated/macros.el generated/file-functions.el generated/conf.el generated/functions.el generated/logging.el >> $@
 	echo "(provide 'shalaev)" >> $@
 	echo ";;; shalaev.el ends here" >> $@
 	emacsclient -e '(untilde (cdr (assoc "local-packages" package-archives)))' | xargs cp $@
@@ -48,8 +48,7 @@ packaged/start.el: packaged/shalaev.el packaged/
 	echo "\n;; I load this file at startup\n"  >> $@
 	cat generated/local-packages.el generated/make.el generated/load.el >> $@
 	-@chgrp tmp $@
-	-for d in ../*/goodies/ ; do rsync -avu $@ $$d ; done
-	-cp $@ ~/.emacs.d/batch-start.el
+	-cp -a $@ ~/.emacs.d/start.el
 
 packaged/cl-shalaev.tbz: quicklisp packaged/
 	@echo "\nTesting before we package it:"

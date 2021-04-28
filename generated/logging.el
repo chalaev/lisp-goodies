@@ -1,3 +1,4 @@
+;; -*-  lexical-binding: t; -*-
 (defvar *log-level* 0)
 
 (defvar *log-buffer* nil)
@@ -13,7 +14,7 @@
 	  (insert today-str) (newline))
 	(dolist (msg (reverse *log-buffer*))
 	  (insert msg) (newline)))
-      (append-to-file (point-min) (point-max) (concat emacs-d "elisp.log")))
+      (append-to-file (point-min) (point-max) (concat *emacs-d* "elisp.log")))
     (setf *log-buffer* nil))))
 
 (defun clog(level fstr &rest args)
@@ -38,3 +39,17 @@
   (log-flush))
 
 (add-hook 'kill-emacs-hook 'on-emacs-exit)
+
+(defun space-log(N-of-spaces fstr)
+  "prints spaces before log messages"
+(let ((log-push (lambda(msg)
+  (push msg *log-buffer*)
+  (when (< 30 (length *log-buffer*)) (log-flush))))
+(spaces ""))
+(while(< 0 N-of-spaces)
+ (cl-decf N-of-spaces)
+ (setf spaces (concat " " spaces)))
+(let((msg(concat spaces fstr)))
+(funcall log-push msg)
+(message msg)))
+nil)
