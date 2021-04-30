@@ -1204,21 +1204,24 @@ Note: only Latin characters are allowed in config files
 #+BEGIN_SRC emacs-lisp :tangle generated/conf.el
 (defun read-conf-file(FN &optional max-size)
   "reads configuration file"
-(error-in "read-conf-file" (with-temp-buffer(insert-file-contents (untilde FN))
-(let(res(max-size(or max-size 40860)))
-  (while-let(str) (< (line-end-position) (min max-size(point-max)))
-	    (setf str (read-line))
+  (error-in "read-conf-file"
+(with-temp-buffer(insert-file-contents (untilde FN))
+(setf buffer-read-only t)
+(let(res)					      
+  (dolist(str(split-string (buffer-string) "\n"))
+    (clog :debug "str= %s" str)
 	    (unless(or
 (string= "
 " str)
 (= ?# (string-to-char str))); ignoring comments or empty lines
-	      (if(string-match "^\\(\\ca+\\)=\\([[:print:]]+\\)$" str)
-		  (let((key(intern(match-string 1 str))) (val(match-string 2 str)))
-		    (if(assoc key res)
-			(setcdr (assoc key res) val)
-		      (push (cons key val) res)))
-		(clog :warning "invalid string in %s: %s" FN str))))
-  (reverse res)))))
+(if(string-match "^\\(\\ca+\\)=\\([[:print:]]+\\)$" str)
+	  (let((key(intern(match-string 1 str))) (val(match-string 2 str)))
+	    (if(assoc key res)
+		(setcdr (assoc key res) val)
+	      (push (cons key val) res)))
+(unless(string= "" str)
+	(clog :warning "invalid string in %s: %s" FN str)))))
+(reverse res)))))
 #+END_SRC
 
 ** parse-conf
@@ -1440,10 +1443,10 @@ BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (
 *** ensure-dir-exists
 #+BEGIN_SRC emacs-lisp :tangle generated/file-functions.el
 (defun ensure-dir-exists (DN)
-(condition-case err
-(make-directory DN t)
-(file-already-exists (clog :debug "%s already exists" DN)))
-DN)
+  (condition-case err
+      (progn (make-directory DN t) DN)
+    ;; (file-already-exists (clog :debug "%s already exists" DN))
+    (file-error (clog :debug "cannot create %s" DN))))
 #+END_SRC
 
 *** FN, to-dir, and need-dir
@@ -1816,13 +1819,15 @@ There is probably some standard function or macro doing this:
      (move-end-of-line 1)))
 (defun read-line(&optional max-size)
 "returns current string of a buffer"
-(let((max-size(or max-size 4086)))
+(let((max-size(or max-size 1024000)))
+(if(< max-size (point-max))
+   (clog :error "read-line> max-size= %d limit is too small for this large (%d) buffer" max-size (point-max))
 #+END_SRC
 ← protection against too long strings.
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(prog1 
+(prog1
   (buffer-substring-no-properties (line-beginning-position) (min max-size(line-end-position)))
-  (sforward-line))))
+  (sforward-line)))))
 #+END_SRC
 * transpose
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el

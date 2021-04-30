@@ -27,10 +27,10 @@
 (vector FN uid gid mod-time fsize (perms-from-str ms)))))
 
 (defun ensure-dir-exists (DN)
-(condition-case err
-(make-directory DN t)
-(file-already-exists (clog :debug "%s already exists" DN)))
-DN)
+  (condition-case err
+      (progn (make-directory DN t) DN)
+    ;; (file-already-exists (clog :debug "%s already exists" DN))
+    (file-error (clog :debug "cannot create %s" DN))))
 
 (defun FN(FN0 &rest other-FN-parts)
 "concatenates arguments into file name inside (sub)directory"

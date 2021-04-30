@@ -41,6 +41,12 @@
       (append (parse-only-time (cadr SS))
 	      (parse-date (car SS))))))
 
+(defun together(strings)
+"concatenates list of strings"
+(if strings
+  (mapconcat 'identity strings " ")
+  ""))
+
 (defun echo-to-file(FN &optional str)
  (write-region (or str "") nil (untilde FN))
  (tilde FN))
@@ -73,11 +79,13 @@
      (move-end-of-line 1)))
 (defun read-line(&optional max-size)
 "returns current string of a buffer"
-(let((max-size(or max-size 4086)))
+(let((max-size(or max-size 1024000)))
+(if(< max-size (point-max))
+   (clog :error "read-line> max-size= %d limit is too small for this large (%d) buffer" max-size (point-max))
 
-(prog1 
+(prog1
   (buffer-substring-no-properties (line-beginning-position) (min max-size(line-end-position)))
-  (sforward-line))))
+  (sforward-line)))))
 
 (defun nth-column(n matrix)
   "returns n-th column of a matrix (n starts from zero)"

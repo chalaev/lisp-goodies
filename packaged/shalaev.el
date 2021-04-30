@@ -228,10 +228,10 @@
 (vector FN uid gid mod-time fsize (perms-from-str ms)))))
 
 (defun ensure-dir-exists (DN)
-(condition-case err
-(make-directory DN t)
-(file-already-exists (clog :debug "%s already exists" DN)))
-DN)
+  (condition-case err
+      (progn (make-directory DN t) DN)
+    ;; (file-already-exists (clog :debug "%s already exists" DN))
+    (file-error (clog :debug "cannot create %s" DN))))
 
 (defun FN(FN0 &rest other-FN-parts)
 "concatenates arguments into file name inside (sub)directory"
@@ -265,21 +265,24 @@ DN)
 
 (defun read-conf-file(FN &optional max-size)
   "reads configuration file"
-(error-in "read-conf-file" (with-temp-buffer(insert-file-contents (untilde FN))
-(let(res(max-size(or max-size 40860)))
-  (while-let(str) (< (line-end-position) (min max-size(point-max)))
-	    (setf str (read-line))
+  (error-in "read-conf-file"
+(with-temp-buffer(insert-file-contents (untilde FN))
+(setf buffer-read-only t)
+(let(res)					      
+  (dolist(str(split-string (buffer-string) "\n"))
+    (clog :debug "str= %s" str)
 	    (unless(or
 (string= "
 " str)
 (= ?# (string-to-char str))); ignoring comments or empty lines
-	      (if(string-match "^\\(\\ca+\\)=\\([[:print:]]+\\)$" str)
-		  (let((key(intern(match-string 1 str))) (val(match-string 2 str)))
-		    (if(assoc key res)
-			(setcdr (assoc key res) val)
-		      (push (cons key val) res)))
-		(clog :warning "invalid string in %s: %s" FN str))))
-  (reverse res)))))
+(if(string-match "^\\(\\ca+\\)=\\([[:print:]]+\\)$" str)
+	  (let((key(intern(match-string 1 str))) (val(match-string 2 str)))
+	    (if(assoc key res)
+		(setcdr (assoc key res) val)
+	      (push (cons key val) res)))
+(unless(string= "" str)
+	(clog :warning "invalid string in %s: %s" FN str)))))
+(reverse res)))))
 
 (defun parse-parameter(str &optional par-type)
 "for =parse-conf=: optionally parses first (string) argument into the specified type"
@@ -351,10 +354,6 @@ vars))
 (defmacro setc(FN vars &rest body)
 `(letc(read-conf-file ,FN) ,vars ,@body))
 
-(defun together(strings)
-(if strings
-  (mapconcat 'identity strings " ")
-  ""))
 (defun print-variable(var)
 (cond
 ((stringp var) var)
@@ -417,6 +416,12 @@ vars))
       (append (parse-only-time (cadr SS))
 	      (parse-date (car SS))))))
 
+(defun together(strings)
+"concatenates list of strings"
+(if strings
+  (mapconcat 'identity strings " ")
+  ""))
+
 (defun echo-to-file(FN &optional str)
  (write-region (or str "") nil (untilde FN))
  (tilde FN))
@@ -449,11 +454,13 @@ vars))
      (move-end-of-line 1)))
 (defun read-line(&optional max-size)
 "returns current string of a buffer"
-(let((max-size(or max-size 4086)))
+(let((max-size(or max-size 1024000)))
+(if(< max-size (point-max))
+   (clog :error "read-line> max-size= %d limit is too small for this large (%d) buffer" max-size (point-max))
 
-(prog1 
+(prog1
   (buffer-substring-no-properties (line-beginning-position) (min max-size(line-end-position)))
-  (sforward-line))))
+  (sforward-line)))))
 
 (defun nth-column(n matrix)
   "returns n-th column of a matrix (n starts from zero)"

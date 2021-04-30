@@ -14,6 +14,11 @@ Significant change in the (emacs-lisp) sections mostly responsible for configura
 8. Now requiring =cl-lib= instead of [[https://nullprogram.com/blog/2017/10/27/][deprecated]] =cl=.
 9. Other (probably minor) updates.
 
+*** 04/30 (eLisp)
+1. updated ensure-dir-exists
+2. updated read-conf-file
+3. updated read-line
+
 * Lazy Improvements
 ** slow updates
 *** 02/19

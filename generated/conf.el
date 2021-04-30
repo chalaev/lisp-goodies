@@ -6,21 +6,24 @@
 
 (defun read-conf-file(FN &optional max-size)
   "reads configuration file"
-(error-in "read-conf-file" (with-temp-buffer(insert-file-contents (untilde FN))
-(let(res(max-size(or max-size 40860)))
-  (while-let(str) (< (line-end-position) (min max-size(point-max)))
-	    (setf str (read-line))
+  (error-in "read-conf-file"
+(with-temp-buffer(insert-file-contents (untilde FN))
+(setf buffer-read-only t)
+(let(res)					      
+  (dolist(str(split-string (buffer-string) "\n"))
+    (clog :debug "str= %s" str)
 	    (unless(or
 (string= "
 " str)
 (= ?# (string-to-char str))); ignoring comments or empty lines
-	      (if(string-match "^\\(\\ca+\\)=\\([[:print:]]+\\)$" str)
-		  (let((key(intern(match-string 1 str))) (val(match-string 2 str)))
-		    (if(assoc key res)
-			(setcdr (assoc key res) val)
-		      (push (cons key val) res)))
-		(clog :warning "invalid string in %s: %s" FN str))))
-  (reverse res)))))
+(if(string-match "^\\(\\ca+\\)=\\([[:print:]]+\\)$" str)
+	  (let((key(intern(match-string 1 str))) (val(match-string 2 str)))
+	    (if(assoc key res)
+		(setcdr (assoc key res) val)
+	      (push (cons key val) res)))
+(unless(string= "" str)
+	(clog :warning "invalid string in %s: %s" FN str)))))
+(reverse res)))))
 
 (defun parse-parameter(str &optional par-type)
 "for =parse-conf=: optionally parses first (string) argument into the specified type"
@@ -92,10 +95,6 @@ vars))
 (defmacro setc(FN vars &rest body)
 `(letc(read-conf-file ,FN) ,vars ,@body))
 
-(defun together(strings)
-(if strings
-  (mapconcat 'identity strings " ")
-  ""))
 (defun print-variable(var)
 (cond
 ((stringp var) var)
