@@ -53,6 +53,57 @@
 		      (list (macroexpand-1 `(needs ,(cdr vardefs) ,@body)))
 		    body)))))
 
+(defmacro case* (expr test &rest cases)
+  "case with arbitrary test function"
+  (let ((v (gensym "v")))
+    `(let ((,v ,expr))
+       (cond
+        ,@(mapcar #'(lambda (VR)
+(let ((val (car VR)) (rest (cdr VR)))
+  (if (eql val 'otherwise)
+      `(t ,@rest)
+    `((,test ,v ,val) ,@rest))))
+ cases)))))
+
+(defmacro case-expand (input (&key (test #'char=)) &body cases)
+  "same as case, allows macros as entries (marked with keyword expand)"
+  (let ((block-sym (gensym "block")))
+    `(block ,block-sym
+       ,@(loop for (value . body) in cases
+	    if (eql value 'otherwise)
+	    collect `(return-from ,block-sym (progn ,@body))
+	    else if (eql value 'expand)
+	    collect
+	      (destructuring-bind (args . code) (macroexpand-1 body)
+		`(when ,(if (consp args); ← might be a list or one value
+			    `(apply ,input-function ,args)
+			    `(funcall ,input-function ,args))
+		   (return-from ,block-sym (progn ,@code))))
+	    else
+	    collect `(when (funcall ,test ,input ,value)
+		       (return-from ,block-sym (progn ,@body)))))))
+
+(defmacro case-f (input-function r &body cases)
+  "Same as case-expand, but the first arg is function applied to each case,
+and the variable r contains the result of such application."
+  (let ((block-sym (gensym "block")))
+    `(block ,block-sym
+       ,@(loop for (value . body) in cases
+	    if (eql value 'otherwise)
+	    collect `(return-from ,block-sym (progn ,@body))
+	    else if (eql value 'expand)
+	    collect
+	      (destructuring-bind (args . code) (macroexpand-1 body)
+		`(when ,(if (consp args); ← might be a list or one value
+			    `(apply ,input-function ,args)
+			    `(funcall ,input-function ,args))
+		   (return-from ,block-sym (progn ,@code))))
+	    else
+	    collect
+	      `(progn
+		 (setf ,r (funcall ,input-function ,value))
+		 (when ,r (return-from ,block-sym (progn ,@body))))))))
+
 (defmacro iff (test-form then &rest else)
   "elisp-kind of if"
   (if (cdr else)

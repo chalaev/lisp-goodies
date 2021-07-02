@@ -3,7 +3,7 @@
   (defun s-gensym(&optional starts-with)
     "similar to gensym in Common Lisp"
     (unless starts-with (setf starts-with "gs"))
-    (let (sym)
+    (let(sym)
       (while (progn
                (setf sym (make-symbol (concat starts-with (number-to-string counter))))
                (or (special-form-p sym) (functionp sym) (macrop sym) (boundp sym)))
@@ -23,10 +23,6 @@
        (setf seq (cdr seq)))
      (setf CS(car seq)))
      (when found CS)))
-
-(defmacro s-decf (var &optional amount)
-  (unless amount (setf amount 1))
-  `(setf ,var (- ,var ,amount)))
 
 (defmacro s-incf (var &optional amount)
   (unless amount (setf amount 1))

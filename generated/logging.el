@@ -1,10 +1,11 @@
 ;; -*-  lexical-binding: t; -*-
+(require 'cl-lib); (at least) for decf
 (defvar *log-level* 0)
 
 (defvar *log-buffer* nil)
 
-(let (last-FLD); saves last day printed to the log file
-(defun log-flush()
+(let((last-FLD "")); saves last day printed to the log file
+(defun log-flush(&optional log-FN)
   "save log messages to file for debugging"
   (when (= 0 *log-level*)
     (with-temp-buffer
@@ -14,7 +15,7 @@
 	  (insert today-str) (newline))
 	(dolist (msg (reverse *log-buffer*))
 	  (insert msg) (newline)))
-      (append-to-file (point-min) (point-max) (concat *emacs-d* "elisp.log")))
+      (append-to-file (point-min) (point-max) (or log-FN (concat *emacs-d* "elisp.log"))))
     (setf *log-buffer* nil))))
 
 (defun clog(level fstr &rest args)
@@ -26,7 +27,7 @@
 (when (<= *log-level* (or (pos level '(:debug :info :warning :error)) 0))
   (let ((log-msg
 	   (cons
-	    (concat "%s " (format-time-string "%H:%M:%S "
+	    (concat "%s " (format-time-string "%H:%M:%S.%3N "
 (apply 'encode-time (butlast (decode-time (current-time)) 3)))
 		    fstr)
 	    (cons (symbol-name level) args))))

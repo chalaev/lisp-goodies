@@ -28,6 +28,16 @@
   :depends-on (:shalaev/macros)
   :components ((:file "files")))
 
+(defsystem "shalaev/conf"
+  :class :package-inferred-system
+  :description "my lisp file functions"
+  :author "Oleg Shalaev"
+  :mailto "oleg@chalaev.com"
+  :licence "MIT"
+  :version (:read-file-line "version.org")
+  :depends-on (:cl-ppcre :cl-ppcre-unicode :shalaev/macros)
+  :components ((:file "conf")))
+
 (defsystem "shalaev/tests"
   :class :package-inferred-system
   :description "testing my lisp goodies"

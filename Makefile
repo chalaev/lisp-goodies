@@ -5,7 +5,7 @@ quicklispDir = $$HOME/quicklisp/local-projects/shalaev
 headersDir = generated/headers
 EMACS = emacs -q --no-site-file --batch
 
-LFNs = macros files tests shalaev
+LFNs = macros files conf tests shalaev
 LISPs = $(addsuffix .lisp, $(LFNs))
 package = $(LISPs) shalaev.asd version.org
 

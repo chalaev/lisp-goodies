@@ -3,7 +3,7 @@
   (:use :cl)
   (:export
 :end-push :iff :ifn :concat :aset :hset
-:when-let
+:case*  :when-let :case-expand :case-f
 :if-let :ifn-let :cond-let
 :needs))
 (in-package :shalaev/macros)

@@ -11,7 +11,7 @@
 (setf buffer-read-only t)
 (let(res)					      
   (dolist(str(split-string (buffer-string) "\n"))
-    (clog :debug "str= %s" str)
+    ;; (clog :debug "str= %s" str)
 	    (unless(or
 (string= "
 " str)

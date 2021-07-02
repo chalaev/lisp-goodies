@@ -50,6 +50,8 @@
 (defun echo-to-file(FN &optional str)
  (write-region (or str "") nil (untilde FN))
  (tilde FN))
+(defmacro echo-to-files(FNs &optional str)
+  `(dolist (FN ,FNs) (echo-to-file FN ,str)))
 
 (defun firstN(lista N)
   "returning first N elments of the list"
@@ -63,7 +65,7 @@
      (cl-loop for i from ?A to ?Z unless (member i forbidden-symbols) collect i)
      (cl-loop for i from ?a to ?z unless (member i forbidden-symbols) collect i)
      (cl-loop for i from ?0 to ?9 unless (member i forbidden-symbols) collect i)))
-"safe characters for file names: everuthing allowed except for what is forbidden")
+"safe characters for file names: everything is forbidden except for what is allowed")
 (defun rand-str(N)
   (apply #'concat
      (cl-loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))
@@ -87,11 +89,28 @@
   (buffer-substring-no-properties (line-beginning-position) (min max-size(line-end-position)))
   (sforward-line)))))
 
+(defvar *safe-chars*
+(let ((forbidden-symbols '(?\\ ?? ?! ?@ ?# ?$ ?% ?& ?* ?\( ?\) ?+ ?= ?/ ?{ ?} ?\[ ?\] ?: ?\; ?< ?> ?- ?| ?, ?. ?` ?' ?~ ?^ ?\")))
+    (append
+     (cl-loop for i from ?! to ?~ unless (member i forbidden-symbols) collect i)))
+"safe characters for file names: everuthing allowed except for what is forbidden")
+(defun *no-digits*(&optional symbols)
+  (let((symbols(or symbols *safe-chars*)))
+    (cl-loop for c in symbols when (or(< c ?0) (> c ?9)) collect c)))
+
+(defun intToChar(intNumer &optional symbols)
+  (let*((symbols(or symbols (*no-digits*))) (lad(length symbols)) divmod)
+    (cl-loop do
+(setf divmod (cl-floor intNumer lad) intNumer (car divmod))
+       collecting (nth (cadr divmod) symbols) into res
+       while (> intNumer 0)
+       finally (return (concat (reverse res))))))
+
 (defun nth-column(n matrix)
   "returns n-th column of a matrix (n starts from zero)"
   (mapcar #'(lambda(line) (nth n line)) matrix))
 (defun transpose(table)
 (let((M(length(car table))) result)
-(while(<= 0 (decf M))
+(while(<= 0 (cl-decf M))
 (push(nth-column M table) result))
 result))

@@ -3,6 +3,12 @@ Change log for [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 * Numerous changes after long pause in updates.
 Significant change in the (emacs-lisp) sections mostly responsible for configuration files treatment.
 
+*** 07/02
+1. eLisp: added global variable =*safe-chars*= and function =intToChar=
+2. common lisp: added macros =case*=, =case-expand=, and =case-f=.
+3. common lisp: added *separate package* =:shalaev/conf= with (only one for now) function =read-conf-file= – 
+   simplest configuration file reader for integer numbers and words (i.e., lines with no spaces).
+
 *** 04/28 (eLisp)
 1. Replaced =update-conf= with =let-conf= and =letc=.
 2. Updated =read-conf-file=; now it is more robust towards bad config files.
@@ -18,6 +24,10 @@ Significant change in the (emacs-lisp) sections mostly responsible for configura
 1. updated ensure-dir-exists
 2. updated read-conf-file
 3. updated read-line
+
+*** uncommitted (eLisp)
+1. emacs logging system: added milliseconds to time stamps
+2. added optional file name argument to =log-flush=
 
 * Lazy Improvements
 ** slow updates

@@ -3,7 +3,7 @@
   (defun s-gensym(&optional starts-with)
     "similar to gensym in Common Lisp"
     (unless starts-with (setf starts-with "gs"))
-    (let (sym)
+    (let(sym)
       (while (progn
                (setf sym (make-symbol (concat starts-with (number-to-string counter))))
                (or (special-form-p sym) (functionp sym) (macrop sym) (boundp sym)))
@@ -23,10 +23,6 @@
        (setf seq (cdr seq)))
      (setf CS(car seq)))
      (when found CS)))
-
-(defmacro s-decf (var &optional amount)
-  (unless amount (setf amount 1))
-  `(setf ,var (- ,var ,amount)))
 
 (defmacro s-incf (var &optional amount)
   (unless amount (setf amount 1))
@@ -218,7 +214,7 @@
      (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll))))))
 
 (defun chgrp(group file-name)
-  (= 0 (call-process "chgrp" nil nil nil group file-name)))
+  (= 0 (call-process "chgrp" nil nil nil group (untilde file-name))))
 
 (defun get-file-properties(FN)
   (when-let((FA (and (file-exists-p FN) (file-attributes FN 'string))))
@@ -270,7 +266,7 @@
 (setf buffer-read-only t)
 (let(res)					      
   (dolist(str(split-string (buffer-string) "\n"))
-    (clog :debug "str= %s" str)
+    ;; (clog :debug "str= %s" str)
 	    (unless(or
 (string= "
 " str)
@@ -425,6 +421,8 @@ vars))
 (defun echo-to-file(FN &optional str)
  (write-region (or str "") nil (untilde FN))
  (tilde FN))
+(defmacro echo-to-files(FNs &optional str)
+  `(dolist (FN ,FNs) (echo-to-file FN ,str)))
 
 (defun firstN(lista N)
   "returning first N elments of the list"
@@ -438,7 +436,7 @@ vars))
      (cl-loop for i from ?A to ?Z unless (member i forbidden-symbols) collect i)
      (cl-loop for i from ?a to ?z unless (member i forbidden-symbols) collect i)
      (cl-loop for i from ?0 to ?9 unless (member i forbidden-symbols) collect i)))
-"safe characters for file names: everuthing allowed except for what is forbidden")
+"safe characters for file names: everything is forbidden except for what is allowed")
 (defun rand-str(N)
   (apply #'concat
      (cl-loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))
@@ -462,21 +460,39 @@ vars))
   (buffer-substring-no-properties (line-beginning-position) (min max-size(line-end-position)))
   (sforward-line)))))
 
+(defvar *safe-chars*
+(let ((forbidden-symbols '(?\\ ?? ?! ?@ ?# ?$ ?% ?& ?* ?\( ?\) ?+ ?= ?/ ?{ ?} ?\[ ?\] ?: ?\; ?< ?> ?- ?| ?, ?. ?` ?' ?~ ?^ ?\")))
+    (append
+     (cl-loop for i from ?! to ?~ unless (member i forbidden-symbols) collect i)))
+"safe characters for file names: everuthing allowed except for what is forbidden")
+(defun *no-digits*(&optional symbols)
+  (let((symbols(or symbols *safe-chars*)))
+    (cl-loop for c in symbols when (or(< c ?0) (> c ?9)) collect c)))
+
+(defun intToChar(intNumer &optional symbols)
+  (let*((symbols(or symbols (*no-digits*))) (lad(length symbols)) divmod)
+    (cl-loop do
+(setf divmod (cl-floor intNumer lad) intNumer (car divmod))
+       collecting (nth (cadr divmod) symbols) into res
+       while (> intNumer 0)
+       finally (return (concat (reverse res))))))
+
 (defun nth-column(n matrix)
   "returns n-th column of a matrix (n starts from zero)"
   (mapcar #'(lambda(line) (nth n line)) matrix))
 (defun transpose(table)
 (let((M(length(car table))) result)
-(while(<= 0 (decf M))
+(while(<= 0 (cl-decf M))
 (push(nth-column M table) result))
 result))
 ;; -*-  lexical-binding: t; -*-
+(require 'cl-lib); (at least) for decf
 (defvar *log-level* 0)
 
 (defvar *log-buffer* nil)
 
-(let (last-FLD); saves last day printed to the log file
-(defun log-flush()
+(let((last-FLD "")); saves last day printed to the log file
+(defun log-flush(&optional log-FN)
   "save log messages to file for debugging"
   (when (= 0 *log-level*)
     (with-temp-buffer
@@ -486,7 +502,7 @@ result))
 	  (insert today-str) (newline))
 	(dolist (msg (reverse *log-buffer*))
 	  (insert msg) (newline)))
-      (append-to-file (point-min) (point-max) (concat *emacs-d* "elisp.log")))
+      (append-to-file (point-min) (point-max) (or log-FN (concat *emacs-d* "elisp.log"))))
     (setf *log-buffer* nil))))
 
 (defun clog(level fstr &rest args)
@@ -498,7 +514,7 @@ result))
 (when (<= *log-level* (or (pos level '(:debug :info :warning :error)) 0))
   (let ((log-msg
 	   (cons
-	    (concat "%s " (format-time-string "%H:%M:%S "
+	    (concat "%s " (format-time-string "%H:%M:%S.%3N "
 (apply 'encode-time (butlast (decode-time (current-time)) 3)))
 		    fstr)
 	    (cons (symbol-name level) args))))

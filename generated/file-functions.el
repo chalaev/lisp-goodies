@@ -17,7 +17,7 @@
      (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll))))))
 
 (defun chgrp(group file-name)
-  (= 0 (call-process "chgrp" nil nil nil group file-name)))
+  (= 0 (call-process "chgrp" nil nil nil group (untilde file-name))))
 
 (defun get-file-properties(FN)
   (when-let((FA (and (file-exists-p FN) (file-attributes FN 'string))))

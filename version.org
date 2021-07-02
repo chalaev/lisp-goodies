@@ -1,3 +1,3 @@
-3.0.1
-← generated 04/30 16:54 from [[file:change-log.org][change-log.org]]
+3.0.3
+← generated 07/02 18:11 from [[file:change-log.org][change-log.org]]
 by [[file:packaged/version.el][version.el]]
