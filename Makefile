@@ -88,9 +88,8 @@ README.md: README.org
 	-@chmod a-x $@
 
 clean:
-	echo "asdf:clear-system forces recompilation of a previously loaded system"
 	-$(SBCL) --quit --eval '(progn (asdf:clear-system :shalaev) (asdf:clear-system :shalaev/tests))'
-	-rm -r $(quicklispDir) generated packaged version.org
+	-rm -r $(quicklispDir) generated packaged version.org $$HOME/.cache/common-lisp/sbcl-*$(quicklispDir)
 
 .PHONY: clean quicklisp all
 

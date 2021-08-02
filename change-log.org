@@ -3,11 +3,19 @@ Change log for [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 * Numerous changes after long pause in updates.
 Significant change in the (emacs-lisp) sections mostly responsible for configuration files treatment.
 
-*** 07/02
+*** 08/02
+1. added [[file:LICENSE.txt][LICENSE.txt]]
+2. improved =eval-on-save= mechanism
+3. fixed =case-expand=
+4. (CL) added functions =rand-str=, =charToInt=, =intToChar= to [[file:generated/conf.lisp][conf.lisp]]
+5. updated [[file:shalaev.asd][shalaev.asd]]
+
+*** 07/03
 1. eLisp: added global variable =*safe-chars*= and function =intToChar=
 2. common lisp: added macros =case*=, =case-expand=, and =case-f=.
 3. common lisp: added *separate package* =:shalaev/conf= with (only one for now) function =read-conf-file= – 
    simplest configuration file reader for integer numbers and words (i.e., lines with no spaces).
+4. common lisp: made variable =r= local in =case-f=
 
 *** 04/28 (eLisp)
 1. Replaced =update-conf= with =let-conf= and =letc=.

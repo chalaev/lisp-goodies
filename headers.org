@@ -13,8 +13,8 @@ here we just make necessary preliminary definitions.
 
 #+BEGIN_SRC lisp :tangle generated/headers/tests.lisp
 ;;(in-package :cl-user)
-(defpackage :shalaev/tests
-  (:use :cl :shalaev/macros :shalaev/files :sb-rt)
+(uiop:define-package :shalaev/tests
+  (:use :cl :shalaev/macros :shalaev/files :shalaev/conf :sb-rt)
   (:export :N-failed)
 #+END_SRC
 Using =*compile-tests*= here: ← [[https://github.com/pbing/sb-rt/blob/master/rt.lisp][when true, compile the tests before running them]]
@@ -42,7 +42,7 @@ Since every lisper probably has his/her own "goodies", let me make this package 
 #+END_SRC
 
 #+BEGIN_SRC lisp :tangle generated/headers/macros.lisp
-(defpackage :shalaev/macros
+(uiop:define-package :shalaev/macros
 (:nicknames "SHM")
   (:use :cl)
   (:export
@@ -54,18 +54,17 @@ Since every lisper probably has his/her own "goodies", let me make this package 
 #+END_SRC
 
 #+BEGIN_SRC lisp :tangle generated/headers/files.lisp
-(defpackage :shalaev/files
+(uiop:define-package :shalaev/files
   (:use :cl :shalaev/macros)
   (:export :without :drop ; ← this function(s)/macro(s) are not about files; should I rename this whole packafe or create another one?
 :without-key :drop-key
-:merge-paths :safe-mkdir :rmdir :echo-to-file :directory-lock
-:read-conf-file))
+:merge-paths :safe-mkdir :rmdir :echo-to-file :directory-lock))
 (in-package :shalaev/files)
 #+END_SRC
 
 #+BEGIN_SRC lisp :tangle generated/headers/conf.lisp
-(defpackage :shalaev/conf
+(uiop:define-package :shalaev/conf
   (:use :cl :shalaev/macros)
-  (:export :read-conf-file))
+  (:export :read-conf-file :rand-str :charToInt :intToChar))
 (in-package :shalaev/conf)
 #+END_SRC

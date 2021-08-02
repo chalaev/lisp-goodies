@@ -75,9 +75,7 @@
 	    else if (eql value 'expand)
 	    collect
 	      (destructuring-bind (args . code) (macroexpand-1 body)
-		`(when ,(if (consp args); ← might be a list or one value
-			    `(apply ,input-function ,args)
-			    `(funcall ,input-function ,args))
+		`(when ,args
 		   (return-from ,block-sym (progn ,@code))))
 	    else
 	    collect `(when (funcall ,test ,input ,value)
@@ -86,7 +84,7 @@
 (defmacro case-f (input-function r &body cases)
   "Same as case-expand, but the first arg is function applied to each case,
 and the variable r contains the result of such application."
-  (let ((block-sym (gensym "block")))
+  (let((block-sym (gensym "block")))
     `(block ,block-sym
        ,@(loop for (value . body) in cases
 	    if (eql value 'otherwise)
@@ -100,7 +98,7 @@ and the variable r contains the result of such application."
 		   (return-from ,block-sym (progn ,@code))))
 	    else
 	    collect
-	      `(progn
+	      `(let(,r)
 		 (setf ,r (funcall ,input-function ,value))
 		 (when ,r (return-from ,block-sym (progn ,@body))))))))
 
@@ -123,3 +121,8 @@ and the variable r contains the result of such application."
 
 (defmacro hset(arr pos val)
   `(setf (gethash ,pos ,arr) ,val))
+
+(defmacro assoc-set (cons-list string-ID new-value)
+  `(setf
+   (cdr(assoc ,string-ID ,cons-list :test #'string=))
+   ,new-value))

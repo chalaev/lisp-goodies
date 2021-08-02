@@ -1,6 +1,6 @@
 ;;(in-package :cl-user)
-(defpackage :shalaev/tests
-  (:use :cl :shalaev/macros :shalaev/files :sb-rt)
+(uiop:define-package :shalaev/tests
+  (:use :cl :shalaev/macros :shalaev/files :shalaev/conf :sb-rt)
   (:export :N-failed)
 
 (:import-from :sb-rt :*compile-tests* :*expected-failures*))

@@ -1,4 +1,4 @@
-(defpackage :shalaev/macros
+(uiop:define-package :shalaev/macros
 (:nicknames "SHM")
   (:use :cl)
   (:export

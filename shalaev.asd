@@ -1,5 +1,4 @@
-(defsystem "shalaev"
-  :class :package-inferred-system
+(defsystem :shalaev
   :description "my lisp goodies"
   :author "Oleg Shalaev"
   :mailto "oleg@chalaev.com"
@@ -9,8 +8,7 @@
   :components ((:file "shalaev"))
   :in-order-to ((test-op (test-op "shalaev/tests"))))
 
-(defsystem "shalaev/macros"
-  :class :package-inferred-system
+(defsystem :shalaev/macros
   :description "my lisp macros"
   :author "Oleg Shalaev"
   :mailto "oleg@chalaev.com"
@@ -18,8 +16,7 @@
   :version (:read-file-line "version.org")
   :components ((:file "macros")))
 
-(defsystem "shalaev/files"
-  :class :package-inferred-system
+(defsystem :shalaev/files
   :description "my lisp file functions"
   :author "Oleg Shalaev"
   :mailto "oleg@chalaev.com"
@@ -28,9 +25,8 @@
   :depends-on (:shalaev/macros)
   :components ((:file "files")))
 
-(defsystem "shalaev/conf"
-  :class :package-inferred-system
-  :description "my lisp file functions"
+(defsystem :shalaev/conf
+  :description "reading configuration files"
   :author "Oleg Shalaev"
   :mailto "oleg@chalaev.com"
   :licence "MIT"
@@ -38,14 +34,13 @@
   :depends-on (:cl-ppcre :cl-ppcre-unicode :shalaev/macros)
   :components ((:file "conf")))
 
-(defsystem "shalaev/tests"
-  :class :package-inferred-system
+(defsystem :shalaev/tests
   :description "testing my lisp goodies"
   :author "Oleg Shalaev"
   :mailto "oleg@chalaev.com"
   :licence "MIT"
   :version (:read-file-line "version.org")
-  :depends-on (:shalaev :sb-rt)
+  :depends-on (:shalaev :shalaev/conf :sb-rt)
   :components ((:file "tests"))
   :perform (test-op (o c)
 (flet ((run-tests (&rest args)

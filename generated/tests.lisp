@@ -34,6 +34,10 @@ x )
 ll)
 ((3 4 5)))
 
+(deftest intToChar
+(charToInt(intToChar 123456789))
+123456789)
+
 (deftest ifn
 (let(a)
 (multiple-value-bind (x y) (floor 44 11)

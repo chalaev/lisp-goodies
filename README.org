@@ -30,4 +30,4 @@ and =(require 'shalaev)= in your code.
 For usage example, see the [[https://github.com/chalaev/cl-simple-logger][simple-logger]] project.
 
 * License
-This code is released under [[https://mit-license.org/][MIT license]].
+This code is released under [[file:LICENSE.txt][MIT license]].
