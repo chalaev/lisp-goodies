@@ -1315,9 +1315,9 @@ Minimal Common Lisp configuration file reader (only for strings and integers):
 (case-f (lambda(regexp) (nth-value 1 (cl-ppcre:scan-to-strings regexp str))) matches; for now we scan for integer numbers only
 ("^(\\p{Script:Latin}+)\\s*=\\s*(\\d+)\\s*$" ; does not allow numbers in the property name
   (cons (aref matches 0) (parse-integer(aref matches 1))))
-("^(\\p{Script:Latin}+)\\s*=\\s*([^\\s]+)\\s*$"
-  (cons (aref matches 0) (aref matches 1)))
-(otherwise (warn "unrecognized line: ~s" str))))))))
+("^(\\p{Script:Latin}+)\\s*=\\s*([^\\s]+)\\s*$" (cons (aref matches 0) (aref matches 1))); one-word parameter
+("^(\\p{Script:Latin}+)\\s*=(.*)$" (cons (aref matches 0) (string-trim '(#\Space #\Tab) (aref matches 1)))); sentence
+(otherwise (warn "conf line ignored: ~s" str))))))))
 #+END_SRC
 ← I am creating special package for that because of extra dependences
 =:cl-ppcre= and =:cl-ppcre-unicode=
@@ -1362,6 +1362,7 @@ Minimal Common Lisp configuration file reader (only for strings and integers):
 #+END_SRC
 
 ** parse-conf
+*** emacs-lisp
 #+BEGIN_SRC emacs-lisp :tangle generated/conf.el
 (defun parse-parameter(str &optional par-type)
 "for =parse-conf=: optionally parses first (string) argument into the specified type"
@@ -1460,6 +1461,168 @@ Usage examples:
       =(list=
        =(cons (quote abc) (or (parse-parameter (cdr (assoc (quote abc) conf21)) (quote integer)) xy))))=
 
+*** Common Lisp
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.lisp
+(defmacro split-string(str)
+  `(split-sequence:split-sequence #\Space ,str))
+(defmacro substring(str index)
+  `(subseq ,str ,index))
+(defun parse-parameter(str &optional par-type)
+"for =parse-conf=: optionally parses first (string) argument into the specified type"
+  (when str
+    (cond
+     ((eql par-type 'integer) (parse-integer str))
+#+END_SRC
+← =integer= is the only recognized type as of 02/23; we might need more special type treatment here.
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.lisp
+     ((consp par-type) (mapcar #'(lambda(s)(parse-parameter s (car par-type))) (split-string str)))
+     (T str))))
+#+END_SRC
+← e.g., =(parse-parameter "a b f qwfe weq" '(string))= ⇒ =("a" "b" "f" "qwfe" "weq")=.
+
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.lisp
+(defun typeof(v)
+"when v is a keyword, returns corresp. symbol; otherwise returns v's type"
+  (if(consp v) (if(eql(car v) 'quote) (typeof(cadr v))  (list(typeof(car v))))
+    (cond
+     ((keywordp v) v)
+     ((integerp v) :integer)
+     ((stringp v) :string)
+     (t(type-of v)))))
+#+END_SRC
+← e.g., =(typeof '("1" "2"))= ⇒ =(:string)=, and =(typeof :integer)= ⇒ =:integer=.
+
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.lisp
+(defun KP(x)(if(listp x)(KP(car x))(keywordp x)))
+(defun typeof-expr(expr)
+  (cond
+   ((listp expr) (when-let((TO(typeof-expr(car expr)))) (list TO)))
+   ((stringp expr) :string)
+   ((consp expr) nil)
+   (t (let((TO(typeof expr)))
+	(unless(eql TO 'symbol) TO)))))
+#+END_SRC
+
+#+BEGIN_SRC lisp :tangle generated/tests.lisp
+(deftest typeof-expr.1 (shalaev/conf::typeof-expr '(1 2)) (:integer))
+(deftest typeof-expr.2 (shalaev/conf::typeof-expr "abc") :string)
+(deftest typeof-expr.3 (shalaev/conf::typeof-expr '("abc" "def")) (:string))
+(deftest typeof-expr.4 (shalaev/conf::typeof-expr '(incf z)) nil)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.lisp
+(defmacro parse-conf(conf-expr vars)
+"for =let-conf=: produces configuration (list of conses) updates variables =vars= conf-expr"
+  (let((conf(gensym "conf")))
+    `(let((,conf ,conf-expr))
+(list ,@(mapcar
+    #'(lambda(CV)
+#+END_SRC
+← =CV= stands for "configuration variable"
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.lisp
+	(if(listp CV)
+	    (if(cddr CV)
+#+END_SRC
+if =(length CV)= ⇒ 3:
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.lisp
+(let((TO(typeof(car CV))))
+  `(cons (quote ,(cadr CV))
+	 ,(if-let((cCV(caddr CV)))
+	      `(or(parse-parameter(cdr(assoc  ,(cadr CV) ,conf :test #'string=)) (quote ,TO)) ,cCV)
+	    `(parse-parameter(cdr(assoc ,(cadr CV) ,conf :test #'string=)) (quote ,TO)))))
+#+END_SRC
+if =(length CV)= ⇒ 2, type =TO= is either specified explicitly (when =(KP(car CV))= ⇒ t), or is determined from the default value:
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.lisp
+(let((TO(typeof-expr(car(if(KP(car CV)) CV (cdr CV)))))
+     (varName(if(KP(car CV)) (cadr CV) (car CV)))
+     (default(unless(KP(car CV))(cadr CV))))
+  `(cons (quote ,varName)
+	 ,(if default
+	      `(or(parse-parameter(cdr(assoc ,varName ,conf :test #'string=)) (quote ,TO)) ,default)
+	    `(parse-parameter(cdr(assoc ,varName ,conf :test #'string=)) (quote ,TO))))))
+#+END_SRC
+if =(listp CV)= ⇒ nil:
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.lisp
+`(cons (quote ,CV) (parse-parameter(cdr(assoc ,CV ,conf :test #'string=))))))
+	 vars)))))
+#+END_SRC
+Usage examples:
+1. simplest case: =(parse-conf cc (a b))= ⇒ (expands to)
+#+BEGIN_SRC lisp :results drawer
+(macroexpand-1 '(shalaev/conf::parse-conf cc ("a" "b")))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(LET ((#:|conf692| CC))
+  (LIST
+   (CONS '"a"
+         (SHALAEV/CONF::PARSE-PARAMETER
+          (CDR (ASSOC "a" #:|conf692| :TEST #'STRING=))))
+   (CONS '"b"
+         (SHALAEV/CONF::PARSE-PARAMETER
+          (CDR (ASSOC "b" #:|conf692| :TEST #'STRING=))))))
+T
+:END:
+
+2. specifying value type =(parse-conf cc ((:integer a) ((:integer) b)))= is useful when no default value supplied ⇒
+#+BEGIN_SRC lisp :results drawer
+(macroexpand-1 '(shalaev/conf::parse-conf cc ((:integer "a") ((:integer) "b"))))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(LET ((#:|conf693| CC))
+  (LIST
+   (CONS '"a"
+         (SHALAEV/CONF::PARSE-PARAMETER
+          (CDR (ASSOC "a" #:|conf693| :TEST #'STRING=)) ':INTEGER))
+   (CONS '"b"
+         (SHALAEV/CONF::PARSE-PARAMETER
+          (CDR (ASSOC "b" #:|conf693| :TEST #'STRING=)) '(:INTEGER)))))
+T
+:END:
+
+3. specifying default values (used unless contained in =cc=): =(parse-conf cc ((a 1) (c 3)))=  ⇒
+   allows to supply type to =parse-parameter=:
+#+BEGIN_SRC lisp :results drawer
+(macroexpand-1 '(shalaev/conf::parse-conf cc (("a" 1) ("c" 3))))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(LET ((#:|conf695| CC))
+  (LIST
+   (CONS '"a"
+         (OR
+          (SHALAEV/CONF::PARSE-PARAMETER
+           (CDR (ASSOC "a" #:|conf695| :TEST #'STRING=)) ':INTEGER)
+          1))
+   (CONS '"c"
+         (OR
+          (SHALAEV/CONF::PARSE-PARAMETER
+           (CDR (ASSOC "c" #:|conf695| :TEST #'STRING=)) ':INTEGER)
+          3))))
+T
+:END:
+
+4. sometimes, when default value is a variable, both type and default value must be specified:
+#+BEGIN_SRC lisp :results drawer
+(macroexpand-1 '(shalaev/conf::parse-conf cc ((:integer "abc" xy))))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(LET ((#:|conf697| CC))
+  (LIST
+   (CONS '"abc"
+         (OR
+          (SHALAEV/CONF::PARSE-PARAMETER
+           (CDR (ASSOC "abc" #:|conf697| :TEST #'STRING=)) ':INTEGER)
+          XY))))
+T
+:END:
+
 ** let-conf
 =let-conf= declares local variables in the usual =let= manner with optional default values (see [[parse-conf]] examples above).
 The values are updated from configuration (list of conses) produced by ~conf-expr~ form.
@@ -1469,6 +1632,12 @@ The values are updated from configuration (list of conses) produced by ~conf-exp
 ,@body))
 #+END_SRC
 where only the configuration parameters mentioned in =vars= argument will be considered.
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.lisp
+(defmacro let-conf(configuration vars &body body)
+"untested"
+  `(let((,(car configuration) (parse-conf ,(cdr configuration) ,vars)))
+,@body))
+#+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/conf.el
 (defmacro let-conf-c(CName variable-name)
@@ -1500,6 +1669,19 @@ In case we want to define variables locally:
 vars))
 ,@body))))
 #+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/conf.lisp
+(defmacro letc(conf-data vars &body body)
+"untested"
+(let((conf-var(s-gensym)))
+  `(let((,conf-var (parse-conf ,conf-data ,vars)))
+(let(,@(mapcar (lambda(v)
+(let((VN(ifn(listp v)v(if(KP(car v))(cadr v)(car v)))))
+`(,VN (cdr(assoc  ,VN ,conf-var :test #'string=)))))
+vars))
+,@body))))
+#+END_SRC
+
 
 Sometimes for testing we need to change local variables in the least possible intrusive way.
 We do it as follows: main code contains a specially marked comment like this one:

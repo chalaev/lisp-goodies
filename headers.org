@@ -58,13 +58,13 @@ Since every lisper probably has his/her own "goodies", let me make this package 
   (:use :cl :shalaev/macros)
   (:export :without :drop ; ← this function(s)/macro(s) are not about files; should I rename this whole packafe or create another one?
 :without-key :drop-key
-:merge-paths :safe-mkdir :rmdir :echo-to-file :directory-lock))
+:merge-paths :rmdir :echo-to-file :directory-lock))
 (in-package :shalaev/files)
 #+END_SRC
 
 #+BEGIN_SRC lisp :tangle generated/headers/conf.lisp
 (uiop:define-package :shalaev/conf
   (:use :cl :shalaev/macros)
-  (:export :read-conf-file :rand-str :charToInt :intToChar))
+  (:export :read-conf-file :rand-str :charToInt :intToChar :let-conf :letc))
 (in-package :shalaev/conf)
 #+END_SRC

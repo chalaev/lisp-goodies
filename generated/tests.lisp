@@ -38,6 +38,11 @@ ll)
 (charToInt(intToChar 123456789))
 123456789)
 
+(deftest typeof-expr.1 (shalaev/conf::typeof-expr '(1 2)) (:integer))
+(deftest typeof-expr.2 (shalaev/conf::typeof-expr "abc") :string)
+(deftest typeof-expr.3 (shalaev/conf::typeof-expr '("abc" "def")) (:string))
+(deftest typeof-expr.4 (shalaev/conf::typeof-expr '(incf z)) nil)
+
 (deftest ifn
 (let(a)
 (multiple-value-bind (x y) (floor 44 11)

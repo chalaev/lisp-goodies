@@ -3,6 +3,15 @@ Change log for [[https://github.com/chalaev/lisp-goodies][(e)Lisp Goodies]].
 * Numerous changes after long pause in updates.
 Significant change in the (emacs-lisp) sections mostly responsible for configuration files treatment.
 
+*** 08/11
+These updates are probably final;
+for now I do not plan to publish more updates
+unless this project turns out to be useful for the lisp community.
+
+1. stopped mentioning (no more existing) =safe-mkdir= in [[file:headers.org][headers.org]]
+2. updated =read-conf-file= so now config parameters may have multi-word (separated by spaces) values
+3. (common lisp) functions =let-conf= and =letc= (that previously had only elisp-version) became now available in [[file:generated/conf.lisp][conf.lisp]]
+
 *** 08/02
 1. added [[file:LICENSE.txt][LICENSE.txt]]
 2. improved =eval-on-save= mechanism
@@ -33,7 +42,7 @@ Significant change in the (emacs-lisp) sections mostly responsible for configura
 2. updated read-conf-file
 3. updated read-line
 
-*** uncommitted (eLisp)
+*** unspecified date (eLisp)
 1. emacs logging system: added milliseconds to time stamps
 2. added optional file name argument to =log-flush=
 

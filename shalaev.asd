@@ -31,7 +31,7 @@
   :mailto "oleg@chalaev.com"
   :licence "MIT"
   :version (:read-file-line "version.org")
-  :depends-on (:cl-ppcre :cl-ppcre-unicode :shalaev/macros)
+  :depends-on (:cl-ppcre :cl-ppcre-unicode :shalaev/macros :split-sequence)
   :components ((:file "conf")))
 
 (defsystem :shalaev/tests
